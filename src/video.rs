@@ -54,7 +54,7 @@ impl WfRecorder {
         }
     }
 
-    pub fn audio(mut self, audio: bool) -> Self {
+    pub const fn audio(mut self, audio: bool) -> Self {
         self.audio = audio;
         self
     }
@@ -237,11 +237,11 @@ impl Screencast {
 
         match sel.as_str() {
             "Monitor" => {
-                std::thread::sleep(std::time::Duration::from_secs(self.rofi_delay(theme)));
+                std::thread::sleep(std::time::Duration::from_secs(Self::rofi_delay(theme)));
                 self.monitor();
             }
             "Selection" => {
-                std::thread::sleep(std::time::Duration::from_secs(self.rofi_delay(theme)));
+                std::thread::sleep(std::time::Duration::from_secs(Self::rofi_delay(theme)));
                 self.selection();
             }
             "All" => unimplemented!("Capturing of all outputs has not been implemented for video"),
@@ -254,7 +254,7 @@ impl Screencast {
     }
 
     /// prompts the user for delay using rofi if not provided as a cli flag
-    fn rofi_delay(&self, theme: &Option<PathBuf>) -> u64 {
+    fn rofi_delay(theme: &Option<PathBuf>) -> u64 {
         let delay_options = ["0", "3", "5"];
 
         let mut rofi = Rofi::new(&delay_options);

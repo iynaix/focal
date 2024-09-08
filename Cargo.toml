@@ -16,3 +16,19 @@ serde = "1.0.210"
 which = "6.0.3"
 chrono = "0.4.38"
 hyprland = { version = "0.4.0-alpha.3" }
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+enum_glob_use = "deny"
+missing_errors_doc = { level = "allow", priority = 1 }
+missing_panics_doc = { level = "allow", priority = 1 }
+must_use_candidate = { level = "allow", priority = 1 }
+nursery = { level = "deny", priority = -1 }
+pedantic = { level = "deny", priority = -1 }
+unwrap_used = "deny"
+
+[profile.release]
+strip = true
+lto = true

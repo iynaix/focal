@@ -105,9 +105,9 @@ impl Screenshot {
     pub fn all(&self) {
         let mut w = 0;
         let mut h = 0;
-        for mon in Monitors::get().expect("unable to get monitors").iter() {
-            w = w.max(mon.x + mon.width as i32);
-            h = h.max(mon.y + mon.height as i32);
+        for mon in &Monitors::get().expect("unable to get monitors") {
+            w = w.max(mon.x + i32::from(mon.width));
+            h = h.max(mon.y + i32::from(mon.height));
         }
 
         self.capture("", &format!("0,0 {w}x{h}"));
@@ -188,12 +188,12 @@ impl Screenshot {
         match sel.as_str() {
             "Selection" => self.selection(),
             "Monitor" => {
-                std::thread::sleep(std::time::Duration::from_secs(self.rofi_delay(theme)));
-                self.monitor()
+                std::thread::sleep(std::time::Duration::from_secs(Self::rofi_delay(theme)));
+                self.monitor();
             }
             "All" => {
-                std::thread::sleep(std::time::Duration::from_secs(self.rofi_delay(theme)));
-                self.all()
+                std::thread::sleep(std::time::Duration::from_secs(Self::rofi_delay(theme)));
+                self.all();
             }
             "" => {
                 eprintln!("No capture selection was made.");
@@ -203,7 +203,7 @@ impl Screenshot {
         };
     }
 
-    fn rofi_delay(&self, theme: &Option<PathBuf>) -> u64 {
+    fn rofi_delay(theme: &Option<PathBuf>) -> u64 {
         let delay_options = ["0", "3", "5"];
 
         let mut rofi = Rofi::new(&delay_options);

@@ -7,11 +7,11 @@ use hyprland::{
 use std::{fmt, process::Stdio};
 
 #[derive(Debug)]
-pub struct SlurpGeomParseError {
+pub struct ParseError {
     message: String,
 }
 
-impl SlurpGeomParseError {
+impl ParseError {
     fn new(msg: &str) -> Self {
         Self {
             message: msg.to_string(),
@@ -19,12 +19,13 @@ impl SlurpGeomParseError {
     }
 }
 
-impl fmt::Display for SlurpGeomParseError {
+impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.message)
     }
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone, Copy)]
 pub struct SlurpGeom {
     w: i32,
@@ -40,7 +41,7 @@ impl fmt::Display for SlurpGeom {
 }
 
 impl std::str::FromStr for SlurpGeom {
-    type Err = SlurpGeomParseError;
+    type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let re = regex::Regex::new(r"[,\sx]+").expect("Failed to create regex for slurp geom");
@@ -51,7 +52,7 @@ impl std::str::FromStr for SlurpGeom {
             .collect();
 
         if parts.len() != 4 {
-            return Err(SlurpGeomParseError::new("Slurp geom must have 4 parts"));
+            return Err(ParseError::new("Slurp geom must have 4 parts"));
         }
 
         Ok(Self {
@@ -71,7 +72,10 @@ impl SlurpGeom {
         let mon = monitors
             .iter()
             .find(|m| {
-                x >= m.x && x <= m.x + m.width as i32 && y >= m.y && y <= m.y + m.height as i32
+                x >= m.x
+                    && x <= m.x + i32::from(m.width)
+                    && y >= m.y
+                    && y <= m.y + i32::from(m.height)
             })
             .unwrap_or_else(|| {
                 panic!("No monitor found for slurp region");
@@ -95,13 +99,13 @@ impl SlurpGeom {
             Transforms::Normal => format!("crop=w={w}:h={h}:x={x}:y={y}"),
             // clockwise
             Transforms::Normal90 => {
-                let final_y = mon.width as i32 - x - w;
+                let final_y = i32::from(mon.width) - x - w;
                 let final_x = y;
                 format!("crop=w={final_w}:h={final_h}:x={final_x}:y={final_y}, transpose=1")
             }
             // anti-clockwise
             Transforms::Normal270 => {
-                let final_x = mon.width as i32 - y - h;
+                let final_x = i32::from(mon.width) - y - h;
                 let final_y = x;
                 format!("crop=w={final_w}:h={final_h}:x={final_x}:y={final_y}, transpose=2")
             }
@@ -176,9 +180,10 @@ impl SlurpGeom {
             .stdout(Stdio::piped())
             .execute_input_output(&slurp_geoms)
             .map(|s| {
-                std::str::from_utf8(&s.stdout)
-                    .map(|s| s.strip_suffix("\n").unwrap_or_default().to_string())
-                    .unwrap_or_else(|_| "".to_string())
+                std::str::from_utf8(&s.stdout).map_or_else(
+                    |_| String::new(),
+                    |s| s.strip_suffix("\n").unwrap_or_default().to_string(),
+                )
             });
 
         // restore the original fade animation

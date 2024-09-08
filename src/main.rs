@@ -18,6 +18,7 @@ pub enum ShellCompletion {
     Fish,
 }
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Parser, Debug)]
 #[command(
     name = "focal",
@@ -93,7 +94,7 @@ pub struct FocalArgs {
     pub generate: Option<ShellCompletion>,
 }
 
-fn generate_completions(shell_completion: ShellCompletion) {
+fn generate_completions(shell_completion: &ShellCompletion) {
     let mut cmd = FocalArgs::command();
 
     match shell_completion {
@@ -118,7 +119,7 @@ fn check_programs(args: &FocalArgs) {
         progs.insert("slurp");
     }
 
-    if let Some(CaptureArea::Selection) = args.area {
+    if matches!(args.area, Some(CaptureArea::Selection)) {
         progs.insert("slurp");
     }
 
@@ -145,7 +146,7 @@ fn main() {
 
     // print shell completions
     if let Some(shell) = args.generate {
-        return generate_completions(shell);
+        return generate_completions(&shell);
     }
 
     if !args.rofi && args.area.is_none() {
@@ -175,7 +176,7 @@ fn main() {
             create_parent_dirs(args.filename.unwrap_or_else(|| {
                 dirs::video_dir()
                     .expect("could not get $XDG_VIDEOS_DIR")
-                    .join(format!("Screencasts/{}", fname))
+                    .join(format!("Screencasts/{fname}"))
             }))
         };
 
@@ -205,7 +206,7 @@ fn main() {
             create_parent_dirs(args.filename.unwrap_or_else(|| {
                 dirs::picture_dir()
                     .expect("could not get $XDG_PICTURES_DIR")
-                    .join(format!("Screenshots/{}", fname))
+                    .join(format!("Screenshots/{fname}"))
             }))
         };
 
