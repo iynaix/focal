@@ -10,7 +10,6 @@
   libnotify,
   rofi-wayland,
   slurp,
-  swappy,
   tesseract,
   wf-recorder,
   wl-clipboard,
@@ -49,7 +48,6 @@ rustPlatform.buildRustPackage {
         wl-clipboard
         hyprland
         rofi-wayland
-        swappy
         wf-recorder
         ffmpeg
       ] ++ lib.optional ocr tesseract;

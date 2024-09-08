@@ -35,7 +35,7 @@ pub enum ShellCompletion {
         .args(["edit", "ocr"]),
 ))]
 pub struct FocalArgs {
-    #[arg(long, action, help = "display rofi menu")]
+    #[arg(long, action, help = "display rofi menu for options")]
     pub rofi: bool,
 
     #[arg(long, action, help = "use rofi theme")]
@@ -53,14 +53,19 @@ pub struct FocalArgs {
     #[arg(long, action, help = "do not save the file permanently")]
     pub no_save: bool,
 
-    #[arg(long, action, help = "do video recording instead of screenshots")]
+    #[arg(long, action, help = "record video instead of screenshots")]
     pub video: bool,
 
     #[arg(long, action, help = "capture video with audio")]
     pub audio: bool,
 
-    #[arg(long, action, help = "edit screenshot with swappy")]
-    pub edit: bool,
+    #[arg(
+        long,
+        action,
+        help = "edit screenshot using PROGRAM",
+        value_name = "PROGRAM"
+    )]
+    pub edit: Option<String>,
 
     #[arg(
         long,
@@ -115,10 +120,6 @@ fn check_programs(args: &FocalArgs) {
 
     if let Some(CaptureArea::Selection) = args.area {
         progs.insert("slurp");
-    }
-
-    if args.edit {
-        progs.insert("swappy");
     }
 
     if args.ocr.is_some() {

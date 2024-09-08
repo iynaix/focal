@@ -33,7 +33,6 @@
                 grim
                 libnotify
                 slurp
-                swappy
                 wl-clipboard
                 hyprland
                 tesseract

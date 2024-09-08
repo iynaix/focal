@@ -223,7 +223,7 @@ impl Screencast {
         }
 
         let (sel, exit_code) = rofi
-            // for editing with swappy
+            // record audio with Alt+a
             .arg("-kb-custom-1")
             .arg("Alt-a")
             .arg("-mesg")

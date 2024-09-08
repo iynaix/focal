@@ -61,7 +61,7 @@ impl Grim {
 
 pub struct Screenshot {
     pub delay: Option<u64>,
-    pub edit: bool,
+    pub edit: Option<String>,
     pub notify: bool,
     pub ocr: Option<String>,
     pub output: PathBuf,
@@ -88,7 +88,7 @@ impl Screenshot {
 
         if self.ocr.is_some() {
             self.ocr();
-        } else if self.edit {
+        } else if self.edit.is_some() {
             self.edit();
         }
     }
@@ -114,13 +114,22 @@ impl Screenshot {
     }
 
     fn edit(&self) {
-        command!("swappy")
-            .arg("--file")
-            .arg(self.output.clone())
-            .arg("--output-file")
-            .arg(self.output.clone())
-            .execute()
-            .expect("Failed to edit screenshot with swappy");
+        if let Some(prog) = &self.edit {
+            if prog.ends_with("swappy") {
+                command!("swappy")
+                    .arg("--file")
+                    .arg(self.output.clone())
+                    .arg("--output-file")
+                    .arg(self.output.clone())
+                    .execute()
+                    .expect("Failed to edit screenshot with swappy");
+            } else {
+                std::process::Command::new(prog)
+                    .arg(self.output.clone())
+                    .execute()
+                    .expect("Failed to edit screenshot");
+            }
+        }
     }
 
     fn ocr(&self) {
@@ -145,22 +154,36 @@ impl Screenshot {
     }
 
     pub fn rofi(&mut self, theme: &Option<PathBuf>) {
-        let mut rofi = Rofi::new(&["Selection", "Monitor", "All"]);
+        let mut opts = vec!["Selection", "Monitor"];
+
+        // don't show all if single monitor
+        if Monitors::get()
+            .expect("unable to get monitors")
+            .iter()
+            .count()
+            > 1
+        {
+            opts.push("All");
+        };
+
+        let mut rofi = Rofi::new(&opts);
 
         if let Some(theme) = theme {
             rofi = rofi.theme(theme.clone());
         }
 
         let (sel, exit_code) = rofi
-            // for editing with swappy
+            // for editing image
             .arg("-kb-custom-1")
             .arg("Alt-e")
             .arg("-mesg")
-            .arg("Screenshots can be edited with swappy by using Alt+e")
+            .arg("Screenshots can be edited with Alt+e")
             .run();
 
-        // custom keyboard code selected
-        self.edit = exit_code == 10;
+        // no alt keycode selected, do not edit
+        if exit_code != 10 {
+            self.edit = None;
+        }
 
         match sel.as_str() {
             "Selection" => self.selection(),

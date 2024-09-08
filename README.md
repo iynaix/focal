@@ -58,7 +58,7 @@ Arguments:
 
 Options:
       --rofi
-          display rofi menu
+          display rofi menu for options
 
       --theme <THEME>
           use rofi theme
@@ -78,13 +78,13 @@ Options:
           do not save the file permanently
 
       --video
-          do video recording instead of screenshots
+          record video instead of screenshots
 
       --audio
           capture video with audio
 
-      --edit
-          edit screenshot with swappy
+      --edit <PROGRAM>
+          edit screenshot using PROGRAM
 
       --ocr [<LANG>]
           runs OCR on the selected text, defaulting to English, supported languages can be shown using 'tesseract --list-langs'
@@ -108,7 +108,6 @@ To build focal from source
     * [slurp](https://github.com/emersion/slurp)
     * [hyprland](https://github.com/hyprwm/Hyprland)
     * [rofi-wayland](https://github.com/lbonn/rofi)
-    * [swappy](https://github.com/jtheoof/swappy)
     * [wl-clipboard](https://github.com/bugaevc/wl-clipboard)
     * [wf-recorder](https://github.com/ammen99/wf-recorder)
     * [ffmpeg](https://www.ffmpeg.org/)
