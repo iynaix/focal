@@ -1,6 +1,7 @@
 use execute::{command_args, Execute};
 use hyprland::{
-    data::{Clients, Monitors, Transforms},
+    data::{Animations, BezierIdent, Clients, Monitors, Transforms},
+    keyword::Keyword,
     shared::HyprData,
 };
 use std::{fmt, process::Stdio};
@@ -112,6 +113,34 @@ impl SlurpGeom {
         (mon.name.clone(), filter)
     }
 
+    pub fn disable_fade_animation() -> Option<String> {
+        // remove fade animation
+        let anims = Animations::get().expect("unable to get animations");
+        anims.0.iter().find_map(|a| {
+            if a.name == "fadeLayers" {
+                let beizer = match &a.bezier {
+                    BezierIdent::None => "",
+                    BezierIdent::Default => "default",
+                    BezierIdent::Specified(s) => s.as_str(),
+                };
+                return Some(format!(
+                    "{},{},{},{}",
+                    a.name,
+                    std::convert::Into::<u8>::into(a.enabled),
+                    a.speed,
+                    beizer
+                ));
+            }
+            None
+        })
+    }
+
+    pub fn reset_fade_animation(anim: &Option<String>) {
+        if let Some(anim) = anim {
+            Keyword::set("animations", anim.clone()).expect("unable to set animations");
+        }
+    }
+
     pub fn prompt() -> Self {
         let active_wksps: Vec<_> = Monitors::get()
             .expect("unable to get monitors")
@@ -124,17 +153,18 @@ impl SlurpGeom {
             .iter()
             .filter_map(|win| {
                 if active_wksps.contains(&win.workspace.id) {
-                    Some(Self {
+                    return Some(Self {
                         x: win.at.0.into(),
                         y: win.at.1.into(),
                         w: win.size.0.into(),
                         h: win.size.1.into(),
-                    })
-                } else {
-                    None
+                    });
                 }
+                None
             })
             .collect();
+
+        let orig_fade_anim = Self::disable_fade_animation();
 
         let slurp_geoms = window_geoms
             .iter()
@@ -145,22 +175,28 @@ impl SlurpGeom {
         let sel = command_args!("slurp")
             .stdout(Stdio::piped())
             .execute_input_output(&slurp_geoms)
-            .expect("failed to execute slurp");
+            .map(|s| {
+                std::str::from_utf8(&s.stdout)
+                    .map(|s| s.strip_suffix("\n").unwrap_or_default().to_string())
+                    .unwrap_or_else(|_| "".to_string())
+            });
 
-        let sel = std::str::from_utf8(&sel.stdout)
-            .expect("failed to parse utf8 from slurp selection")
-            .strip_suffix("\n")
-            .unwrap_or_default()
-            .to_string();
+        // restore the original fade animation
+        Self::reset_fade_animation(&orig_fade_anim);
 
-        if sel.is_empty() {
-            eprintln!("No slurp selection made");
-            std::process::exit(1);
-        };
-
-        window_geoms
-            .into_iter()
-            .find(|geom| geom.to_string() == sel)
-            .unwrap_or_else(|| sel.parse().expect("Failed to parse slurp selection"))
+        match sel {
+            Ok(ref s) if s.is_empty() => {
+                eprintln!("No slurp selection made");
+                std::process::exit(1);
+            }
+            Err(_) => {
+                eprintln!("Invalid slurp selection");
+                std::process::exit(1);
+            }
+            Ok(sel) => window_geoms
+                .into_iter()
+                .find(|geom| geom.to_string() == sel)
+                .unwrap_or_else(|| sel.parse().expect("Failed to parse slurp selection")),
+        }
     }
 }
