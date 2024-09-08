@@ -4,14 +4,16 @@
   installShellFiles,
   rustPlatform,
   makeWrapper,
-  rofi,
+  ffmpeg,
   grim,
+  hyprland,
   libnotify,
+  rofi-wayland,
   slurp,
   swappy,
-  wl-clipboard,
-  hyprland,
   tesseract,
+  wf-recorder,
+  wl-clipboard,
   ocr ? false,
 }:
 rustPlatform.buildRustPackage {
@@ -46,8 +48,10 @@ rustPlatform.buildRustPackage {
         slurp
         wl-clipboard
         hyprland
-        rofi
+        rofi-wayland
         swappy
+        wf-recorder
+        ffmpeg
       ] ++ lib.optional ocr tesseract;
     in
     "wrapProgram $out/bin/focal --prefix PATH : ${lib.makeBinPath binaries}";

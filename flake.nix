@@ -29,7 +29,7 @@
 
               packages = with pkgs; [
                 cargo-edit
-                rofi
+                rofi-wayland
                 grim
                 libnotify
                 slurp

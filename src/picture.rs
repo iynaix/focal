@@ -157,7 +157,7 @@ impl Screenshot {
 
         match sel.as_str() {
             "Selection" => {
-                // delay is pointless for selection
+                std::thread::sleep(std::time::Duration::from_secs(self.rofi_delay(theme)));
                 self.selection()
             }
             "Monitor" => {
