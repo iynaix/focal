@@ -63,13 +63,13 @@ pub struct Screenshot {
     pub delay: Option<u64>,
     pub edit: bool,
     pub notify: bool,
-    pub ocr: bool,
+    pub ocr: Option<String>,
     pub output: PathBuf,
 }
 
 impl Screenshot {
     fn capture(&self, monitor: &str, geometry: &str) {
-        if !self.ocr {
+        if self.ocr.is_none() {
             // copy the image file to clipboard
             command!("wl-copy")
                 .arg("--type")
@@ -86,7 +86,7 @@ impl Screenshot {
             .monitor(monitor)
             .capture(self.notify);
 
-        if self.ocr {
+        if self.ocr.is_some() {
             self.ocr();
         } else if self.edit {
             self.edit();
@@ -124,9 +124,16 @@ impl Screenshot {
     }
 
     fn ocr(&self) {
-        let output = command!("tesseract")
-            .arg(&self.output)
-            .arg("-")
+        let mut cmd = command!("tesseract");
+        cmd.arg(&self.output).arg("-");
+
+        if let Some(lang) = &self.ocr {
+            if !lang.is_empty() {
+                cmd.arg("-l").arg(lang);
+            }
+        }
+
+        let output = cmd
             .stdout(Stdio::piped())
             .execute_output()
             .expect("Failed to run tesseract");

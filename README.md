@@ -50,7 +50,7 @@ OCR support can be optionally disabled through the use of an override:
 $ focal --help
 Focal captures screenshots / videos using rofi, with clipboard support on hyprland
 
-Usage: focal [] [FILE]
+Usage: focal [OPTIONS] [FILE]
 
 Arguments:
   [FILE]
@@ -86,8 +86,8 @@ Options:
       --edit
           edit screenshot with swappy
 
-      --ocr
-          run ocr on the selected text
+      --ocr [<LANG>]
+          runs OCR on the selected text, defaulting to English, supported languages can be shown using 'tesseract --list-langs'
 
   -h, --help
           Print help (see a summary with '-h')

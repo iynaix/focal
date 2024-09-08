@@ -62,8 +62,15 @@ pub struct FocalArgs {
     #[arg(long, action, help = "edit screenshot with swappy")]
     pub edit: bool,
 
-    #[arg(long, action, help = "run ocr on the selected text")]
-    pub ocr: bool,
+    #[arg(
+        long,
+        num_args = 0..=1,
+        value_name = "LANG",
+        default_missing_value = "",
+        action,
+        long_help = "runs OCR on the selected text, defaulting to English, supported languages can be shown using 'tesseract --list-langs'",
+    )]
+    pub ocr: Option<String>,
 
     #[arg(
         name = "FILE",
@@ -114,7 +121,7 @@ fn check_programs(args: &FocalArgs) {
         progs.insert("swappy");
     }
 
-    if args.ocr {
+    if args.ocr.is_some() {
         progs.insert("tesseract");
     }
 
