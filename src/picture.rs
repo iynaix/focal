@@ -172,18 +172,24 @@ impl Screenshot {
             rofi = rofi.theme(theme.clone());
         }
 
-        let (sel, exit_code) = rofi
-            // for editing image
-            .arg("-kb-custom-1")
-            .arg("Alt-e")
-            .arg("-mesg")
-            .arg("Screenshots can be edited with Alt+e")
-            .run();
+        // only show edit message if an editor is provided
+        let sel = if self.edit.is_some() {
+            let (sel, exit_code) = rofi
+                .arg("-kb-custom-1")
+                .arg("Alt-e")
+                .arg("-mesg")
+                .arg("Screenshots can be edited with Alt+e")
+                .run();
 
-        // no alt keycode selected, do not edit
-        if exit_code != 10 {
-            self.edit = None;
-        }
+            // no alt keycode selected, do not edit
+            if exit_code != 10 {
+                self.edit = None;
+            }
+
+            sel
+        } else {
+            rofi.run().0
+        };
 
         match sel.as_str() {
             "Selection" => self.selection(),
