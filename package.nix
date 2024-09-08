@@ -14,7 +14,7 @@
   tesseract,
   wf-recorder,
   wl-clipboard,
-  ocr ? false,
+  ocr ? true,
 }:
 rustPlatform.buildRustPackage {
   pname = "focal";

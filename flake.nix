@@ -54,6 +54,7 @@
               nixpkgs.lib.replaceStrings [ "-dirty" ] [ "" ] self.dirtyShortRev;
         };
         default = focal;
+        no-ocr = focal.override { ocr = false; };
       });
     };
 }

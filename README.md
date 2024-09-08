@@ -10,7 +10,7 @@ focal captures screenshots / videos using rofi, with clipboard support on hyprla
 
 ## Features
 
-- rofi menu to select area to capture / capture the entire screen
+- rofi menu to select area or window to capture / capture the entire screen
 - rofi menu to select delay before capture
 - image / video is automatically copied to clipboard, ready for pasting into other programs
 - notifications when screenshots are captured
@@ -29,14 +29,19 @@ focal captures screenshots / videos using rofi, with clipboard support on hyprla
 ```
 
 Then, include it in your `environment.systemPackages` or `home.packages` by referencing the input:
-```
+```nix
 inputs.focal.packages.${pkgs.system}.default
 ```
 
 Alternatively, it can also be run directly:
 
-```
+```sh
 nix run github:iynaix/focal
+```
+
+OCR support can be optionally disabled through the use of an override:
+```nix
+(inputs.focal.packages.${pkgs.system}.default.override { ocr = false; })
 ```
 
 ## Usage
@@ -96,17 +101,17 @@ Options:
 To build focal from source
 
 - Build dependencies
-    1. Rust (cargo, rustc)
+    * Rust (cargo, rustc)
 - Runtime dependencies
-    1. [grim](https://sr.ht/~emersion/grim/)
-    2. [libnotify](https://gitlab.gnome.org/GNOME/libnotify)
-    3. [slurp](https://github.com/emersion/slurp)
-    4. [hyprland](https://github.com/hyprwm/Hyprland)
-    5. [rofi-wayland](https://github.com/lbonn/rofi)
-    6. [swappy](https://github.com/jtheoof/swappy)
-    7. [wl-clipboard](https://github.com/bugaevc/wl-clipboard)
-    8. [wf-recorder](https://github.com/ammen99/wf-recorder)
-    9. [ffmpeg](https://www.ffmpeg.org/)
+    * [grim](https://sr.ht/~emersion/grim/)
+    * [libnotify](https://gitlab.gnome.org/GNOME/libnotify)
+    * [slurp](https://github.com/emersion/slurp)
+    * [hyprland](https://github.com/hyprwm/Hyprland)
+    * [rofi-wayland](https://github.com/lbonn/rofi)
+    * [swappy](https://github.com/jtheoof/swappy)
+    * [wl-clipboard](https://github.com/bugaevc/wl-clipboard)
+    * [wf-recorder](https://github.com/ammen99/wf-recorder)
+    * [ffmpeg](https://www.ffmpeg.org/)
 
 ## Hacking
 

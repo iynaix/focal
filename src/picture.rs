@@ -156,10 +156,7 @@ impl Screenshot {
         self.edit = exit_code == 10;
 
         match sel.as_str() {
-            "Selection" => {
-                std::thread::sleep(std::time::Duration::from_secs(self.rofi_delay(theme)));
-                self.selection()
-            }
+            "Selection" => self.selection(),
             "Monitor" => {
                 std::thread::sleep(std::time::Duration::from_secs(self.rofi_delay(theme)));
                 self.monitor()
