@@ -1,4 +1,4 @@
-use execute::{command_args, Execute};
+use execute::{command, Execute};
 use hyprland::{
     data::{Animations, BezierIdent, Clients, Monitors, Transforms},
     keyword::Keyword,
@@ -176,7 +176,11 @@ impl SlurpGeom {
             .collect::<Vec<_>>()
             .join("\n");
 
-        let sel = command_args!("slurp")
+        let sel = command!("slurp")
+            .arg("-b") // background
+            .arg("#000000C0") // 0.75 opaque black
+            .arg("-B") // boxes
+            .arg("#0000007F") // 0.5 opaque black
             .stdout(Stdio::piped())
             .execute_input_output(&slurp_geoms)
             .map(|s| {
