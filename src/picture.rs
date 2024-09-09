@@ -62,6 +62,7 @@ impl Grim {
 pub struct Screenshot {
     pub delay: Option<u64>,
     pub edit: Option<String>,
+    pub icons: bool,
     pub notify: bool,
     pub ocr: Option<String>,
     pub output: PathBuf,
@@ -154,17 +155,24 @@ impl Screenshot {
     }
 
     pub fn rofi(&mut self, theme: &Option<PathBuf>) {
-        let mut opts = vec!["Selection", "Monitor"];
+        let mut opts = vec!["󰒉\tSelection", "󰍹\tMonitor", "󰍺\tAll"];
 
-        // don't show all if single monitor
+        // don't show "All" option if single monitor
         if Monitors::get()
             .expect("unable to get monitors")
             .iter()
             .count()
-            > 1
+            == 1
         {
-            opts.push("All");
+            opts.pop();
         };
+
+        if !self.icons {
+            opts = opts
+                .iter()
+                .map(|s| s.split('\t').collect::<Vec<&str>>()[1])
+                .collect();
+        }
 
         let mut rofi = Rofi::new(&opts);
 
@@ -191,7 +199,13 @@ impl Screenshot {
             rofi.run().0
         };
 
-        match sel.as_str() {
+        let sel = sel
+            .split('\t')
+            .collect::<Vec<&str>>()
+            .pop()
+            .unwrap_or_default();
+
+        match sel {
             "Selection" => self.selection(),
             "Monitor" => {
                 std::thread::sleep(std::time::Duration::from_secs(Self::rofi_delay(theme)));

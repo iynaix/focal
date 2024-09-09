@@ -2,6 +2,7 @@
 
 focal is a rofi menu for capturing and copying screenshots or videos on hyprland.
 
+<!-- 93859049_p0.webp -->
 <img src="https://i.imgur.com/bBBD8ou.png" alt="main menu" width="49%" /> <img src="https://i.imgur.com/AipxMmf.png" alt="delay menu" width="49%" />
 <img src="https://i.imgur.com/aVMtOIe.png" alt="selection" width="49%" /> <img src="https://i.imgur.com/lpJdoax.png" alt="selection" width="49%" />
 <br/>
@@ -47,7 +48,7 @@ OCR support can be optionally disabled through the use of an override:
 
 ```console
 $ focal --help
-Focal captures screenshots / videos using rofi, with clipboard support on hyprland
+focal is a rofi menu for capturing and copying screenshots or videos on hyprland.
 
 Usage: focal [OPTIONS] [FILE]
 
@@ -59,8 +60,11 @@ Options:
       --rofi
           display rofi menu for options
 
+      --no-icons
+          do not show icons for rofi menu
+
       --theme <THEME>
-          use rofi theme
+          path to a rofi theme
 
       --area <AREA>
           type of area to capture

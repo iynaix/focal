@@ -22,7 +22,7 @@ pub enum ShellCompletion {
 #[derive(Parser, Debug)]
 #[command(
     name = "focal",
-    about = "Focal captures screenshots / videos using rofi, with clipboard support on hyprland",
+    about = "focal is a rofi menu for capturing and copying screenshots or videos on hyprland.",
     version = env!("CARGO_PKG_VERSION")
 )]
 #[command(group(
@@ -39,7 +39,10 @@ pub struct FocalArgs {
     #[arg(long, action, help = "display rofi menu for options")]
     pub rofi: bool,
 
-    #[arg(long, action, help = "use rofi theme")]
+    #[arg(long, action, help = "do not show icons for rofi menu")]
+    pub no_icons: bool,
+
+    #[arg(long, action, help = "path to a rofi theme")]
     pub theme: Option<PathBuf>,
 
     #[arg(long, value_enum, help = "type of area to capture")]
@@ -182,6 +185,7 @@ fn main() {
 
         let mut screencast = Screencast {
             output,
+            icons: !args.no_icons,
             delay: args.delay,
             audio: args.audio,
         };
@@ -214,6 +218,7 @@ fn main() {
             output,
             delay: args.delay,
             edit: args.edit,
+            icons: !args.no_icons,
             notify: !args.no_notify,
             ocr: args.ocr,
         };

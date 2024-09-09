@@ -179,6 +179,7 @@ impl WfRecorder {
 
 pub struct Screencast {
     pub delay: Option<u64>,
+    pub icons: bool,
     pub audio: bool,
     pub output: PathBuf,
 }
@@ -216,7 +217,16 @@ impl Screencast {
     }
 
     pub fn rofi(&mut self, theme: &Option<PathBuf>) {
-        let mut rofi = Rofi::new(&["Selection", "Monitor"]);
+        let mut opts = vec!["Selection", "Monitor"];
+
+        if !self.icons {
+            opts = opts
+                .iter()
+                .map(|s| s.split('\t').collect::<Vec<&str>>()[1])
+                .collect();
+        }
+
+        let mut rofi = Rofi::new(&opts);
 
         if let Some(theme) = &theme {
             rofi = rofi.theme(theme.clone());
@@ -235,7 +245,13 @@ impl Screencast {
             self.audio = exit_code == 10;
         }
 
-        match sel.as_str() {
+        let sel = sel
+            .split('\t')
+            .collect::<Vec<&str>>()
+            .pop()
+            .unwrap_or_default();
+
+        match sel {
             "Monitor" => {
                 std::thread::sleep(std::time::Duration::from_secs(Self::rofi_delay(theme)));
                 self.monitor();
