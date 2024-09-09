@@ -8,6 +8,7 @@ use execute::Execute;
 pub struct Rofi {
     choices: Vec<String>,
     command: Command,
+    message: String,
     theme: PathBuf,
 }
 
@@ -19,6 +20,9 @@ impl Rofi {
         let mut cmd = Command::new("rofi");
 
         cmd.arg("-dmenu")
+            // hide the search input
+            .arg("-theme-str")
+            .arg("mainbox { children: [listview, message]; }")
             // use | as separator
             .arg("-sep")
             .arg("|")
@@ -30,6 +34,7 @@ impl Rofi {
         Self {
             choices: choices.iter().map(|s| s.as_ref().to_string()).collect(),
             command: cmd,
+            message: String::new(),
             theme: dirs::cache_dir()
                 .expect("could not get $XDG_CACHE_HOME")
                 .join("wallust/rofi-menu-noinput.rasi"),
@@ -48,14 +53,34 @@ impl Rofi {
         self
     }
 
+    #[must_use]
+    pub fn message(mut self, message: &str) -> Self {
+        self.message = message.to_string();
+        self
+    }
+
     pub fn run(self) -> (String, i32) {
-        let mut output = self.command;
+        let mut cmd = self.command;
 
         if self.theme.exists() {
-            output.arg("-theme").arg(self.theme);
+            cmd.arg("-theme").arg(self.theme);
         }
 
-        let output = output
+        if !self.message.is_empty() {
+            cmd.arg("-mesg").arg(&self.message);
+        }
+
+        // hide the search input, show message if necessary
+        cmd.arg("-theme-str").arg(format!(
+            "mainbox {{ children: {}; }}",
+            if self.message.is_empty() {
+                "[ listview ]"
+            } else {
+                "[ listview, message ]"
+            }
+        ));
+
+        let output = cmd
             .stdout(Stdio::piped())
             // use | as separator
             .execute_input_output(self.choices.join("|").as_bytes())

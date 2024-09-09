@@ -236,8 +236,7 @@ impl Screencast {
             // record audio with Alt+a
             .arg("-kb-custom-1")
             .arg("Alt-a")
-            .arg("-mesg")
-            .arg("Audio can be recorded using Alt+a")
+            .message("Audio can be recorded using Alt+a")
             .run();
 
         // custom keyboard code selected

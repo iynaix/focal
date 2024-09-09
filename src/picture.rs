@@ -185,8 +185,7 @@ impl Screenshot {
             let (sel, exit_code) = rofi
                 .arg("-kb-custom-1")
                 .arg("Alt-e")
-                .arg("-mesg")
-                .arg("Screenshots can be edited with Alt+e")
+                .message("Screenshots can be edited with Alt+e")
                 .run();
 
             // no alt keycode selected, do not edit
