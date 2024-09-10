@@ -64,6 +64,7 @@ pub struct Screenshot {
     pub edit: Option<String>,
     pub icons: bool,
     pub notify: bool,
+    pub slurp: Option<String>,
     pub ocr: Option<String>,
     pub output: PathBuf,
 }
@@ -100,7 +101,7 @@ impl Screenshot {
     }
 
     pub fn selection(&self) {
-        self.capture("", &SlurpGeom::prompt().to_string());
+        self.capture("", &SlurpGeom::prompt(&self.slurp).to_string());
     }
 
     pub fn all(&self) {

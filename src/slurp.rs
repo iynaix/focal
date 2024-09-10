@@ -145,7 +145,7 @@ impl SlurpGeom {
         }
     }
 
-    pub fn prompt() -> Self {
+    pub fn prompt(slurp_args: &Option<String>) -> Self {
         let active_wksps: Vec<_> = Monitors::get()
             .expect("unable to get monitors")
             .iter()
@@ -176,11 +176,19 @@ impl SlurpGeom {
             .collect::<Vec<_>>()
             .join("\n");
 
-        let sel = command!("slurp")
-            .arg("-b") // background
-            .arg("#000000C0") // 0.75 opaque black
-            .arg("-B") // boxes
-            .arg("#0000007F") // 0.5 opaque black
+        let mut slurp_cmd = command!("slurp");
+        if let Some(slurp_args) = slurp_args {
+            slurp_cmd.args(slurp_args.split_whitespace());
+        } else {
+            // sane slurp defaults
+            slurp_cmd
+                .arg("-b") // background
+                .arg("#000000C0") // 0.75 opaque black
+                .arg("-B") // boxes
+                .arg("#0000007F"); // 0.5 opaque black
+        }
+
+        let sel = slurp_cmd
             .stdout(Stdio::piped())
             .execute_input_output(&slurp_geoms)
             .map(|s| {

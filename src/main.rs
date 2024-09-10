@@ -51,6 +51,9 @@ pub struct FocalArgs {
     #[arg(long, help = "delay in seconds before capturing")]
     pub delay: Option<u64>, // sleep uses u64
 
+    #[arg(long, help = "options to pass to slurp")]
+    pub slurp: Option<String>,
+
     #[arg(long, action, help = "do not show notifications")]
     pub no_notify: bool,
 
@@ -188,6 +191,7 @@ fn main() {
             icons: !args.no_icons,
             delay: args.delay,
             audio: args.audio,
+            slurp: args.slurp,
         };
 
         if args.rofi {
@@ -221,6 +225,7 @@ fn main() {
             icons: !args.no_icons,
             notify: !args.no_notify,
             ocr: args.ocr,
+            slurp: args.slurp,
         };
 
         if args.rofi {

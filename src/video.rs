@@ -181,6 +181,7 @@ pub struct Screencast {
     pub delay: Option<u64>,
     pub icons: bool,
     pub audio: bool,
+    pub slurp: Option<String>,
     pub output: PathBuf,
 }
 
@@ -203,7 +204,7 @@ impl Screencast {
     }
 
     pub fn selection(&self) {
-        let (mon, filter) = SlurpGeom::prompt().to_ffmpeg_geom();
+        let (mon, filter) = SlurpGeom::prompt(&self.slurp).to_ffmpeg_geom();
         self.capture(&mon, &filter);
     }
 

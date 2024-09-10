@@ -74,6 +74,9 @@ Options:
       --delay <DELAY>
           delay in seconds before capturing
 
+      --slurp <SLURP>
+          options to pass to slurp
+
       --no-notify
           do not show notifications
 
