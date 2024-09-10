@@ -121,21 +121,20 @@ impl SlurpGeom {
         // remove fade animation
         let anims = Animations::get().expect("unable to get animations");
         anims.0.iter().find_map(|a| {
-            if a.name == "fadeLayers" {
+            (a.name == "fadeLayers").then(|| {
                 let beizer = match &a.bezier {
                     BezierIdent::None => "",
                     BezierIdent::Default => "default",
                     BezierIdent::Specified(s) => s.as_str(),
                 };
-                return Some(format!(
+                format!(
                     "{},{},{},{}",
                     a.name,
                     std::convert::Into::<u8>::into(a.enabled),
                     a.speed,
                     beizer
-                ));
-            }
-            None
+                )
+            })
         })
     }
 
@@ -155,16 +154,12 @@ impl SlurpGeom {
         let windows = Clients::get().expect("unable to get clients");
         let window_geoms: Vec<_> = windows
             .iter()
-            .filter_map(|win| {
-                if active_wksps.contains(&win.workspace.id) {
-                    return Some(Self {
-                        x: win.at.0.into(),
-                        y: win.at.1.into(),
-                        w: win.size.0.into(),
-                        h: win.size.1.into(),
-                    });
-                }
-                None
+            .filter(|&win| (active_wksps.contains(&win.workspace.id)))
+            .map(|win| Self {
+                x: win.at.0.into(),
+                y: win.at.1.into(),
+                w: win.size.0.into(),
+                h: win.size.1.into(),
             })
             .collect();
 
