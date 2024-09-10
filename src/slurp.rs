@@ -182,6 +182,8 @@ impl SlurpGeom {
         } else {
             // sane slurp defaults
             slurp_cmd
+                .arg("-c") // selection border
+                .arg("#000000") // opaque black
                 .arg("-b") // background
                 .arg("#000000C0") // 0.75 opaque black
                 .arg("-B") // boxes
