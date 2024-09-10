@@ -17,6 +17,11 @@ which = "6.0.3"
 chrono = "0.4.38"
 hyprland = { version = "0.4.0-alpha.3" }
 
+[features]
+default = ["hyprland"]
+hyprland = []
+# sway = []
+
 [lints.rust]
 unsafe_code = "forbid"
 

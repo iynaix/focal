@@ -1,5 +1,14 @@
 use std::path::PathBuf;
 
+#[cfg(feature = "hyprland")]
+mod hyprland;
+use hyprland::HyprMonitors as Monitors;
+
+// #[cfg(feature = "sway")]
+// mod sway;
+// use sway::SwayMonitors as Monitors;
+
+mod monitor;
 mod picture;
 mod rofi;
 mod slurp;

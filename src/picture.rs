@@ -1,11 +1,7 @@
 use std::{path::PathBuf, process::Stdio};
 
-use crate::{Rofi, SlurpGeom};
+use crate::{monitor::FocalMonitors, Monitors, Rofi, SlurpGeom};
 use execute::{command, command_args, Execute};
-use hyprland::{
-    data::{Monitor, Monitors},
-    shared::{HyprData, HyprDataActive},
-};
 
 #[derive(Default)]
 struct Grim {
@@ -96,8 +92,7 @@ impl Screenshot {
     }
 
     pub fn monitor(&self) {
-        let focused = Monitor::get_active().expect("unable to get active monitor");
-        self.capture(&focused.name, "");
+        self.capture(&Monitors::focused().name, "");
     }
 
     pub fn selection(&self) {
@@ -107,9 +102,9 @@ impl Screenshot {
     pub fn all(&self) {
         let mut w = 0;
         let mut h = 0;
-        for mon in &Monitors::get().expect("unable to get monitors") {
-            w = w.max(mon.x + i32::from(mon.width));
-            h = h.max(mon.y + i32::from(mon.height));
+        for mon in Monitors::all() {
+            w = w.max(mon.x + mon.w);
+            h = h.max(mon.y + mon.h);
         }
 
         self.capture("", &format!("0,0 {w}x{h}"));
@@ -159,12 +154,7 @@ impl Screenshot {
         let mut opts = vec!["󰒉\tSelection", "󰍹\tMonitor", "󰍺\tAll"];
 
         // don't show "All" option if single monitor
-        if Monitors::get()
-            .expect("unable to get monitors")
-            .iter()
-            .count()
-            == 1
-        {
+        if Monitors::all().len() == 1 {
             opts.pop();
         };
 

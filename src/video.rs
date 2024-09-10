@@ -1,9 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-use crate::{Rofi, SlurpGeom};
+use crate::{monitor::FocalMonitors, Monitors, Rofi, SlurpGeom};
 use execute::{command, command_args, Execute};
-use hyprland::{data::Monitor, shared::HyprDataActive};
 
 #[derive(Serialize, Deserialize)]
 struct LockFile {
@@ -209,8 +208,7 @@ impl Screencast {
     }
 
     pub fn monitor(&self) {
-        let focused = Monitor::get_active().expect("unable to get active monitor");
-        self.capture(&focused.name, "");
+        self.capture(&Monitors::focused().name, "");
     }
 
     pub fn stop(notify: bool) -> bool {

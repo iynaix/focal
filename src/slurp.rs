@@ -1,10 +1,10 @@
 use execute::{command, Execute};
-use hyprland::{
-    data::{Animations, BezierIdent, Clients, Monitors, Transforms},
-    keyword::Keyword,
-    shared::HyprData,
-};
 use std::{fmt, process::Stdio};
+
+use crate::{
+    monitor::{FocalMonitors, Rotation},
+    Monitors,
+};
 
 #[derive(Debug)]
 pub struct ParseError {
@@ -28,10 +28,10 @@ impl fmt::Display for ParseError {
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone, Copy)]
 pub struct SlurpGeom {
-    w: i32,
-    h: i32,
-    x: i32,
-    y: i32,
+    pub w: i32,
+    pub h: i32,
+    pub x: i32,
+    pub y: i32,
 }
 
 impl fmt::Display for SlurpGeom {
@@ -68,15 +68,10 @@ impl SlurpGeom {
     pub fn to_ffmpeg_geom(self) -> (String, String) {
         let Self { x, y, w, h } = self;
 
-        let monitors = Monitors::get().expect("unable to get monitors");
+        let monitors = Monitors::all();
         let mon = monitors
             .iter()
-            .find(|m| {
-                x >= m.x
-                    && x <= m.x + i32::from(m.width)
-                    && y >= m.y
-                    && y <= m.y + i32::from(m.height)
-            })
+            .find(|m| x >= m.x && x <= m.x + m.w && y >= m.y && y <= m.y + m.h)
             .unwrap_or_else(|| {
                 panic!("No monitor found for slurp region");
             });
@@ -95,21 +90,21 @@ impl SlurpGeom {
         let final_w = round2(h);
         let final_h = round2(w);
 
-        let filter = match mon.transform {
-            Transforms::Normal => format!("crop=w={w}:h={h}:x={x}:y={y}"),
+        let filter = match mon.rotation {
+            Rotation::Normal => format!("crop=w={w}:h={h}:x={x}:y={y}"),
             // clockwise
-            Transforms::Normal90 => {
-                let final_y = i32::from(mon.width) - x - w;
+            Rotation::Normal90 => {
+                let final_y = mon.w - x - w;
                 let final_x = y;
                 format!("crop=w={final_w}:h={final_h}:x={final_x}:y={final_y}, transpose=1")
             }
             // anti-clockwise
-            Transforms::Normal270 => {
-                let final_x = i32::from(mon.width) - y - h;
+            Rotation::Normal270 => {
+                let final_x = mon.w - y - h;
                 let final_y = x;
                 format!("crop=w={final_w}:h={final_h}:x={final_x}:y={final_y}, transpose=2")
             }
-            _ => {
+            Rotation::Other => {
                 unimplemented!("Unknown monitor transform");
             }
         };
@@ -117,7 +112,13 @@ impl SlurpGeom {
         (mon.name.clone(), filter)
     }
 
+    #[cfg(feature = "hyprland")]
     pub fn disable_fade_animation() -> Option<String> {
+        use hyprland::{
+            data::{Animations, BezierIdent},
+            shared::HyprData,
+        };
+
         // remove fade animation
         let anims = Animations::get().expect("unable to get animations");
         anims.0.iter().find_map(|a| {
@@ -138,30 +139,25 @@ impl SlurpGeom {
         })
     }
 
+    #[cfg(not(feature = "hyprland"))]
+    pub fn disable_fade_animation() -> Option<String> {
+        None
+    }
+
+    #[cfg(feature = "hyprland")]
     pub fn reset_fade_animation(anim: &Option<String>) {
+        use hyprland::keyword::Keyword;
+
         if let Some(anim) = anim {
             Keyword::set("animations", anim.clone()).expect("unable to set animations");
         }
     }
 
-    pub fn prompt(slurp_args: &Option<String>) -> Self {
-        let active_wksps: Vec<_> = Monitors::get()
-            .expect("unable to get monitors")
-            .iter()
-            .map(|mon| mon.active_workspace.id)
-            .collect();
+    #[cfg(not(feature = "hyprland"))]
+    pub fn reset_fade_animation(anim: &Option<String>) {}
 
-        let windows = Clients::get().expect("unable to get clients");
-        let window_geoms: Vec<_> = windows
-            .iter()
-            .filter(|&win| (active_wksps.contains(&win.workspace.id)))
-            .map(|win| Self {
-                x: win.at.0.into(),
-                y: win.at.1.into(),
-                w: win.size.0.into(),
-                h: win.size.1.into(),
-            })
-            .collect();
+    pub fn prompt(slurp_args: &Option<String>) -> Self {
+        let window_geoms = Monitors::window_geoms();
 
         let orig_fade_anim = Self::disable_fade_animation();
 
