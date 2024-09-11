@@ -213,10 +213,11 @@ impl Screenshot {
         };
     }
 
+    /// prompts the user for delay using rofi if not provided as a cli flag
     fn rofi_delay(theme: &Option<PathBuf>) -> u64 {
-        let delay_options = ["0", "3", "5"];
+        let delay_options = ["0s", "3s", "5s", "10s"];
 
-        let mut rofi = Rofi::new(&delay_options);
+        let mut rofi = Rofi::new(&delay_options).message("Select a delay");
         if let Some(theme) = theme {
             rofi = rofi.theme(theme.clone());
         }
@@ -228,6 +229,8 @@ impl Screenshot {
             std::process::exit(1);
         }
 
-        sel.parse::<u64>().expect("Invalid delay specified")
+        sel.replace('s', "")
+            .parse::<u64>()
+            .expect("Invalid delay specified")
     }
 }

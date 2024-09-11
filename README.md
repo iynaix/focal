@@ -3,7 +3,7 @@
 focal is a rofi menu for capturing and copying screenshots or videos on hyprland / sway.
 
 <!-- 93859049_p0.webp -->
-<img src="https://i.imgur.com/3DrXV0I.png" alt="main menu" width="49%" /> <img src="https://i.imgur.com/AipxMmf.png" alt="delay menu" width="49%" />
+<img src="https://i.imgur.com/3DrXV0I.png" alt="main menu" width="49%" /> <img src="https://i.imgur.com/3kKoNJv.png" alt="delay menu" width="49%" />
 <img src="https://i.imgur.com/5NXnkKm.png" alt="selection" width="49%" /> <img src="https://i.imgur.com/sm7PJgw.png" alt="selection" width="49%" />
 <br/>
 <em>Wallpaper made by the awesome <a href="https://www.pixiv.net/en/users/2993192">Rosuuri</a></em>
