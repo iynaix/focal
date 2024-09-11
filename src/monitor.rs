@@ -1,5 +1,6 @@
 use crate::SlurpGeom;
 
+#[derive(Debug)]
 pub enum Rotation {
     Normal,
     Normal90,  // clockwise
@@ -8,6 +9,7 @@ pub enum Rotation {
 }
 
 #[allow(clippy::module_name_repetitions)]
+#[derive(Debug)]
 pub struct FocalMonitor {
     pub name: String,
     pub x: i32,

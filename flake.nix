@@ -35,6 +35,7 @@
                 slurp
                 wl-clipboard
                 hyprland
+                sway
                 tesseract
               ];
 
@@ -54,6 +55,8 @@
         };
         default = focal;
         no-ocr = focal.override { ocr = false; };
+        focal-hyprland = focal.override { backend = "hyprland"; };
+        focal-sway = focal.override { backend = "sway"; };
       });
     };
 }

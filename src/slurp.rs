@@ -140,7 +140,7 @@ impl SlurpGeom {
     }
 
     #[cfg(not(feature = "hyprland"))]
-    pub fn disable_fade_animation() -> Option<String> {
+    pub const fn disable_fade_animation() -> Option<String> {
         None
     }
 
@@ -154,7 +154,7 @@ impl SlurpGeom {
     }
 
     #[cfg(not(feature = "hyprland"))]
-    pub fn reset_fade_animation(anim: &Option<String>) {}
+    pub const fn reset_fade_animation(_anim: &Option<String>) {}
 
     pub fn prompt(slurp_args: &Option<String>) -> Self {
         let window_geoms = Monitors::window_geoms();

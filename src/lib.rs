@@ -1,12 +1,14 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, process::Command};
 
 #[cfg(feature = "hyprland")]
 mod hyprland;
+#[cfg(feature = "hyprland")]
 use hyprland::HyprMonitors as Monitors;
 
-// #[cfg(feature = "sway")]
-// mod sway;
-// use sway::SwayMonitors as Monitors;
+#[cfg(feature = "sway")]
+mod sway;
+#[cfg(feature = "sway")]
+use sway::SwayMonitors as Monitors;
 
 mod monitor;
 mod picture;
@@ -31,4 +33,11 @@ pub fn create_parent_dirs(path: PathBuf) -> PathBuf {
 
 pub fn iso8601_filename() -> String {
     chrono::Local::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true)
+}
+
+pub fn command_json<T: serde::de::DeserializeOwned>(cmd: &mut Command) -> T {
+    let output = cmd.output().expect("Failed to execute command");
+    let output_str = String::from_utf8(output.stdout).expect("unable to parse utf8 from command");
+
+    serde_json::from_str(&output_str).expect("unable to parse json from command")
 }

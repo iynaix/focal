@@ -16,11 +16,12 @@ serde = "1.0.210"
 which = "6.0.3"
 chrono = "0.4.38"
 hyprland = { version = "0.4.0-alpha.3" }
+serde_derive = "1.0.210"
 
 [features]
 default = ["hyprland"]
 hyprland = []
-# sway = []
+sway = []
 
 [lints.rust]
 unsafe_code = "forbid"

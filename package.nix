@@ -6,15 +6,21 @@
   makeWrapper,
   ffmpeg,
   grim,
-  hyprland,
   libnotify,
   rofi-wayland,
   slurp,
   tesseract,
   wf-recorder,
   wl-clipboard,
+  hyprland,
+  sway,
+  backend ? "hyprland",
   ocr ? true,
 }:
+assert lib.assertOneOf "backend" backend [
+  "hyprland"
+  "sway"
+];
 rustPlatform.buildRustPackage {
   pname = "focal";
 
@@ -26,6 +32,12 @@ rustPlatform.buildRustPackage {
   env.NIX_RELEASE_VERSION = version;
 
   cargoLock.lockFile = ./Cargo.lock;
+
+  cargoBuildFlags = lib.optionals (backend == "sway") [
+    "--no-default-features"
+    "--features"
+    "sway"
+  ];
 
   nativeBuildInputs = [
     installShellFiles
@@ -41,16 +53,19 @@ rustPlatform.buildRustPackage {
 
   postFixup =
     let
-      binaries = [
-        grim
-        libnotify
-        slurp
-        wl-clipboard
-        hyprland
-        rofi-wayland
-        wf-recorder
-        ffmpeg
-      ] ++ lib.optional ocr tesseract;
+      binaries =
+        [
+          grim
+          libnotify
+          slurp
+          wl-clipboard
+          rofi-wayland
+          wf-recorder
+          ffmpeg
+        ]
+        ++ lib.optional (backend == "hyprland") hyprland
+        ++ lib.optional (backend == "sway") sway
+        ++ lib.optional ocr tesseract;
     in
     "wrapProgram $out/bin/focal --prefix PATH : ${lib.makeBinPath binaries}";
 

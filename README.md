@@ -1,6 +1,6 @@
 # focal
 
-focal is a rofi menu for capturing and copying screenshots or videos on hyprland.
+focal is a rofi menu for capturing and copying screenshots or videos on hyprland / sway.
 
 <!-- 93859049_p0.webp -->
 <img src="https://i.imgur.com/3DrXV0I.png" alt="main menu" width="49%" /> <img src="https://i.imgur.com/AipxMmf.png" alt="delay menu" width="49%" />
@@ -15,6 +15,7 @@ focal is a rofi menu for capturing and copying screenshots or videos on hyprland
 - image / video is automatically copied to clipboard, ready for pasting into other programs
 - notifications when screenshots are captured
 - all options are also avaiable via a CLI
+- supports either hyprland or sway
 - OCR support to select text from captured image (CLI only)
 
 ## Installation
@@ -32,6 +33,10 @@ Then, include it in your `environment.systemPackages` or `home.packages` by refe
 ```nix
 inputs.focal.packages.${pkgs.system}.default
 ```
+For sway support, use:
+```nix
+inputs.focal.packages.${pkgs.system}.focal-sway
+```
 
 Alternatively, it can also be run directly:
 
@@ -48,7 +53,7 @@ OCR support can be optionally disabled through the use of an override:
 
 ```console
 $ focal --help
-focal is a rofi menu for capturing and copying screenshots or videos on hyprland.
+focal is a rofi menu for capturing and copying screenshots or videos on hyprland / sway.
 
 Usage: focal [OPTIONS] [FILE]
 
@@ -112,7 +117,8 @@ To build focal from source
     * [grim](https://sr.ht/~emersion/grim/)
     * [libnotify](https://gitlab.gnome.org/GNOME/libnotify)
     * [slurp](https://github.com/emersion/slurp)
-    * [hyprland](https://github.com/hyprwm/Hyprland)
+    * [hyprland](https://hyprland.org/)
+    * [sway](https://swaywm.org/)
     * [rofi-wayland](https://github.com/lbonn/rofi)
     * [wl-clipboard](https://github.com/bugaevc/wl-clipboard)
     * [wf-recorder](https://github.com/ammen99/wf-recorder)

@@ -354,6 +354,7 @@ dependencies = [
  "hyprland",
  "regex",
  "serde",
+ "serde_derive",
  "serde_json",
  "sysinfo",
  "which",

@@ -22,7 +22,7 @@ pub enum ShellCompletion {
 #[derive(Parser, Debug)]
 #[command(
     name = "focal",
-    about = "focal is a rofi menu for capturing and copying screenshots or videos on hyprland.",
+    about = "focal is a rofi menu for capturing and copying screenshots or videos on hyprland / sway.",
     version = env!("CARGO_PKG_VERSION")
 )]
 #[command(group(
