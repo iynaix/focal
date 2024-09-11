@@ -60,7 +60,11 @@ pub struct FocalArgs {
     #[arg(long, action, help = "do not save the file permanently")]
     pub no_save: bool,
 
-    #[arg(long, action, help = "record video instead of screenshots")]
+    #[arg(
+        long,
+        action,
+        help = "records video instead of screenshots / stops any previous recordings"
+    )]
     pub video: bool,
 
     #[arg(long, action, help = "capture video with audio")]
@@ -112,7 +116,7 @@ fn generate_completions(shell_completion: &ShellCompletion) {
 
 /// check if all required programs are installed
 fn check_programs(args: &FocalArgs) {
-    let mut progs = std::collections::HashSet::from(["notify-send", "wl-copy"]);
+    let mut progs = std::collections::HashSet::from(["wl-copy", "xdg-open"]);
 
     if args.video {
         progs.insert("wf-recorder");

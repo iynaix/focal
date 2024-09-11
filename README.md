@@ -33,7 +33,7 @@ Then, include it in your `environment.systemPackages` or `home.packages` by refe
 ```nix
 inputs.focal.packages.${pkgs.system}.default
 ```
-For sway support, use:
+For **sway** support, use:
 ```nix
 inputs.focal.packages.${pkgs.system}.focal-sway
 ```
@@ -89,7 +89,7 @@ Options:
           do not save the file permanently
 
       --video
-          record video instead of screenshots
+          records video instead of screenshots / stops any previous recordings
 
       --audio
           capture video with audio
@@ -105,6 +105,19 @@ Options:
 
   -V, --version
           Print version
+```
+
+> [!TIP]
+> Invoking `focal --video` a second time stops any currently recording videos.
+
+Example usage as a **hyprland** keybinding:
+```
+bind=$mainMod, backslash, exec, focal --area selection
+```
+
+Similarly, for a **sway** keybinding:
+```
+bindsym $mod+backslash exec "focal --area selection"
 ```
 
 ## Packaging
