@@ -31,17 +31,19 @@ focal is a rofi menu for capturing and copying screenshots or videos on hyprland
 
 Then, include it in your `environment.systemPackages` or `home.packages` by referencing the input:
 ```nix
+# for hyprland
 inputs.focal.packages.${pkgs.system}.default
-```
-For **sway** support, use:
-```nix
+# for sway
 inputs.focal.packages.${pkgs.system}.focal-sway
 ```
 
 Alternatively, it can also be run directly:
 
 ```sh
+# for hyprland
 nix run github:iynaix/focal
+# for sway
+nix run github:iynaix/focal#focal-sway
 ```
 
 OCR support can be optionally disabled through the use of an override:

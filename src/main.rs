@@ -45,7 +45,7 @@ pub struct FocalArgs {
     #[arg(long, action, help = "path to a rofi theme")]
     pub theme: Option<PathBuf>,
 
-    #[arg(long, value_enum, help = "type of area to capture")]
+    #[arg(long, aliases = ["capture"], value_enum, help = "type of area to capture")]
     pub area: Option<CaptureArea>,
 
     #[arg(long, help = "delay in seconds before capturing")]
@@ -85,6 +85,7 @@ pub struct FocalArgs {
         default_missing_value = "",
         action,
         long_help = "runs OCR on the selected text, defaulting to English, supported languages can be shown using 'tesseract --list-langs'",
+        hide = cfg!(not(feature = "ocr"))
     )]
     pub ocr: Option<String>,
 
@@ -164,6 +165,15 @@ fn main() {
             .error(
                 clap::error::ErrorKind::MissingRequiredArgument,
                 "Either --rofi or --area is required.",
+            )
+            .exit()
+    }
+
+    if !cfg!(feature = "ocr") && args.ocr.is_some() {
+        FocalArgs::command()
+            .error(
+                clap::error::ErrorKind::UnknownArgument,
+                "OCR support was not built in this version of focal.",
             )
             .exit()
     }

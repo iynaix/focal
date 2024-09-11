@@ -33,11 +33,16 @@ rustPlatform.buildRustPackage {
 
   cargoLock.lockFile = ./Cargo.lock;
 
-  cargoBuildFlags = lib.optionals (backend == "sway") [
-    "--no-default-features"
-    "--features"
-    "sway"
-  ];
+  cargoBuildFlags =
+    [
+      "--no-default-features"
+      "--features"
+      backend
+    ]
+    ++ lib.optionals ocr [
+      "--features"
+      "ocr"
+    ];
 
   nativeBuildInputs = [
     installShellFiles
@@ -72,7 +77,7 @@ rustPlatform.buildRustPackage {
   meta = with lib; {
     description = "Focal captures screenshots / videos using rofi, with clipboard support on hyprland";
     mainProgram = "focal";
-    homepage = "https://github.com/iynaix/dotfiles";
+    homepage = "https://github.com/iynaix/focal";
     license = licenses.mit;
     maintainers = [ maintainers.iynaix ];
   };
