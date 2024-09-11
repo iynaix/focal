@@ -41,3 +41,22 @@ pub fn command_json<T: serde::de::DeserializeOwned>(cmd: &mut Command) -> T {
 
     serde_json::from_str(&output_str).expect("unable to parse json from command")
 }
+
+pub fn show_notification(body: &str, output: &PathBuf) {
+    notify_rust::Notification::new()
+        .body(body)
+        .icon(&output.to_string_lossy())
+        .appname("focal")
+        .timeout(3000)
+        .action("open", "open")
+        .show()
+        .expect("Failed to send notification")
+        .wait_for_action(|action| {
+            if action == "open" {
+                std::process::Command::new("xdg-open")
+                    .arg(output)
+                    .spawn()
+                    .expect("Failed to open file");
+            }
+        });
+}

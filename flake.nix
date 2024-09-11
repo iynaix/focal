@@ -29,14 +29,14 @@
 
               packages = with pkgs; [
                 cargo-edit
-                rofi-wayland
                 grim
-                libnotify
-                slurp
-                wl-clipboard
                 hyprland
+                rofi-wayland
+                slurp
                 sway
                 tesseract
+                wl-clipboard
+                xdg-utils # xdg-open
               ];
 
               languages.rust.enable = true;

@@ -10,10 +10,10 @@ focal is a rofi menu for capturing and copying screenshots or videos on hyprland
 
 ## Features
 
-- rofi menu to select area or window to capture / capture the entire screen
+- rofi menu to select area / window / entire screen to capture
 - rofi menu to select delay before capture
 - image / video is automatically copied to clipboard, ready for pasting into other programs
-- notifications when screenshots are captured
+- notifications that open captured file when clicked
 - all options are also avaiable via a CLI
 - supports either hyprland or sway
 - OCR support to select text from captured image (CLI only)
@@ -115,7 +115,6 @@ To build focal from source
     * Rust (cargo, rustc)
 - Runtime dependencies
     * [grim](https://sr.ht/~emersion/grim/)
-    * [libnotify](https://gitlab.gnome.org/GNOME/libnotify)
     * [slurp](https://github.com/emersion/slurp)
     * [hyprland](https://hyprland.org/)
     * [sway](https://swaywm.org/)

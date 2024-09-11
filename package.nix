@@ -6,12 +6,12 @@
   makeWrapper,
   ffmpeg,
   grim,
-  libnotify,
   rofi-wayland,
   slurp,
   tesseract,
   wf-recorder,
   wl-clipboard,
+  xdg-utils,
   hyprland,
   sway,
   backend ? "hyprland",
@@ -55,13 +55,13 @@ rustPlatform.buildRustPackage {
     let
       binaries =
         [
-          grim
-          libnotify
-          slurp
-          wl-clipboard
-          rofi-wayland
-          wf-recorder
           ffmpeg
+          grim
+          rofi-wayland
+          slurp
+          wf-recorder
+          wl-clipboard
+          xdg-utils
         ]
         ++ lib.optional (backend == "hyprland") hyprland
         ++ lib.optional (backend == "sway") sway

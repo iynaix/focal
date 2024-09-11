@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-use crate::{monitor::FocalMonitors, Monitors, Rofi, SlurpGeom};
-use execute::{command, command_args, Execute};
+use crate::{monitor::FocalMonitors, show_notification, Monitors, Rofi, SlurpGeom};
+use execute::{command, Execute};
 
 #[derive(Serialize, Deserialize)]
 struct LockFile {
@@ -167,12 +167,10 @@ impl WfRecorder {
             .expect("failed to create notification thumbnail");
 
         // show notifcation with the video thumbnail
-        command_args!("notify-send", "-t", "3000", "-a", "focal")
-            .arg(format!("Video captured to {}", video.display()))
-            .arg("-i")
-            .arg(&thumb_path)
-            .execute()
-            .expect("Failed to send screencast notification");
+        show_notification(
+            &format!("Screenshot captured to {}", video.display()),
+            &thumb_path,
+        );
     }
 }
 

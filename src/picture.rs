@@ -1,7 +1,7 @@
 use std::{path::PathBuf, process::Stdio};
 
-use crate::{monitor::FocalMonitors, Monitors, Rofi, SlurpGeom};
-use execute::{command, command_args, Execute};
+use crate::{monitor::FocalMonitors, show_notification, Monitors, Rofi, SlurpGeom};
+use execute::{command, Execute};
 
 #[derive(Default)]
 struct Grim {
@@ -45,12 +45,10 @@ impl Grim {
 
         // show a notification
         if notify {
-            command_args!("notify-send", "-t", "3000", "-a", "focal")
-                .arg(format!("Screenshot captured to {}", self.output.display()))
-                .arg("-i")
-                .arg(&self.output)
-                .execute()
-                .expect("Failed to send screenshot notification");
+            show_notification(
+                &format!("Screenshot captured to {}", &self.output.display()),
+                &self.output,
+            );
         }
     }
 }
