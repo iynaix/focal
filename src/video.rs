@@ -1,8 +1,26 @@
+use clap::Args;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 use crate::{monitor::FocalMonitors, show_notification, Monitors, Rofi, SlurpGeom};
 use execute::{command, Execute};
+
+#[allow(clippy::module_name_repetitions)]
+#[derive(Args, Debug)]
+#[command(next_help_heading = "Video Options")]
+pub struct VideoArgs {
+    #[arg(
+        long,
+        action,
+        id = "video",
+        help = "Records video / stops previous recordings",
+        long_help = "Records video instead of screenshots\nRunning a second time stops any previous recordings"
+    )]
+    pub video: bool,
+
+    #[arg(long, action, help = "Capture video with audio", requires = "video")]
+    pub audio: bool,
+}
 
 #[derive(Serialize, Deserialize)]
 struct LockFile {
@@ -168,7 +186,7 @@ impl WfRecorder {
 
         // show notifcation with the video thumbnail
         show_notification(
-            &format!("Screenshot captured to {}", video.display()),
+            &format!("Video captured to {}", video.display()),
             &thumb_path,
         );
     }
@@ -210,7 +228,7 @@ impl Screencast {
     }
 
     pub fn stop(notify: bool) -> bool {
-        WfRecorder::stop(notify)
+        LockFile::read().map_or_else(|_| false, |_| WfRecorder::stop(notify))
     }
 
     pub fn rofi(&mut self, theme: &Option<PathBuf>) {

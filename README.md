@@ -57,56 +57,63 @@ OCR support can be optionally disabled through the use of an override:
 $ focal --help
 focal is a rofi menu for capturing and copying screenshots or videos on hyprland / sway.
 
-Usage: focal [OPTIONS] [FILE]
+Usage: focal [OPTIONS] <--area <AREA>|--rofi> [FILE]
 
 Arguments:
   [FILE]
-          files are created in XDG_PICTURES_DIR/Screenshots or XDG_VIDEOS_DIR/Screencasts if not specified
+          Files are created in XDG_PICTURES_DIR/Screenshots or XDG_VIDEOS_DIR/Screencasts if not specified
 
 Options:
-      --rofi
-          display rofi menu for options
+  -a, --area <AREA>
+          Type of area to capture
 
-      --no-icons
-          do not show icons for rofi menu
-
-      --theme <THEME>
-          path to a rofi theme
-
-      --area <AREA>
-          type of area to capture
-
+          [aliases: capture]
           [possible values: monitor, selection, all]
 
-      --delay <DELAY>
-          delay in seconds before capturing
+  -t, --delay <DELAY>
+          Delay in seconds before capturing
 
-      --slurp <SLURP>
-          options to pass to slurp
+  -s, --slurp <SLURP>
+          Options to pass to slurp
 
       --no-notify
-          do not show notifications
+          Do not show notifications
 
       --no-save
-          do not save the file permanently
-
-      --video
-          records video instead of screenshots / stops any previous recordings
-
-      --audio
-          capture video with audio
-
-      --edit <PROGRAM>
-          edit screenshot using PROGRAM
-
-      --ocr [<LANG>]
-          runs OCR on the selected text, defaulting to English, supported languages can be shown using 'tesseract --list-langs'
+          Do not save the file permanently
 
   -h, --help
           Print help (see a summary with '-h')
 
   -V, --version
           Print version
+
+Rofi Options:
+      --rofi
+          Display rofi menu for options
+
+      --no-icons
+          Do not show icons for rofi menu
+
+      --theme <THEME>
+          Path to a rofi theme
+
+Image Options:
+  -e, --edit <COMMAND>
+          Edit screenshot using COMMAND
+          The image path will be passed as $IMAGE
+
+      --ocr [<LANG>]
+          Runs OCR on the selected text, defaulting to English
+          Supported languages can be shown using 'tesseract --list-langs'
+
+Video Options:
+      --video
+          Records video instead of screenshots
+          Running a second time stops any previous recordings
+
+      --audio
+          Capture video with audio
 ```
 
 > [!TIP]

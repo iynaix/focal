@@ -1,7 +1,36 @@
 use std::{path::PathBuf, process::Stdio};
 
 use crate::{monitor::FocalMonitors, show_notification, Monitors, Rofi, SlurpGeom};
+use clap::Args;
 use execute::{command, Execute};
+
+#[allow(clippy::module_name_repetitions)]
+#[derive(Args, Debug)]
+#[command(next_help_heading = "Image Options")]
+pub struct ImageArgs {
+    #[arg(
+        short,
+        long,
+        action,
+        help = "Edit screenshot using COMMAND\nThe image path will be passed as $IMAGE",
+        value_name = "COMMAND",
+        conflicts_with = "ocr"
+    )]
+    pub edit: Option<String>,
+
+    #[arg(
+        long,
+        num_args = 0..=1,
+        value_name = "LANG",
+        default_missing_value = "",
+        action,
+        help = "Runs OCR on the selected text",
+        long_help = "Runs OCR on the selected text, defaulting to English\nSupported languages can be shown using 'tesseract --list-langs'",
+        conflicts_with = "edit",
+        hide = cfg!(not(feature = "ocr"))
+    )]
+    pub ocr: Option<String>,
+}
 
 #[derive(Default)]
 struct Grim {

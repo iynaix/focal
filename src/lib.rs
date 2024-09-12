@@ -10,13 +10,14 @@ mod sway;
 #[cfg(feature = "sway")]
 use sway::SwayMonitors as Monitors;
 
+pub mod cli;
+pub mod image;
 mod monitor;
-mod picture;
-mod rofi;
+pub mod rofi;
 mod slurp;
-mod video;
+pub mod video;
 
-pub use picture::Screenshot;
+pub use image::Screenshot;
 pub use rofi::Rofi;
 pub use slurp::SlurpGeom;
 pub use video::Screencast;

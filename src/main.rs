@@ -1,131 +1,22 @@
 use std::path::PathBuf;
 
-use clap::{ArgGroup, CommandFactory, Parser, Subcommand, ValueEnum};
-use clap_complete::{generate, Shell};
-use focal::{create_parent_dirs, iso8601_filename, Screencast, Screenshot};
-
-#[derive(Subcommand, ValueEnum, Debug, Clone)]
-pub enum CaptureArea {
-    Monitor,
-    Selection,
-    All,
-}
-
-#[derive(Subcommand, ValueEnum, Debug, Clone)]
-pub enum ShellCompletion {
-    Bash,
-    Zsh,
-    Fish,
-}
-
-#[allow(clippy::struct_excessive_bools)]
-#[derive(Parser, Debug)]
-#[command(
-    name = "focal",
-    about = "focal is a rofi menu for capturing and copying screenshots or videos on hyprland / sway.",
-    version = env!("CARGO_PKG_VERSION")
-)]
-#[command(group(
-    ArgGroup::new("video_options")
-        .requires("video")
-        .args(["audio"]),
-))]
-#[command(group(
-    ArgGroup::new("image_options")
-        .conflicts_with("video")
-        .args(["edit", "ocr"]),
-))]
-pub struct FocalArgs {
-    #[arg(long, action, help = "display rofi menu for options")]
-    pub rofi: bool,
-
-    #[arg(long, action, help = "do not show icons for rofi menu")]
-    pub no_icons: bool,
-
-    #[arg(long, action, help = "path to a rofi theme")]
-    pub theme: Option<PathBuf>,
-
-    #[arg(long, aliases = ["capture"], value_enum, help = "type of area to capture")]
-    pub area: Option<CaptureArea>,
-
-    #[arg(long, help = "delay in seconds before capturing")]
-    pub delay: Option<u64>, // sleep uses u64
-
-    #[arg(long, help = "options to pass to slurp")]
-    pub slurp: Option<String>,
-
-    #[arg(long, action, help = "do not show notifications")]
-    pub no_notify: bool,
-
-    #[arg(long, action, help = "do not save the file permanently")]
-    pub no_save: bool,
-
-    #[arg(
-        long,
-        action,
-        help = "records video instead of screenshots / stops any previous recordings"
-    )]
-    pub video: bool,
-
-    #[arg(long, action, help = "capture video with audio")]
-    pub audio: bool,
-
-    #[arg(
-        long,
-        action,
-        help = "edit screenshot using PROGRAM",
-        value_name = "PROGRAM"
-    )]
-    pub edit: Option<String>,
-
-    #[arg(
-        long,
-        num_args = 0..=1,
-        value_name = "LANG",
-        default_missing_value = "",
-        action,
-        long_help = "runs OCR on the selected text, defaulting to English, supported languages can be shown using 'tesseract --list-langs'",
-        hide = cfg!(not(feature = "ocr"))
-    )]
-    pub ocr: Option<String>,
-
-    #[arg(
-        name = "FILE",
-        long_help = "files are created in XDG_PICTURES_DIR/Screenshots or XDG_VIDEOS_DIR/Screencasts if not specified"
-    )]
-    pub filename: Option<PathBuf>,
-
-    #[arg(
-        long,
-        value_enum,
-        help = "type of shell completion to generate",
-        hide = true,
-        exclusive = true
-    )]
-    pub generate: Option<ShellCompletion>,
-}
-
-fn generate_completions(shell_completion: &ShellCompletion) {
-    let mut cmd = FocalArgs::command();
-
-    match shell_completion {
-        ShellCompletion::Bash => generate(Shell::Bash, &mut cmd, "focal", &mut std::io::stdout()),
-        ShellCompletion::Zsh => generate(Shell::Zsh, &mut cmd, "focal", &mut std::io::stdout()),
-        ShellCompletion::Fish => generate(Shell::Fish, &mut cmd, "focal", &mut std::io::stdout()),
-    }
-}
+use clap::{CommandFactory, Parser};
+use focal::{
+    cli::{generate_completions, CaptureArea, Cli},
+    create_parent_dirs, iso8601_filename, Screencast, Screenshot,
+};
 
 /// check if all required programs are installed
-fn check_programs(args: &FocalArgs) {
+fn check_programs(args: &Cli) {
     let mut progs = std::collections::HashSet::from(["wl-copy", "xdg-open"]);
 
-    if args.video {
+    if args.video_args.video {
         progs.insert("wf-recorder");
     } else {
         progs.insert("grim");
     }
 
-    if args.rofi {
+    if args.rofi_args.rofi {
         progs.insert("rofi");
         progs.insert("slurp");
     }
@@ -134,7 +25,7 @@ fn check_programs(args: &FocalArgs) {
         progs.insert("slurp");
     }
 
-    if args.ocr.is_some() {
+    if args.image_args.ocr.is_some() {
         progs.insert("tesseract");
     }
 
@@ -153,24 +44,15 @@ fn check_programs(args: &FocalArgs) {
 }
 
 fn main() {
-    let args = FocalArgs::parse();
+    let args = Cli::parse();
 
     // print shell completions
     if let Some(shell) = args.generate {
         return generate_completions(&shell);
     }
 
-    if !args.rofi && args.area.is_none() {
-        FocalArgs::command()
-            .error(
-                clap::error::ErrorKind::MissingRequiredArgument,
-                "Either --rofi or --area is required.",
-            )
-            .exit()
-    }
-
-    if !cfg!(feature = "ocr") && args.ocr.is_some() {
-        FocalArgs::command()
+    if !cfg!(feature = "ocr") && args.image_args.ocr.is_some() {
+        Cli::command()
             .error(
                 clap::error::ErrorKind::UnknownArgument,
                 "OCR support was not built in this version of focal.",
@@ -182,12 +64,12 @@ fn main() {
     check_programs(&args);
 
     // stop any currently recording videos
-    if args.video && Screencast::stop(!args.no_notify) {
+    if args.video_args.video && Screencast::stop(!args.no_notify) {
         println!("Stopping previous recording...");
         return;
     }
 
-    if args.video {
+    if args.video_args.video {
         let fname = format!("{}.mp4", iso8601_filename());
 
         let output = if args.no_save {
@@ -202,14 +84,14 @@ fn main() {
 
         let mut screencast = Screencast {
             output,
-            icons: !args.no_icons,
+            icons: !args.rofi_args.no_icons,
             delay: args.delay,
-            audio: args.audio,
+            audio: args.video_args.audio,
             slurp: args.slurp,
         };
 
-        if args.rofi {
-            screencast.rofi(&args.theme);
+        if args.rofi_args.rofi {
+            screencast.rofi(&args.rofi_args.theme);
         } else if let Some(area) = args.area {
             match area {
                 CaptureArea::Monitor => screencast.monitor(),
@@ -235,15 +117,15 @@ fn main() {
         let mut screenshot = Screenshot {
             output,
             delay: args.delay,
-            edit: args.edit,
-            icons: !args.no_icons,
+            edit: args.image_args.edit,
+            icons: !args.rofi_args.no_icons,
             notify: !args.no_notify,
-            ocr: args.ocr,
+            ocr: args.image_args.ocr,
             slurp: args.slurp,
         };
 
-        if args.rofi {
-            screenshot.rofi(&args.theme);
+        if args.rofi_args.rofi {
+            screenshot.rofi(&args.rofi_args.theme);
         } else if let Some(area) = args.area {
             match area {
                 CaptureArea::Monitor => screenshot.monitor(),
