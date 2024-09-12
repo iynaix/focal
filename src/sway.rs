@@ -25,24 +25,10 @@ pub struct Rect {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct GetTree {
-    pub nodes: Vec<GetTreeMonitorNode>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct GetTreeMonitorNode {
-    pub nodes: Vec<GetTreeWorkspaceNode>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct GetTreeWorkspaceNode {
-    pub nodes: Vec<GetTreeWindowNode>,
-}
-
-#[derive(Debug, Deserialize)]
 pub struct GetTreeWindowNode {
     pub rect: Rect,
     pub nodes: Vec<GetTreeWindowNode>,
+    // visible is only available in leaf (window) nodes
     pub visible: Option<bool>,
 }
 
@@ -86,6 +72,24 @@ fn to_focal_monitor(mon: &GetOutput) -> FocalMonitor {
     }
 }
 
+fn window_geoms_cmd(cmd: &mut Command) -> Vec<SlurpGeom> {
+    let tree: GetTreeWindowNode = command_json(cmd);
+
+    tree.leaf_nodes()
+        .iter()
+        .filter(|&node| node.visible == Some(true))
+        .map(|win_node| {
+            let rect = &win_node.rect;
+            SlurpGeom {
+                x: rect.x,
+                y: rect.y,
+                w: rect.width,
+                h: rect.height,
+            }
+        })
+        .collect()
+}
+
 impl FocalMonitors for SwayMonitors {
     fn all() -> Vec<FocalMonitor> {
         let monitors: Vec<GetOutput> = command_json(
@@ -113,30 +117,11 @@ impl FocalMonitors for SwayMonitors {
     }
 
     fn window_geoms() -> Vec<SlurpGeom> {
-        let tree: GetTree = command_json(
+        window_geoms_cmd(
             Command::new("swaymsg")
                 .arg("-t")
                 .arg("get_tree")
                 .arg("--raw"),
-        );
-
-        tree.nodes
-            .iter()
-            .flat_map(|mon_node| mon_node.nodes.iter())
-            .flat_map(|wksp_node| wksp_node.nodes.iter())
-            // win_nodes are recursive
-            .flat_map(|win_node| win_node.leaf_nodes())
-            // only want visible windows
-            .filter(|&win_node| win_node.visible == Some(true))
-            .map(|win_node| {
-                let rect = &win_node.rect;
-                SlurpGeom {
-                    x: rect.x,
-                    y: rect.y,
-                    w: rect.width,
-                    h: rect.height,
-                }
-            })
-            .collect()
+        )
     }
 }

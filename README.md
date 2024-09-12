@@ -14,7 +14,7 @@ focal is a rofi menu for capturing and copying screenshots or videos on hyprland
 - rofi menu to select delay before capture
 - image / video is automatically copied to clipboard, ready for pasting into other programs
 - notifications that open captured file when clicked
-- all options are also avaiable via a CLI
+- all options are also avaiable via the CLI
 - supports either hyprland or sway
 - OCR support to select text from captured image (CLI only)
 

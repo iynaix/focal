@@ -10,7 +10,7 @@
       self,
       nixpkgs,
       devenv,
-      systems,
+      # systems,
       ...
     }@inputs:
     let
