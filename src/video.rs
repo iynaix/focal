@@ -203,10 +203,13 @@ impl Screencast {
 
     pub fn selection(&self) {
         let (mon, filter) = SlurpGeom::prompt(&self.slurp).to_ffmpeg_geom();
+
+        std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
         self.capture(&mon, &filter);
     }
 
     pub fn monitor(&self) {
+        std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
         self.capture(&Monitors::focused().name, "");
     }
 
@@ -250,11 +253,11 @@ impl Screencast {
 
         match sel {
             "Monitor" => {
-                std::thread::sleep(std::time::Duration::from_secs(Self::rofi_delay(theme)));
+                self.delay = Some(Self::rofi_delay(theme));
                 self.monitor();
             }
             "Selection" => {
-                std::thread::sleep(std::time::Duration::from_secs(Self::rofi_delay(theme)));
+                self.delay = Some(Self::rofi_delay(theme));
                 self.selection();
             }
             "All" => unimplemented!("Capturing of all outputs has not been implemented for video"),

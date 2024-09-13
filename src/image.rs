@@ -119,10 +119,12 @@ impl Screenshot {
     }
 
     pub fn monitor(&self) {
+        std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
         self.capture(&Monitors::focused().name, "");
     }
 
     pub fn selection(&self) {
+        std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
         self.capture("", &SlurpGeom::prompt(&self.slurp).to_string());
     }
 
@@ -134,6 +136,7 @@ impl Screenshot {
             h = h.max(mon.y + mon.h);
         }
 
+        std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
         self.capture("", &format!("0,0 {w}x{h}"));
     }
 
@@ -225,11 +228,11 @@ impl Screenshot {
         match sel {
             "Selection" => self.selection(),
             "Monitor" => {
-                std::thread::sleep(std::time::Duration::from_secs(Self::rofi_delay(theme)));
+                self.delay = Some(Self::rofi_delay(theme));
                 self.monitor();
             }
             "All" => {
-                std::thread::sleep(std::time::Duration::from_secs(Self::rofi_delay(theme)));
+                self.delay = Some(Self::rofi_delay(theme));
                 self.all();
             }
             "" => {
