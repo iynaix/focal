@@ -24,8 +24,6 @@ pub struct VideoArgs {
 
 #[derive(Serialize, Deserialize)]
 struct LockFile {
-    pid: u32,
-    child: u32,
     video: PathBuf,
 }
 
@@ -93,34 +91,22 @@ impl WfRecorder {
         sys.refresh_processes(sysinfo::ProcessesToUpdate::All);
 
         let mut is_killed = false;
-        for process in sys.processes_by_exact_name("wf-recorder".as_ref()) {
-            is_killed = true;
-            process.kill_with(sysinfo::Signal::Interrupt);
-        }
+        sys.processes_by_exact_name("wf-recorder".as_ref())
+            .filter(|p| p.parent().map_or(false, |parent| parent.as_u32() == 1))
+            .for_each(|p| {
+                is_killed = true;
+                p.kill_with(sysinfo::Signal::Interrupt);
+            });
 
-        // check lock file and close the process within if it exists
-        if let Ok(LockFile { pid, child, video }) = LockFile::read() {
-            if let Some(child_process) = sys.process(sysinfo::Pid::from_u32(child)) {
-                // stop any wf-recorder processes
-                child_process.kill_with(sysinfo::Signal::Interrupt);
-                for wf_process in sys.processes_by_exact_name("wf-recorder".as_ref()) {
-                    wf_process.kill_with(sysinfo::Signal::Interrupt);
-                }
+        if let Ok(LockFile { video }) = LockFile::read() {
+            LockFile::remove();
 
-                // kill previous instance of focal
-                if let Some(prev_process) = sys.process(sysinfo::Pid::from_u32(pid)) {
-                    prev_process.kill_with(sysinfo::Signal::Interrupt);
-                }
-
-                LockFile::remove();
-
-                // show notification with the video thumbnail
-                if notify {
-                    Self::notify(&video);
-                }
-
-                return true;
+            // show notification with the video thumbnail
+            if notify {
+                Self::notify(&video);
             }
+
+            return true;
         }
 
         is_killed
@@ -137,13 +123,14 @@ impl WfRecorder {
             wfrecorder.arg("--audio");
         }
 
-        if let Ok(child) = wfrecorder
+        if wfrecorder
             .arg("--output")
             .arg(&self.monitor)
             .arg("--overwrite")
             .arg("-f")
             .arg(&self.video)
             .spawn()
+            .is_ok()
         {
             // duration provied, recording will stop by itself so no lock file is needed
             if let Some(duration) = self.duration {
@@ -151,11 +138,7 @@ impl WfRecorder {
 
                 Self::stop(self.notify);
             } else {
-                let lock = LockFile {
-                    pid: std::process::id(),
-                    child: child.id(),
-                    video: self.video.clone(),
-                };
+                let lock = LockFile { video: self.video };
                 lock.write().expect("failed to write to focal.lock");
             }
         } else {
