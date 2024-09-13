@@ -30,12 +30,6 @@ pub enum ShellCompletion {
         .multiple(false)
         .args(["edit", "ocr", "video"]),
 ))]
-#[command(group(
-    ArgGroup::new("required_operation")
-    .required(true)
-    .multiple(false)
-    .args(["area", "rofi"]),
-))]
 pub struct Cli {
     #[arg(
         short,
@@ -101,7 +95,7 @@ mod tests {
 
     fn assert_cmd(cmd: &str, err_kind: ErrorKind, msg: &str) {
         let res = Cli::try_parse_from(cmd.split_whitespace());
-        assert!(res.is_err());
+        assert!(res.is_err(), "{msg}");
         assert_eq!(res.expect_err("").kind(), err_kind, "{msg}");
     }
 
@@ -120,15 +114,12 @@ mod tests {
         );
 
         assert_cmd(
-            "focal --video",
-            ErrorKind::MissingRequiredArgument,
-            "--area or --rofi is required",
-        );
-
-        assert_cmd(
             "focal --audio",
             ErrorKind::MissingRequiredArgument,
             "--video is required for --audio",
         );
+
+        let res = Cli::try_parse_from("focal --generate fish".split_whitespace());
+        assert!(res.is_ok(), "--generate should still work");
     }
 }

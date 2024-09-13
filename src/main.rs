@@ -63,6 +63,16 @@ fn main() {
     // check if all required programs are installed
     check_programs(&args);
 
+    // check performed here so that --generate can run
+    if !args.rofi_args.rofi && args.area.is_none() {
+        Cli::command()
+            .error(
+                clap::error::ErrorKind::MissingRequiredArgument,
+                "Either --rofi or --area is required.",
+            )
+            .exit()
+    }
+
     // stop any currently recording videos
     if args.video_args.video && Screencast::stop(!args.no_notify) {
         println!("Stopping previous recording...");

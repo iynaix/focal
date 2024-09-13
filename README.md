@@ -57,7 +57,7 @@ OCR support can be optionally disabled through the use of an override:
 $ focal --help
 focal is a rofi menu for capturing and copying screenshots or videos on hyprland / sway.
 
-Usage: focal [OPTIONS] <--area <AREA>|--rofi> [FILE]
+Usage: focal [OPTIONS] [FILE]
 
 Arguments:
   [FILE]
