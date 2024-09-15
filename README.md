@@ -57,76 +57,60 @@ OCR support can be optionally disabled through the use of an override:
 $ focal --help
 focal is a rofi menu for capturing and copying screenshots or videos on hyprland / sway.
 
-Usage: focal [OPTIONS] [FILE]
-
-Arguments:
-  [FILE]
-          Files are created in XDG_PICTURES_DIR/Screenshots or XDG_VIDEOS_DIR/Screencasts if not specified
+Usage: focal image [OPTIONS] [FILE]
+       focal video [OPTIONS] [FILE]
+       focal help [COMMAND]...
 
 Options:
-  -a, --area <AREA>
-          Type of area to capture
+  -h, --help     Print help
+  -V, --version  Print version
 
-          [aliases: capture]
-          [possible values: monitor, selection, all]
+focal image:
+Captures a screenshot
+  -a, --area <AREA>     Type of area to capture [aliases: capture] [possible values: monitor, selection, all]
+  -t, --delay <DELAY>   Delay in seconds before capturing
+  -s, --slurp <SLURP>   Options to pass to slurp
+      --no-notify       Do not show notifications
+      --no-save         Do not save the file permanently
+      --rofi            Display rofi menu for options
+      --no-icons        Do not show icons for rofi menu
+      --theme <THEME>   Path to a rofi theme
+  -e, --edit <COMMAND>  Edit screenshot using COMMAND
+                        The image path will be passed as $IMAGE
+      --ocr [<LANG>]    Runs OCR on the selected text
+  -h, --help            Print help (see more with '--help')
+  [FILE]            Files are created in XDG_PICTURES_DIR/Screenshots if not specified
 
-  -t, --delay <DELAY>
-          Delay in seconds before capturing
+focal video:
+Captures a video
+  -a, --area <AREA>    Type of area to capture [aliases: capture] [possible values: monitor, selection, all]
+  -t, --delay <DELAY>  Delay in seconds before capturing
+  -s, --slurp <SLURP>  Options to pass to slurp
+      --no-notify      Do not show notifications
+      --no-save        Do not save the file permanently
+      --rofi           Display rofi menu for options
+      --no-icons       Do not show icons for rofi menu
+      --theme <THEME>  Path to a rofi theme
+      --audio          Capture video with audio
+  -h, --help           Print help
+  [FILE]           Files are created in XDG_VIDEOS_DIR/Screencasts if not specified
 
-  -s, --slurp <SLURP>
-          Options to pass to slurp
-
-      --no-notify
-          Do not show notifications
-
-      --no-save
-          Do not save the file permanently
-
-  -h, --help
-          Print help (see a summary with '-h')
-
-  -V, --version
-          Print version
-
-Rofi Options:
-      --rofi
-          Display rofi menu for options
-
-      --no-icons
-          Do not show icons for rofi menu
-
-      --theme <THEME>
-          Path to a rofi theme
-
-Image Options:
-  -e, --edit <COMMAND>
-          Edit screenshot using COMMAND
-          The image path will be passed as $IMAGE
-
-      --ocr [<LANG>]
-          Runs OCR on the selected text, defaulting to English
-          Supported languages can be shown using 'tesseract --list-langs'
-
-Video Options:
-      --video
-          Records video instead of screenshots
-          Running a second time stops any previous recordings
-
-      --audio
-          Capture video with audio
+focal help:
+Print this message or the help of the given subcommand(s)
+  [COMMAND]...  Print help for the subcommand(s)
 ```
 
 > [!TIP]
-> Invoking `focal --video` a second time stops any currently recording videos.
+> Invoking `focal video` a second time stops any currently recording videos.
 
 Example usage as a **hyprland** keybinding:
 ```
-bind=$mainMod, backslash, exec, focal --area selection
+bind=$mainMod, backslash, exec, focal image --area selection
 ```
 
 Similarly, for a **sway** keybinding:
 ```
-bindsym $mod+backslash exec "focal --area selection"
+bindsym $mod+backslash exec "focal image --area selection"
 ```
 
 ## Packaging

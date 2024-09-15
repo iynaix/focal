@@ -1,13 +1,30 @@
 use std::{path::PathBuf, process::Stdio};
 
-use crate::{monitor::FocalMonitors, show_notification, Monitors, Rofi, SlurpGeom};
-use clap::Args;
+use crate::{
+    check_programs,
+    cli::{CaptureArea, Cli, CommonArgs},
+    create_parent_dirs, iso8601_filename,
+    monitor::FocalMonitors,
+    rofi::RofiArgs,
+    show_notification, Monitors, Rofi, SlurpGeom,
+};
+use clap::{ArgGroup, Args, CommandFactory};
 use execute::{command, Execute};
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Args, Debug)]
-#[command(next_help_heading = "Image Options")]
+#[command(group(
+    ArgGroup::new("mode")
+        .multiple(false)
+        .args(["rofi", "area"]),
+))]
 pub struct ImageArgs {
+    #[command(flatten)]
+    pub common_args: CommonArgs,
+
+    #[command(flatten)]
+    pub rofi_args: RofiArgs,
+
     #[arg(
         short,
         long,
@@ -30,6 +47,33 @@ pub struct ImageArgs {
         hide = cfg!(not(feature = "ocr"))
     )]
     pub ocr: Option<String>,
+
+    #[arg(
+        name = "FILE",
+        help = "Files are created in XDG_PICTURES_DIR/Screenshots if not specified"
+    )]
+    pub filename: Option<PathBuf>,
+}
+
+impl ImageArgs {
+    pub fn required_programs(&self) -> Vec<&str> {
+        let mut progs = vec!["grim"];
+
+        if self.rofi_args.rofi {
+            progs.push("rofi");
+            progs.push("slurp");
+        }
+
+        if matches!(self.common_args.area, Some(CaptureArea::Selection)) {
+            progs.push("slurp");
+        }
+
+        if self.ocr.is_some() {
+            progs.push("tesseract");
+        }
+
+        progs
+    }
 }
 
 #[derive(Default)]
@@ -262,5 +306,51 @@ impl Screenshot {
         sel.replace('s', "")
             .parse::<u64>()
             .expect("Invalid delay specified")
+    }
+}
+
+pub fn main(args: ImageArgs) {
+    if !cfg!(feature = "ocr") && args.ocr.is_some() {
+        Cli::command()
+            .error(
+                clap::error::ErrorKind::UnknownArgument,
+                "OCR support was not built in this version of focal.",
+            )
+            .exit()
+    }
+
+    // check if all required programs are installed
+    check_programs(&args.required_programs());
+
+    let fname = format!("{}.png", iso8601_filename());
+
+    let output = if args.common_args.no_save {
+        PathBuf::from(format!("/tmp/{fname}"))
+    } else {
+        create_parent_dirs(args.filename.unwrap_or_else(|| {
+            dirs::picture_dir()
+                .expect("could not get $XDG_PICTURES_DIR")
+                .join(format!("Screenshots/{fname}"))
+        }))
+    };
+
+    let mut screenshot = Screenshot {
+        output,
+        delay: args.common_args.delay,
+        edit: args.edit,
+        icons: !args.rofi_args.no_icons,
+        notify: !args.common_args.no_notify,
+        ocr: args.ocr,
+        slurp: args.common_args.slurp,
+    };
+
+    if args.rofi_args.rofi {
+        screenshot.rofi(&args.rofi_args.theme);
+    } else if let Some(area) = args.common_args.area {
+        match area {
+            CaptureArea::Monitor => screenshot.monitor(),
+            CaptureArea::Selection => screenshot.selection(),
+            CaptureArea::All => screenshot.all(),
+        }
     }
 }

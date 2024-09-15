@@ -8,7 +8,6 @@ use execute::Execute;
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Args, Debug)]
-#[command(next_help_heading = "Rofi Options")]
 pub struct RofiArgs {
     #[arg(long, action, help = "Display rofi menu for options")]
     pub rofi: bool,

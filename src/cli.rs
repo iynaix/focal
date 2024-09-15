@@ -1,8 +1,18 @@
-use std::path::PathBuf;
-
-use crate::{image::ImageArgs, rofi::RofiArgs, video::VideoArgs};
-use clap::{ArgGroup, CommandFactory, Parser, Subcommand, ValueEnum};
+use crate::{image::ImageArgs, video::VideoArgs};
+use clap::{Args, CommandFactory, Parser, Subcommand, ValueEnum};
 use clap_complete::{generate, Shell};
+
+#[derive(Subcommand, Debug)]
+pub enum FocalSubcommands {
+    #[command(name = "image", about = "Captures a screenshot")]
+    Image(ImageArgs),
+
+    #[command(name = "video", about = "Captures a video")]
+    Video(VideoArgs),
+
+    #[command(name = "generate", about = "Generate shell completions", hide = true)]
+    Generate(GenerateArgs),
+}
 
 #[derive(Subcommand, ValueEnum, Debug, Clone)]
 pub enum CaptureArea {
@@ -18,19 +28,14 @@ pub enum ShellCompletion {
     Fish,
 }
 
-#[derive(Parser, Debug)]
-#[command(
-    name = "focal",
-    about = "focal is a rofi menu for capturing and copying screenshots or videos on hyprland / sway.",
-    author,
-    version = env!("CARGO_PKG_VERSION")
-)]
-#[command(group(
-    ArgGroup::new("mode")
-        .multiple(false)
-        .args(["edit", "ocr", "video"]),
-))]
-pub struct Cli {
+#[derive(Args, Debug)]
+pub struct GenerateArgs {
+    #[arg(value_enum, help = "Type of shell completion to generate")]
+    pub shell: ShellCompletion,
+}
+
+#[derive(Args, Debug)]
+pub struct CommonArgs {
     #[arg(
         short,
         long,
@@ -51,30 +56,19 @@ pub struct Cli {
 
     #[arg(long, action, help = "Do not save the file permanently")]
     pub no_save: bool,
+}
 
-    #[arg(
-        long,
-        value_enum,
-        help = "Type of shell completion to generate",
-        hide = true,
-        exclusive = true
-    )]
-    pub generate: Option<ShellCompletion>,
-
-    #[arg(
-        name = "FILE",
-        long_help = "Files are created in XDG_PICTURES_DIR/Screenshots or XDG_VIDEOS_DIR/Screencasts if not specified"
-    )]
-    pub filename: Option<PathBuf>,
-
-    #[command(flatten)]
-    pub rofi_args: RofiArgs,
-
-    #[command(flatten)]
-    pub image_args: ImageArgs,
-
-    #[command(flatten)]
-    pub video_args: VideoArgs,
+#[derive(Parser, Debug)]
+#[command(
+    name = "focal",
+    about = "focal is a rofi menu for capturing and copying screenshots or videos on hyprland / sway.",
+    author,
+    version = env!("CARGO_PKG_VERSION"),
+    flatten_help = true
+)]
+pub struct Cli {
+    #[command(subcommand)]
+    pub command: FocalSubcommands,
 }
 
 pub fn generate_completions(shell_completion: &ShellCompletion) {
@@ -87,7 +81,7 @@ pub fn generate_completions(shell_completion: &ShellCompletion) {
     }
 }
 
-// write tests for nixos
+// write tests for exclusive arguments
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -102,24 +96,24 @@ mod tests {
     #[test]
     fn test_exclusive_args() {
         assert_cmd(
-            "focal --video --area monitor --edit gimp",
+            "focal video --rofi --area monitor",
             ErrorKind::ArgumentConflict,
-            "--video and --area are exclusive",
+            "--rofi and --area are exclusive",
         );
 
         assert_cmd(
-            "focal --area monitor --ocr --edit gimp",
+            "focal image --rofi --area monitor",
+            ErrorKind::ArgumentConflict,
+            "--rofi and --area are exclusive",
+        );
+
+        assert_cmd(
+            "focal image --area monitor --ocr --edit gimp",
             ErrorKind::ArgumentConflict,
             "--ocr and --edit are exclusive",
         );
 
-        assert_cmd(
-            "focal --audio",
-            ErrorKind::MissingRequiredArgument,
-            "--video is required for --audio",
-        );
-
-        let res = Cli::try_parse_from("focal --generate fish".split_whitespace());
-        assert!(res.is_ok(), "--generate should still work");
+        let res = Cli::try_parse_from("focal generate fish".split_whitespace());
+        assert!(res.is_ok(), "generate should still work");
     }
 }

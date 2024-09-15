@@ -1,25 +1,56 @@
-use clap::Args;
+use clap::{ArgGroup, Args};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-use crate::{monitor::FocalMonitors, show_notification, Monitors, Rofi, SlurpGeom};
+use crate::{
+    check_programs,
+    cli::{CaptureArea, CommonArgs},
+    create_parent_dirs, iso8601_filename,
+    monitor::FocalMonitors,
+    rofi::RofiArgs,
+    show_notification, Monitors, Rofi, SlurpGeom,
+};
 use execute::{command, Execute};
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Args, Debug)]
-#[command(next_help_heading = "Video Options")]
+#[command(group(
+    ArgGroup::new("mode")
+        .multiple(false)
+        .args(["rofi", "area"]),
+))]
 pub struct VideoArgs {
-    #[arg(
-        long,
-        action,
-        id = "video",
-        help = "Records video / stops previous recordings",
-        long_help = "Records video instead of screenshots\nRunning a second time stops any previous recordings"
-    )]
-    pub video: bool,
+    #[command(flatten)]
+    pub common_args: CommonArgs,
 
-    #[arg(long, action, help = "Capture video with audio", requires = "video")]
+    #[command(flatten)]
+    pub rofi_args: RofiArgs,
+
+    #[arg(long, action, help = "Capture video with audio")]
     pub audio: bool,
+
+    #[arg(
+        name = "FILE",
+        help = "Files are created in XDG_VIDEOS_DIR/Screencasts if not specified"
+    )]
+    pub filename: Option<PathBuf>,
+}
+
+impl VideoArgs {
+    pub fn required_programs(&self) -> Vec<&str> {
+        let mut progs = vec!["grim"];
+
+        if self.rofi_args.rofi {
+            progs.push("rofi");
+            progs.push("slurp");
+        }
+
+        if matches!(self.common_args.area, Some(CaptureArea::Selection)) {
+            progs.push("slurp");
+        }
+
+        progs
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -288,5 +319,48 @@ impl Screencast {
         sel.replace('s', "")
             .parse::<u64>()
             .expect("Invalid delay specified")
+    }
+}
+
+pub fn main(args: VideoArgs) {
+    // stop any currently recording videos
+    if Screencast::stop(!args.common_args.no_notify) {
+        println!("Stopping previous recording...");
+        return;
+    }
+
+    // check if all required programs are installed
+    check_programs(&args.required_programs());
+
+    let fname = format!("{}.mp4", iso8601_filename());
+
+    let output = if args.common_args.no_save {
+        PathBuf::from(format!("/tmp/{fname}"))
+    } else {
+        create_parent_dirs(args.filename.unwrap_or_else(|| {
+            dirs::video_dir()
+                .expect("could not get $XDG_VIDEOS_DIR")
+                .join(format!("Screencasts/{fname}"))
+        }))
+    };
+
+    let mut screencast = Screencast {
+        output,
+        icons: !args.rofi_args.no_icons,
+        delay: args.common_args.delay,
+        audio: args.audio,
+        slurp: args.common_args.slurp,
+    };
+
+    if args.rofi_args.rofi {
+        screencast.rofi(&args.rofi_args.theme);
+    } else if let Some(area) = args.common_args.area {
+        match area {
+            CaptureArea::Monitor => screencast.monitor(),
+            CaptureArea::Selection => screencast.selection(),
+            CaptureArea::All => {
+                unimplemented!("Capturing of all outputs has not been implemented for video")
+            }
+        }
     }
 }

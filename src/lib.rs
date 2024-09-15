@@ -61,3 +61,23 @@ pub fn show_notification(body: &str, output: &PathBuf) {
             }
         });
 }
+
+/// check if all required programs are installed
+pub fn check_programs(progs: &[&str]) {
+    let mut all_progs = std::collections::HashSet::from(["wl-copy", "xdg-open"]);
+
+    all_progs.extend(progs);
+
+    let not_found: Vec<_> = all_progs
+        .into_iter()
+        .filter(|prog| which::which(prog).is_err())
+        .collect();
+
+    if !not_found.is_empty() {
+        eprintln!(
+            "The following programs are required but not installed: {}",
+            not_found.join(", ")
+        );
+        std::process::exit(1);
+    }
+}
