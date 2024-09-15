@@ -153,7 +153,7 @@ impl Screenshot {
         Grim::new(self.output.clone())
             .geometry(geometry)
             .monitor(monitor)
-            .capture(self.notify);
+            .capture(self.ocr.is_none() && self.notify);
 
         if self.ocr.is_some() {
             self.ocr();
