@@ -38,7 +38,7 @@ pub struct VideoArgs {
 
 impl VideoArgs {
     pub fn required_programs(&self) -> Vec<&str> {
-        let mut progs = vec!["grim"];
+        let mut progs = vec!["wf-recorder", "pkill"];
 
         if self.rofi_args.rofi {
             progs.push("rofi");
@@ -54,7 +54,7 @@ impl VideoArgs {
 }
 
 #[derive(Serialize, Deserialize)]
-struct LockFile {
+pub struct LockFile {
     video: PathBuf,
 }
 
@@ -63,6 +63,10 @@ impl LockFile {
         dirs::runtime_dir()
             .expect("could not get $XDG_RUNTIME_DIR")
             .join("focal.lock")
+    }
+
+    pub fn exists() -> bool {
+        Self::path().exists()
     }
 
     fn write(&self) -> std::io::Result<()> {
@@ -118,16 +122,19 @@ impl WfRecorder {
 
     pub fn stop(notify: bool) -> bool {
         // kill all wf-recorder processes
-        let mut sys = sysinfo::System::new();
-        sys.refresh_processes(sysinfo::ProcessesToUpdate::All);
+        let wf_process = std::process::Command::new("pkill")
+            .arg("--echo")
+            .arg("-SIGINT")
+            .arg("wf-recorder")
+            .output()
+            .expect("failed to pkill wf-recorder")
+            .stdout;
 
-        let mut is_killed = false;
-        sys.processes_by_exact_name("wf-recorder".as_ref())
-            .filter(|p| p.parent().map_or(false, |parent| parent.as_u32() == 1))
-            .for_each(|p| {
-                is_killed = true;
-                p.kill_with(sysinfo::Signal::Interrupt);
-            });
+        let is_killed = String::from_utf8(wf_process)
+            .expect("failed to parse pkill output")
+            .lines()
+            .count()
+            > 0;
 
         if let Ok(LockFile { video }) = LockFile::read() {
             LockFile::remove();

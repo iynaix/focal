@@ -6,6 +6,7 @@
   makeWrapper,
   ffmpeg,
   grim,
+  procps,
   rofi-wayland,
   slurp,
   tesseract,
@@ -62,6 +63,7 @@ rustPlatform.buildRustPackage {
         [
           ffmpeg
           grim
+          procps
           rofi-wayland
           slurp
           wf-recorder
