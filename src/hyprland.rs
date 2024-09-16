@@ -18,8 +18,12 @@ fn to_focal_monitor(mon: &Monitor) -> FocalMonitor {
         rotation: match mon.transform {
             Transforms::Normal => Rotation::Normal,
             Transforms::Normal90 => Rotation::Normal90,
+            Transforms::Normal180 => Rotation::Normal180,
             Transforms::Normal270 => Rotation::Normal270,
-            _ => Rotation::Other,
+            Transforms::Flipped => Rotation::Flipped,
+            Transforms::Flipped90 => Rotation::Flipped90,
+            Transforms::Flipped180 => Rotation::Flipped180,
+            Transforms::Flipped270 => Rotation::Flipped270,
         },
     }
 }

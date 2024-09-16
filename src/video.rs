@@ -248,7 +248,9 @@ impl Screencast {
 
     pub fn monitor(&self) {
         std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
-        self.capture(&Monitors::focused().name, "");
+
+        let mon = Monitors::focused();
+        self.capture(&mon.name, &mon.rotation.ffmpeg_transpose());
     }
 
     pub fn stop(notify: bool) -> bool {

@@ -90,23 +90,30 @@ impl SlurpGeom {
         let final_w = round2(h);
         let final_h = round2(w);
 
+        let transpose = mon.rotation.ffmpeg_transpose();
         let filter = match mon.rotation {
             Rotation::Normal => format!("crop=w={w}:h={h}:x={x}:y={y}"),
             // clockwise
             Rotation::Normal90 => {
                 let final_y = mon.w - x - w;
                 let final_x = y;
-                format!("crop=w={final_w}:h={final_h}:x={final_x}:y={final_y}, transpose=1")
+                format!("crop=w={final_w}:h={final_h}:x={final_x}:y={final_y}")
             }
             // anti-clockwise
             Rotation::Normal270 => {
                 let final_x = mon.w - y - h;
                 let final_y = x;
-                format!("crop=w={final_w}:h={final_h}:x={final_x}:y={final_y}, transpose=2")
+                format!("crop=w={final_w}:h={final_h}:x={final_x}:y={final_y}")
             }
-            Rotation::Other => {
+            _ => {
                 unimplemented!("Unknown monitor transform");
             }
+        };
+
+        let filter = if transpose.is_empty() {
+            filter
+        } else {
+            format!("{filter}, {transpose}")
         };
 
         (mon.name.clone(), filter)

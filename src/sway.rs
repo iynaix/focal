@@ -67,7 +67,12 @@ fn to_focal_monitor(mon: &GetOutput) -> FocalMonitor {
             "normal" => Rotation::Normal,
             "90" => Rotation::Normal90,
             "270" => Rotation::Normal270,
-            _ => Rotation::Other,
+            "180" => Rotation::Normal180,
+            "flipped" => Rotation::Flipped,
+            "flipped-90" => Rotation::Flipped90,
+            "flipped-180" => Rotation::Flipped180,
+            "flipped-270" => Rotation::Flipped270,
+            _ => unimplemented!("Invalid monitor transform"),
         },
     }
 }
