@@ -16,6 +16,7 @@ mod monitor;
 pub mod rofi;
 mod slurp;
 pub mod video;
+mod wf_recorder;
 
 pub use image::Screenshot;
 pub use rofi::Rofi;

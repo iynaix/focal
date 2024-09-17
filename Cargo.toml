@@ -19,6 +19,7 @@ chrono = "0.4.38"
 hyprland = { version = "0.4.0-alpha.3" }
 serde_derive = "1.0.210"
 notify-rust = "4.11.3"
+ctrlc = "3.4.5"
 
 [features]
 default = ["hyprland", "ocr"]
