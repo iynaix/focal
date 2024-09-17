@@ -5,7 +5,7 @@ use std::{env, path::PathBuf, process::Command};
 #[derive(Parser, Debug)]
 #[command(
     name = "focal-waybar",
-    about = "Waybar module for showing focal video recording status",
+    about = "Updates waybar module with focal's recording status.",
     author,
     version = env!("CARGO_PKG_VERSION"),
 )]
@@ -37,10 +37,10 @@ struct Cli {
     )]
     stopped: String,
 
-    // This will capture any additional arguments passed to the command
+    // captures leftover arguments to be passed to `focal video`
     #[arg(
         allow_hyphen_values = true,
-        trailing_var_arg = true,
+        num_args = 0..,
         help = "Additional arguments to pass to 'focal video'"
     )]
     pub focal_args: Vec<String>,
