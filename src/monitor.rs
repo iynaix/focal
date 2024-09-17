@@ -23,13 +23,13 @@ impl Rotation {
     pub fn ffmpeg_transpose(&self) -> String {
         match self {
             Self::Normal => String::new(),
-            // clockwise
             Self::Normal90 => "transpose=1".into(),
-            // anti-clockwise
             Self::Normal270 => "transpose=2".into(),
-            _ => {
-                unimplemented!("Unknown monitor transform");
-            }
+            Self::Normal180 => "transpose=1,transpose=1".into(),
+            Self::Flipped => "hflip".into(),
+            Self::Flipped90 => "transpose=0".into(),
+            Self::Flipped270 => "transpose=3".into(),
+            Self::Flipped180 => "hflip,transpose=1,transpose=1".into(),
         }
     }
 }

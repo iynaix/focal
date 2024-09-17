@@ -1,10 +1,7 @@
 use execute::{command, Execute};
 use std::{fmt, process::Stdio};
 
-use crate::{
-    monitor::{FocalMonitors, Rotation},
-    Monitors,
-};
+use crate::{monitor::FocalMonitors, Monitors};
 
 #[derive(Debug)]
 pub struct ParseError {
@@ -64,6 +61,14 @@ impl std::str::FromStr for SlurpGeom {
     }
 }
 
+const fn round2(n: i32) -> i32 {
+    if n % 2 == 1 {
+        n - 1
+    } else {
+        n
+    }
+}
+
 impl SlurpGeom {
     pub fn to_ffmpeg_geom(self) -> (String, String) {
         let Self { x, y, w, h } = self;
@@ -78,43 +83,20 @@ impl SlurpGeom {
 
         // get coordinates relative to monitor
         let (x, y) = (x - mon.x, y - mon.y);
-        let round2 = |n: i32| {
-            if n % 2 == 1 {
-                n - 1
-            } else {
-                n
-            }
-        };
 
         // h264 requires the width and height to be even
-        let final_w = round2(h);
-        let final_h = round2(w);
+        let w = round2(w);
+        let h = round2(h);
 
         let transpose = mon.rotation.ffmpeg_transpose();
-        let filter = match mon.rotation {
-            Rotation::Normal => format!("crop=w={w}:h={h}:x={x}:y={y}"),
-            // clockwise
-            Rotation::Normal90 => {
-                let final_y = mon.w - x - w;
-                let final_x = y;
-                format!("crop=w={final_w}:h={final_h}:x={final_x}:y={final_y}")
+        let filter = format!(
+            "{}crop=w={w}:h={h}:x={x}:y={y}",
+            if transpose.is_empty() {
+                String::new()
+            } else {
+                format!("{transpose}, ")
             }
-            // anti-clockwise
-            Rotation::Normal270 => {
-                let final_x = mon.w - y - h;
-                let final_y = x;
-                format!("crop=w={final_w}:h={final_h}:x={final_x}:y={final_y}")
-            }
-            _ => {
-                unimplemented!("Unknown monitor transform");
-            }
-        };
-
-        let filter = if transpose.is_empty() {
-            filter
-        } else {
-            format!("{filter}, {transpose}")
-        };
+        );
 
         (mon.name.clone(), filter)
     }

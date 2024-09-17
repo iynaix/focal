@@ -1,6 +1,6 @@
 use clap::{ArgGroup, Args};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::{path::PathBuf, process::Stdio};
 
 use crate::{
     check_programs,
@@ -167,7 +167,9 @@ impl WfRecorder {
             .arg("--overwrite")
             .arg("-f")
             .arg(&self.video)
-            .spawn()
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .output()
             .is_ok()
         {
             // duration provied, recording will stop by itself so no lock file is needed
