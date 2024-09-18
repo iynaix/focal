@@ -92,6 +92,7 @@ Captures a video
       --no-icons       Do not show icons for rofi menu
       --theme <THEME>  Path to a rofi theme
       --audio          Capture video with audio
+      --stop           Stops any previous video recordings
   -h, --help           Print help
   [FILE]           Files are created in XDG_VIDEOS_DIR/Screencasts if not specified
 

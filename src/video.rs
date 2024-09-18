@@ -136,7 +136,12 @@ impl Screencast {
     }
 
     pub fn rofi(&mut self, theme: &Option<PathBuf>) {
-        let mut opts = vec!["Selection", "Monitor"];
+        let mut opts = vec!["󰒉\tSelection", "󰍹\tMonitor", "󰍺\tAll"];
+
+        // don't show "All" option if single monitor
+        // if Monitors::all().len() == 1 {
+        opts.pop();
+        // };
 
         if !self.icons {
             opts = opts

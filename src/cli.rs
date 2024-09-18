@@ -88,9 +88,9 @@ mod tests {
     use clap::error::ErrorKind;
 
     fn assert_cmd(cmd: &str, err_kind: ErrorKind, msg: &str) {
-        let res = Cli::try_parse_from(cmd.split_whitespace());
-        assert!(res.is_err(), "{msg}");
-        assert_eq!(res.expect_err("").kind(), err_kind, "{msg}");
+        let args = Cli::try_parse_from(cmd.split_whitespace());
+        assert!(args.is_err(), "{msg}");
+        assert_eq!(args.expect_err("").kind(), err_kind, "{msg}");
     }
 
     #[test]

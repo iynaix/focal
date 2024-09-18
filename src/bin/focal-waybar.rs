@@ -98,3 +98,23 @@ fn main() {
         update_waybar(&args.stopped, &args);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_focal_args() {
+        let cmd = "focal-waybar --toggle --signal 1 --recording REC --stopped STOP --audio --rofi";
+        let args = Cli::try_parse_from(cmd.split_whitespace());
+        assert!(args.is_ok(), "{cmd}");
+        if let Ok(args) = args {
+            let msg = "test focal args";
+            assert!(args.toggle, "{msg}");
+            assert_eq!(args.signal, 1, "{msg}");
+            assert_eq!(args.recording, "REC", "{msg}");
+            assert_eq!(args.stopped, "STOP", "{msg}");
+            assert_eq!(args.focal_args, ["--audio", "--rofi"], "{msg}");
+        }
+    }
+}
