@@ -4,21 +4,14 @@ use clap_complete::{generate, Shell};
 
 #[derive(Subcommand, Debug)]
 pub enum FocalSubcommands {
-    #[command(name = "image", about = "Captures a screenshot")]
+    #[command(name = "image", about = "Captures a screenshot.")]
     Image(ImageArgs),
 
-    #[command(name = "video", about = "Captures a video")]
+    #[command(name = "video", about = "Captures a video.")]
     Video(VideoArgs),
 
     #[command(name = "generate", about = "Generate shell completions", hide = true)]
     Generate(GenerateArgs),
-}
-
-#[derive(Subcommand, ValueEnum, Debug, Clone)]
-pub enum CaptureArea {
-    Monitor,
-    Selection,
-    All,
 }
 
 #[derive(Subcommand, ValueEnum, Debug, Clone)]
@@ -36,15 +29,6 @@ pub struct GenerateArgs {
 
 #[derive(Args, Debug)]
 pub struct CommonArgs {
-    #[arg(
-        short,
-        long,
-        visible_alias = "capture",
-        value_enum,
-        help = "Type of area to capture"
-    )]
-    pub area: Option<CaptureArea>,
-
     #[arg(short = 't', long, help = "Delay in seconds before capturing")]
     pub delay: Option<u64>, // sleep uses u64
 

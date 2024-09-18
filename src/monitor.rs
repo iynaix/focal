@@ -1,6 +1,6 @@
 use crate::SlurpGeom;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Rotation {
     Normal,
     /// Clockwise
@@ -21,21 +21,22 @@ pub enum Rotation {
 
 impl Rotation {
     pub fn ffmpeg_transpose(&self) -> String {
-        match self {
-            Self::Normal => String::new(),
-            Self::Normal90 => "transpose=1".into(),
-            Self::Normal270 => "transpose=2".into(),
-            Self::Normal180 => "transpose=1,transpose=1".into(),
-            Self::Flipped => "hflip".into(),
-            Self::Flipped90 => "transpose=0".into(),
-            Self::Flipped270 => "transpose=3".into(),
-            Self::Flipped180 => "hflip,transpose=1,transpose=1".into(),
-        }
+        (match self {
+            Self::Normal => "",
+            Self::Normal90 => "transpose=1",
+            Self::Normal270 => "transpose=2",
+            Self::Normal180 => "transpose=1,transpose=1",
+            Self::Flipped => "hflip",
+            Self::Flipped90 => "transpose=0",
+            Self::Flipped270 => "transpose=3",
+            Self::Flipped180 => "hflip,transpose=1,transpose=1",
+        })
+        .to_string()
     }
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FocalMonitor {
     pub name: String,
     pub x: i32,
@@ -56,4 +57,19 @@ pub trait FocalMonitors {
 
     /// returns geometries of all visible (active) windows across all monitors
     fn window_geoms() -> Vec<SlurpGeom>;
+
+    /// total dimensions across all monitors
+    fn total_dimensions() -> (i32, i32)
+    where
+        Self: std::marker::Sized,
+    {
+        let mut w = 0;
+        let mut h = 0;
+        for mon in Self::all() {
+            w = w.max(mon.x + mon.w);
+            h = h.max(mon.y + mon.h);
+        }
+
+        (w, h)
+    }
 }

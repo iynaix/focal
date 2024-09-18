@@ -1,37 +1,95 @@
-use clap::{ArgGroup, Args};
+use clap::{ArgGroup, Args, Subcommand, ValueEnum};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::{path::PathBuf, vec};
 
 use crate::{
-    check_programs,
-    cli::{CaptureArea, CommonArgs},
-    create_parent_dirs, iso8601_filename,
-    monitor::FocalMonitors,
-    rofi::RofiArgs,
-    wf_recorder::WfRecorder,
-    Monitors, Rofi, SlurpGeom,
+    check_programs, cli::CommonArgs, create_parent_dirs, iso8601_filename, monitor::FocalMonitors,
+    rofi::RofiArgs, show_notification, wf_recorder::WfRecorder, Monitors, Rofi, SlurpGeom,
 };
 use execute::{command, Execute};
+
+#[derive(Subcommand, ValueEnum, Debug, Clone)]
+pub enum CaptureArea {
+    Monitor,
+    Selection,
+}
+
+#[derive(Args, Debug)]
+#[command(group(
+    ArgGroup::new("area_shortcuts")
+        .args(["area", "selection", "monitor"])
+        .multiple(false)
+))]
+pub struct AreaArgs {
+    #[arg(
+        short,
+        long,
+        visible_alias = "capture",
+        value_enum,
+        help = "Type of area to capture",
+        long_help = "Type of area to capture\nShorthand aliases are also available"
+    )]
+    pub area: Option<CaptureArea>,
+
+    #[arg(
+        long,
+        group = "area_shortcuts",
+        help = "",
+        long_help = "Shorthand for --area selection"
+    )]
+    pub selection: bool,
+
+    #[arg(
+        long,
+        group = "area_shortcuts",
+        help = "",
+        long_help = "Shorthand for --area monitor"
+    )]
+    pub monitor: bool,
+}
+impl AreaArgs {
+    pub fn parse(&self) -> Option<CaptureArea> {
+        if self.selection {
+            Some(CaptureArea::Selection)
+        } else if self.monitor {
+            Some(CaptureArea::Monitor)
+        } else {
+            self.area.clone()
+        }
+    }
+}
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Args, Debug)]
 #[command(group(
-    ArgGroup::new("mode")
+    ArgGroup::new("required_mode")
+        .required(true)
         .multiple(false)
-        .args(["rofi", "area", "stop"]),
+        .args(["rofi", "area", "selection", "monitor", "stop"]),
 ))]
 pub struct VideoArgs {
+    #[command(flatten)]
+    pub area_args: AreaArgs,
+
     #[command(flatten)]
     pub common_args: CommonArgs,
 
     #[command(flatten)]
     pub rofi_args: RofiArgs,
 
+    #[arg(long, action, help = "Stops any previous video recordings")]
+    pub stop: bool,
+
     #[arg(long, action, help = "Capture video with audio")]
     pub audio: bool,
 
-    #[arg(long, action, help = "Stops any previous video recordings")]
-    pub stop: bool,
+    #[arg(
+        long,
+        value_name = "SECONDS",
+        action,
+        help = "Duration in seconds to record"
+    )]
+    pub duration: Option<u64>,
 
     #[arg(
         name = "FILE",
@@ -49,7 +107,7 @@ impl VideoArgs {
             progs.push("slurp");
         }
 
-        if matches!(self.common_args.area, Some(CaptureArea::Selection)) {
+        if matches!(self.area_args.parse(), Some(CaptureArea::Selection)) {
             progs.push("slurp");
         }
 
@@ -95,12 +153,19 @@ pub struct Screencast {
     pub delay: Option<u64>,
     pub icons: bool,
     pub audio: bool,
+    pub notify: bool,
+    pub duration: Option<u64>,
     pub slurp: Option<String>,
     pub output: PathBuf,
 }
 
 impl Screencast {
     fn capture(&self, mon: &str, filter: &str) {
+        ctrlc::set_handler(move || {
+            Self::stop(false);
+        })
+        .expect("unable to set ctrl-c handler");
+
         // copy the video file to clipboard
         command!("wl-copy")
             .arg("--type")
@@ -111,10 +176,82 @@ impl Screencast {
         // small delay before recording
         std::thread::sleep(std::time::Duration::from_millis(500));
 
+        let lock = LockFile {
+            video: self.output.clone(),
+        };
+
         WfRecorder::new(mon, self.output.clone())
             .audio(self.audio)
             .filter(filter)
             .record();
+
+        // write the lock file
+        lock.write().expect("failed to write to focal.lock");
+
+        // duration provied, recording will stop by itself so no lock file is needed
+        if let Some(duration) = self.duration {
+            std::thread::sleep(std::time::Duration::from_secs(duration));
+
+            Self::stop(false);
+        }
+    }
+
+    pub fn stop(notify: bool) -> bool {
+        // kill all wf-recorder processes
+        let wf_process = std::process::Command::new("pkill")
+            .arg("--echo")
+            .arg("-SIGINT")
+            .arg("wf-recorder")
+            .output()
+            .expect("failed to pkill wf-recorder")
+            .stdout;
+
+        let is_killed = String::from_utf8(wf_process)
+            .expect("failed to parse pkill output")
+            .lines()
+            .count()
+            > 0;
+
+        if let Ok(LockFile { video }) = LockFile::read() {
+            LockFile::remove();
+
+            // show notification with the video thumbnail
+            if notify {
+                Self::notify(&video);
+            }
+
+            return true;
+        }
+
+        is_killed
+    }
+
+    fn notify(video: &PathBuf) {
+        let thumb_path = PathBuf::from("/tmp/focal-thumbnail.jpg");
+
+        if thumb_path.exists() {
+            std::fs::remove_file(&thumb_path).expect("failed to remove notification thumbnail");
+        }
+
+        command!("ffmpeg")
+            .arg("-i")
+            .arg(video)
+            // from 3s in the video
+            .arg("-ss")
+            .arg("00:00:03.000")
+            .arg("-vframes")
+            .arg("1")
+            .arg("-s")
+            .arg("128x72")
+            .arg(&thumb_path)
+            .execute()
+            .expect("failed to create notification thumbnail");
+
+        // show notifcation with the video thumbnail
+        show_notification(
+            &format!("Video captured to {}", video.display()),
+            &thumb_path,
+        );
     }
 
     pub fn selection(&self) {
@@ -128,20 +265,17 @@ impl Screencast {
         std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
 
         let mon = Monitors::focused();
-        self.capture(&mon.name, &mon.rotation.ffmpeg_transpose());
-    }
-
-    pub fn stop(notify: bool) -> bool {
-        LockFile::read().map_or_else(|_| false, |_| WfRecorder::stop(notify))
+        let transpose = mon.rotation.ffmpeg_transpose();
+        self.capture(&mon.name, &transpose);
     }
 
     pub fn rofi(&mut self, theme: &Option<PathBuf>) {
         let mut opts = vec!["󰒉\tSelection", "󰍹\tMonitor", "󰍺\tAll"];
 
         // don't show "All" option if single monitor
-        // if Monitors::all().len() == 1 {
-        opts.pop();
-        // };
+        if Monitors::all().len() == 1 {
+            opts.pop();
+        };
 
         if !self.icons {
             opts = opts
@@ -183,7 +317,6 @@ impl Screencast {
                 self.delay = Some(Self::rofi_delay(theme));
                 self.selection();
             }
-            "All" => unimplemented!("Capturing of all outputs has not been implemented for video"),
             "" => {
                 eprintln!("No rofi selection was made.");
                 std::process::exit(1);
@@ -244,20 +377,19 @@ pub fn main(args: VideoArgs) {
     let mut screencast = Screencast {
         output,
         icons: !args.rofi_args.no_icons,
+        notify: !args.common_args.no_notify,
         delay: args.common_args.delay,
+        duration: args.duration,
         audio: args.audio,
         slurp: args.common_args.slurp,
     };
 
     if args.rofi_args.rofi {
         screencast.rofi(&args.rofi_args.theme);
-    } else if let Some(area) = args.common_args.area {
+    } else if let Some(area) = args.area_args.parse() {
         match area {
             CaptureArea::Monitor => screencast.monitor(),
             CaptureArea::Selection => screencast.selection(),
-            CaptureArea::All => {
-                unimplemented!("Capturing of all outputs has not been implemented for video")
-            }
         }
     }
 }

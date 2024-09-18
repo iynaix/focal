@@ -2,23 +2,90 @@ use std::{path::PathBuf, process::Stdio};
 
 use crate::{
     check_programs,
-    cli::{CaptureArea, Cli, CommonArgs},
+    cli::{Cli, CommonArgs},
     create_parent_dirs, iso8601_filename,
     monitor::FocalMonitors,
     rofi::RofiArgs,
     show_notification, Monitors, Rofi, SlurpGeom,
 };
-use clap::{ArgGroup, Args, CommandFactory};
+use clap::{ArgGroup, Args, CommandFactory, Subcommand, ValueEnum};
 use execute::{command, Execute};
+
+#[derive(Subcommand, ValueEnum, Debug, Clone)]
+pub enum CaptureArea {
+    Monitor,
+    Selection,
+    All,
+}
+
+#[derive(Args, Debug)]
+#[command(group(
+    ArgGroup::new("area_shortcuts")
+        .args(["area", "selection", "monitor", "all"])
+        .multiple(false)
+))]
+pub struct AreaArgs {
+    #[arg(
+        short,
+        long,
+        visible_alias = "capture",
+        value_enum,
+        help = "Type of area to capture",
+        long_help = "Type of area to capture\nShorthand aliases are also available"
+    )]
+    pub area: Option<CaptureArea>,
+
+    #[arg(
+        long,
+        group = "area_shortcuts",
+        help = "",
+        long_help = "Shorthand for --area selection"
+    )]
+    pub selection: bool,
+
+    #[arg(
+        long,
+        group = "area_shortcuts",
+        help = "",
+        long_help = "Shorthand for --area monitor"
+    )]
+    pub monitor: bool,
+
+    #[arg(
+        long,
+        group = "area_shortcuts",
+        help = "",
+        long_help = "Shorthand for --area all"
+    )]
+    pub all: bool,
+}
+
+impl AreaArgs {
+    pub fn parse(&self) -> Option<CaptureArea> {
+        if self.selection {
+            Some(CaptureArea::Selection)
+        } else if self.monitor {
+            Some(CaptureArea::Monitor)
+        } else if self.all {
+            Some(CaptureArea::All)
+        } else {
+            self.area.clone()
+        }
+    }
+}
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Args, Debug)]
 #[command(group(
-    ArgGroup::new("mode")
+    ArgGroup::new("required_mode")
+        .required(true)
         .multiple(false)
-        .args(["rofi", "area"]),
+        .args(["rofi", "area", "selection", "monitor", "all"]),
 ))]
 pub struct ImageArgs {
+    #[command(flatten)]
+    pub area_args: AreaArgs,
+
     #[command(flatten)]
     pub common_args: CommonArgs,
 
@@ -64,7 +131,7 @@ impl ImageArgs {
             progs.push("slurp");
         }
 
-        if matches!(self.common_args.area, Some(CaptureArea::Selection)) {
+        if matches!(self.area_args.parse(), Some(CaptureArea::Selection)) {
             progs.push("slurp");
         }
 
@@ -173,12 +240,7 @@ impl Screenshot {
     }
 
     pub fn all(&self) {
-        let mut w = 0;
-        let mut h = 0;
-        for mon in Monitors::all() {
-            w = w.max(mon.x + mon.w);
-            h = h.max(mon.y + mon.h);
-        }
+        let (w, h) = Monitors::total_dimensions();
 
         std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
         self.capture("", &format!("0,0 {w}x{h}"));
@@ -310,6 +372,8 @@ impl Screenshot {
 }
 
 pub fn main(args: ImageArgs) {
+    dbg!(&args);
+
     if !cfg!(feature = "ocr") && args.ocr.is_some() {
         Cli::command()
             .error(
@@ -346,7 +410,7 @@ pub fn main(args: ImageArgs) {
 
     if args.rofi_args.rofi {
         screenshot.rofi(&args.rofi_args.theme);
-    } else if let Some(area) = args.common_args.area {
+    } else if let Some(area) = args.area_args.parse() {
         match area {
             CaptureArea::Monitor => screenshot.monitor(),
             CaptureArea::Selection => screenshot.selection(),
