@@ -145,7 +145,8 @@ impl SlurpGeom {
     #[cfg(not(feature = "hyprland"))]
     pub const fn reset_fade_animation(_anim: &Option<String>) {}
 
-    pub fn prompt(slurp_args: &Option<String>) -> Self {
+    /// returns the selected geometry and if a window was selected
+    pub fn prompt(slurp_args: &Option<String>) -> (Self, bool) {
         let window_geoms = Monitors::window_geoms();
 
         let orig_fade_anim = Self::disable_fade_animation();
@@ -195,7 +196,10 @@ impl SlurpGeom {
             Ok(sel) => window_geoms
                 .into_iter()
                 .find(|geom| geom.to_string() == sel)
-                .unwrap_or_else(|| sel.parse().expect("Failed to parse slurp selection")),
+                .map_or_else(
+                    || (sel.parse().expect("Failed to parse slurp selection"), false),
+                    |sel| (sel, true),
+                ),
         }
     }
 }

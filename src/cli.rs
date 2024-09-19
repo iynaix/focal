@@ -35,6 +35,14 @@ pub struct CommonArgs {
     #[arg(short, long, help = "Options to pass to slurp")]
     pub slurp: Option<String>,
 
+    // not available for sway
+    #[arg(
+        long,
+        hide = cfg!(not(feature = "hyprland")),
+        help = "Do not show rounded corners when capturing a window. (Hyprland only)"
+    )]
+    pub no_rounded_windows: bool,
+
     #[arg(long, action, help = "Do not show notifications")]
     pub no_notify: bool,
 

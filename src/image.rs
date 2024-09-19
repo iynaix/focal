@@ -195,6 +195,7 @@ impl Grim {
 
 pub struct Screenshot {
     pub delay: Option<u64>,
+    pub no_rounded_windows: bool,
     pub edit: Option<String>,
     pub icons: bool,
     pub notify: bool,
@@ -236,7 +237,26 @@ impl Screenshot {
 
     pub fn selection(&self) {
         std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
-        self.capture("", &SlurpGeom::prompt(&self.slurp).to_string());
+        let (geom, is_window) = SlurpGeom::prompt(&self.slurp);
+
+        let do_capture = || self.capture("", &geom.to_string());
+
+        #[cfg(feature = "hyprland")]
+        if is_window && self.no_rounded_windows {
+            use hyprland::keyword::Keyword;
+
+            if let Ok(Keyword {
+                value: rounding, ..
+            }) = Keyword::get("decoration:rounding")
+            {
+                Keyword::set("decoration:rounding", 0).expect("unable to disable rounding");
+                do_capture();
+                Keyword::set("decoration:rounding", rounding).expect("unable to restore rounding");
+                return;
+            }
+        }
+
+        do_capture();
     }
 
     pub fn all(&self) {
@@ -402,6 +422,7 @@ pub fn main(args: ImageArgs) {
         output,
         delay: args.common_args.delay,
         edit: args.edit,
+        no_rounded_windows: args.common_args.no_rounded_windows,
         icons: !args.rofi_args.no_icons,
         notify: !args.common_args.no_notify,
         ocr: args.ocr,

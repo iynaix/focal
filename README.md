@@ -67,40 +67,42 @@ Options:
 
 focal image:
 Captures a screenshot.
-  -a, --area <AREA>     Type of area to capture [aliases: capture] [possible values: monitor, selection, all]
+  -a, --area <AREA>         Type of area to capture [aliases: capture] [possible values: monitor, selection, all]
       --selection
       --monitor
       --all
-  -t, --delay <DELAY>   Delay in seconds before capturing
-  -s, --slurp <SLURP>   Options to pass to slurp
-      --no-notify       Do not show notifications
-      --no-save         Do not save the file permanently
-      --rofi            Display rofi menu for selection options
-      --no-icons        Do not show icons for rofi menu
-      --theme <THEME>   Path to a rofi theme
-  -e, --edit <COMMAND>  Edit screenshot using COMMAND
-                        The image path will be passed as $IMAGE
-      --ocr [<LANG>]    Runs OCR on the selected text
-  -h, --help            Print help (see more with '--help')
-  [FILE]            Files are created in XDG_PICTURES_DIR/Screenshots if not specified
+  -t, --delay <DELAY>       Delay in seconds before capturing
+  -s, --slurp <SLURP>       Options to pass to slurp
+      --no-rounded-windows  Do not show rounded corners when capturing a window. (Hyprland only)
+      --no-notify           Do not show notifications
+      --no-save             Do not save the file permanently
+      --rofi                Display rofi menu for selection options
+      --no-icons            Do not show icons for rofi menu
+      --theme <THEME>       Path to a rofi theme
+  -e, --edit <COMMAND>      Edit screenshot using COMMAND
+                            The image path will be passed as $IMAGE
+      --ocr [<LANG>]        Runs OCR on the selected text
+  -h, --help                Print help (see more with '--help')
+  [FILE]                Files are created in XDG_PICTURES_DIR/Screenshots if not specified
 
 focal video:
 Captures a video.
-  -a, --area <AREA>          Type of area to capture [aliases: capture] [possible values: monitor, selection]
+  -a, --area <AREA>         Type of area to capture [aliases: capture] [possible values: monitor, selection]
       --selection
       --monitor
-  -t, --delay <DELAY>        Delay in seconds before capturing
-  -s, --slurp <SLURP>        Options to pass to slurp
-      --no-notify            Do not show notifications
-      --no-save              Do not save the file permanently
-      --rofi                 Display rofi menu for selection options
-      --no-icons             Do not show icons for rofi menu
-      --theme <THEME>        Path to a rofi theme
-      --stop                 Stops any previous video recordings
-      --audio                Capture video with audio
-      --duration <SECONDS>   Duration in seconds to record
-  -h, --help                 Print help (see more with '--help')
-  [FILE]                 Files are created in XDG_VIDEOS_DIR/Screencasts if not specified
+  -t, --delay <DELAY>       Delay in seconds before capturing
+  -s, --slurp <SLURP>       Options to pass to slurp
+      --no-rounded-windows  Do not show rounded corners when capturing a window. (Hyprland only)
+      --no-notify           Do not show notifications
+      --no-save             Do not save the file permanently
+      --rofi                Display rofi menu for selection options
+      --no-icons            Do not show icons for rofi menu
+      --theme <THEME>       Path to a rofi theme
+      --stop                Stops any previous video recordings
+      --audio               Capture video with audio
+      --duration <SECONDS>  Duration in seconds to record
+  -h, --help                Print help (see more with '--help')
+  [FILE]                Files are created in XDG_VIDEOS_DIR/Screencasts if not specified
 
 focal help:
 Print this message or the help of the given subcommand(s)
