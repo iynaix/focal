@@ -149,7 +149,7 @@ Create a custom waybar module similar to the following:
 ```jsonc
 {
   "custom/focal": {
-    "exec": "focal-waybar",
+    "exec": "focal-waybar --signal 1 --recording 'REC'",
     "format": "{}",
     "interval": "once",
     "on-click": "focal video --stop",
