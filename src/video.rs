@@ -261,7 +261,7 @@ impl Screencast {
         // show notifcation with the video thumbnail
         show_notification(
             &format!("Video captured to {}", video.display()),
-            &thumb_path,
+            &Some(thumb_path),
         );
     }
 
@@ -285,7 +285,6 @@ impl Screencast {
             {
                 Keyword::set("decoration:rounding", 0).expect("unable to disable rounding");
 
-                // TODO: write to lock file?
                 do_capture(Some(rounding));
             }
         }

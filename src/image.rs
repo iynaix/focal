@@ -187,7 +187,7 @@ impl Grim {
         if notify {
             show_notification(
                 &format!("Screenshot captured to {}", &self.output.display()),
-                &self.output,
+                &Some(self.output),
             );
         }
     }
@@ -304,6 +304,10 @@ impl Screenshot {
             .stdout(Stdio::piped())
             .execute_input(&output.stdout)
             .expect("unable to copy ocr text");
+
+        if let Ok(copied_text) = std::str::from_utf8(&output.stdout) {
+            show_notification(copied_text, &None);
+        }
     }
 
     pub fn rofi(&mut self, theme: &Option<PathBuf>) {
@@ -392,8 +396,6 @@ impl Screenshot {
 }
 
 pub fn main(args: ImageArgs) {
-    dbg!(&args);
-
     if !cfg!(feature = "ocr") && args.ocr.is_some() {
         Cli::command()
             .error(

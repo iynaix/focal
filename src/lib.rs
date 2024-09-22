@@ -44,16 +44,24 @@ pub fn command_json<T: serde::de::DeserializeOwned>(cmd: &mut Command) -> T {
     serde_json::from_str(&output_str).expect("unable to parse json from command")
 }
 
-pub fn show_notification(body: &str, output: &PathBuf) {
-    notify_rust::Notification::new()
-        .body(body)
-        .icon(&output.to_string_lossy())
+pub fn show_notification(body: &str, output: &Option<PathBuf>) {
+    let mut notification = notify_rust::Notification::new();
+
+    notification.body(body);
+
+    if let Some(output) = output {
+        notification.icon(&output.to_string_lossy());
+    }
+
+    let notification = notification
         .appname("focal")
         .timeout(3000)
         .action("open", "open")
         .show()
-        .expect("Failed to send notification")
-        .wait_for_action(|action| {
+        .expect("Failed to send notification");
+
+    if let Some(output) = output {
+        notification.wait_for_action(|action| {
             if action == "open" {
                 std::process::Command::new("xdg-open")
                     .arg(output)
@@ -61,6 +69,7 @@ pub fn show_notification(body: &str, output: &PathBuf) {
                     .expect("Failed to open file");
             }
         });
+    }
 }
 
 /// check if all required programs are installed
