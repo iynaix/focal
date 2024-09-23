@@ -25,7 +25,17 @@ assert lib.assertOneOf "backend" backend [
 rustPlatform.buildRustPackage {
   pname = "focal";
 
-  src = ./.;
+  src = lib.fileset.toSource {
+    root = ./.;
+    fileset = lib.fileset.difference ./. (
+      # don't include in build
+      lib.fileset.unions [
+        ./README.md
+        ./LICENSE
+        # ./PKGBUILD
+      ]
+    );
+  };
 
   inherit version;
 

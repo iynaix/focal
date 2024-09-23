@@ -305,8 +305,10 @@ impl Screenshot {
             .execute_input(&output.stdout)
             .expect("unable to copy ocr text");
 
-        if let Ok(copied_text) = std::str::from_utf8(&output.stdout) {
-            show_notification(copied_text, &None);
+        if self.notify {
+            if let Ok(copied_text) = std::str::from_utf8(&output.stdout) {
+                show_notification(copied_text, &None);
+            }
         }
     }
 
