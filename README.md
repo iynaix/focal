@@ -20,6 +20,7 @@ focal is a rofi menu for capturing and copying screenshots or videos on hyprland
 
 ## Installation
 
+### NixOS
 ```nix
 {
   inputs.focal = {
@@ -49,6 +50,17 @@ nix run github:iynaix/focal#focal-sway
 OCR support can be optionally disabled through the use of an override:
 ```nix
 (inputs.focal.packages.${pkgs.system}.default.override { ocr = false; })
+```
+
+### Arch Linux
+
+Arch Linux users can install from the [AUR](https://aur.archlinux.org/) or [AUR-git](https://aur.archlinux.org/packages/focal-hyprland-git).
+
+```sh
+# for hyprland
+paru -S focal-hyprland-git
+# for sway
+paru -S focal-sway-git
 ```
 
 ## Usage
