@@ -61,10 +61,12 @@ rustPlatform.buildRustPackage {
   ];
 
   postInstall = ''
-    installShellCompletion --cmd focal \
-      --bash <($out/bin/focal generate bash) \
-      --fish <($out/bin/focal generate fish) \
-      --zsh <($out/bin/focal generate zsh)
+    for cmd in focal focal-waybar; do
+      installShellCompletion --cmd $cmd \
+        --bash <($out/bin/$cmd generate bash) \
+        --fish <($out/bin/$cmd generate fish) \
+        --zsh <($out/bin/$cmd generate zsh)
+    done
   '';
 
   postFixup =

@@ -1,6 +1,15 @@
-use clap::Parser;
-use focal::video::LockFile;
+use clap::{CommandFactory, Parser, Subcommand};
+use focal::{
+    cli::{generate_completions, GenerateArgs},
+    video::LockFile,
+};
 use std::{env, path::PathBuf, process::Command};
+
+#[derive(Subcommand, Debug)]
+pub enum FocalWaybarSubcommands {
+    #[command(name = "generate", about = "Generate shell completions", hide = true)]
+    Generate(GenerateArgs),
+}
 
 #[derive(Parser, Debug)]
 #[command(
@@ -10,6 +19,10 @@ use std::{env, path::PathBuf, process::Command};
     version = env!("CARGO_PKG_VERSION"),
 )]
 struct Cli {
+    // subcommand for generating shell completions
+    #[command(subcommand)]
+    pub command: Option<FocalWaybarSubcommands>,
+
     #[arg(long, help = "Start / stop focal recording")]
     toggle: bool,
 
@@ -66,6 +79,11 @@ fn update_waybar(message: &str, args: &Cli) {
 
 fn main() {
     let args = Cli::parse();
+
+    if let Some(FocalWaybarSubcommands::Generate(args)) = args.command {
+        generate_completions("focal-waybar", &mut Cli::command(), &args.shell);
+        return;
+    }
 
     let lock_exists = LockFile::exists();
 

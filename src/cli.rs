@@ -1,5 +1,5 @@
 use crate::{image::ImageArgs, video::VideoArgs};
-use clap::{Args, CommandFactory, Parser, Subcommand, ValueEnum};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 use clap_complete::{generate, Shell};
 
 #[derive(Subcommand, Debug)]
@@ -63,13 +63,15 @@ pub struct Cli {
     pub command: FocalSubcommands,
 }
 
-pub fn generate_completions(shell_completion: &ShellCompletion) {
-    let mut cmd = Cli::command();
-
+pub fn generate_completions(
+    progname: &str,
+    cmd: &mut clap::Command,
+    shell_completion: &ShellCompletion,
+) {
     match shell_completion {
-        ShellCompletion::Bash => generate(Shell::Bash, &mut cmd, "focal", &mut std::io::stdout()),
-        ShellCompletion::Zsh => generate(Shell::Zsh, &mut cmd, "focal", &mut std::io::stdout()),
-        ShellCompletion::Fish => generate(Shell::Fish, &mut cmd, "focal", &mut std::io::stdout()),
+        ShellCompletion::Bash => generate(Shell::Bash, cmd, progname, &mut std::io::stdout()),
+        ShellCompletion::Zsh => generate(Shell::Zsh, cmd, progname, &mut std::io::stdout()),
+        ShellCompletion::Fish => generate(Shell::Fish, cmd, progname, &mut std::io::stdout()),
     }
 }
 
