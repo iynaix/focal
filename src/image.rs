@@ -1,4 +1,7 @@
-use std::{path::PathBuf, process::Stdio};
+use std::{
+    path::PathBuf,
+    process::{Command, Stdio},
+};
 
 use crate::{
     check_programs,
@@ -169,7 +172,7 @@ impl Grim {
     }
 
     pub fn capture(self, notify: bool) {
-        let mut grim = command!("grim");
+        let mut grim = Command::new("grim");
 
         if !self.monitor.is_empty() {
             grim.arg("-o").arg(self.monitor);
@@ -208,7 +211,7 @@ impl Screenshot {
     fn capture(&self, monitor: &str, geometry: &str) {
         if self.ocr.is_none() {
             // copy the image file to clipboard
-            command!("wl-copy")
+            Command::new("wl-copy")
                 .arg("--type")
                 .arg("text/uri-list")
                 .execute_input(&format!("file://{}", self.output.display()))
@@ -269,7 +272,7 @@ impl Screenshot {
     fn edit(&self) {
         if let Some(prog) = &self.edit {
             if prog.ends_with("swappy") {
-                command!("swappy")
+                Command::new("swappy")
                     .arg("--file")
                     .arg(self.output.clone())
                     .arg("--output-file")
@@ -286,7 +289,7 @@ impl Screenshot {
     }
 
     fn ocr(&self) {
-        let mut cmd = command!("tesseract");
+        let mut cmd = Command::new("tesseract");
         cmd.arg(&self.output).arg("-");
 
         if let Some(lang) = &self.ocr {
@@ -300,7 +303,7 @@ impl Screenshot {
             .execute_output()
             .expect("Failed to run tesseract");
 
-        command!("wl-copy")
+        Command::new("wl-copy")
             .stdout(Stdio::piped())
             .execute_input(&output.stdout)
             .expect("unable to copy ocr text");

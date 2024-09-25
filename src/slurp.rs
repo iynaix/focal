@@ -1,5 +1,8 @@
-use execute::{command, Execute};
-use std::{fmt, process::Stdio};
+use execute::Execute;
+use std::{
+    fmt,
+    process::{Command, Stdio},
+};
 
 use crate::{monitor::FocalMonitors, Monitors};
 
@@ -128,11 +131,6 @@ impl SlurpGeom {
         })
     }
 
-    #[cfg(not(feature = "hyprland"))]
-    pub const fn disable_fade_animation() -> Option<String> {
-        None
-    }
-
     #[cfg(feature = "hyprland")]
     pub fn reset_fade_animation(anim: &Option<String>) {
         use hyprland::keyword::Keyword;
@@ -142,13 +140,11 @@ impl SlurpGeom {
         }
     }
 
-    #[cfg(not(feature = "hyprland"))]
-    pub const fn reset_fade_animation(_anim: &Option<String>) {}
-
     /// returns the selected geometry and if a window was selected
     pub fn prompt(slurp_args: &Option<String>) -> (Self, bool) {
         let window_geoms = Monitors::window_geoms();
 
+        #[cfg(feature = "hyprland")]
         let orig_fade_anim = Self::disable_fade_animation();
 
         let slurp_geoms = window_geoms
@@ -157,7 +153,7 @@ impl SlurpGeom {
             .collect::<Vec<_>>()
             .join("\n");
 
-        let mut slurp_cmd = command!("slurp");
+        let mut slurp_cmd = Command::new("slurp");
         if let Some(slurp_args) = slurp_args {
             slurp_cmd.args(slurp_args.split_whitespace());
         } else {
@@ -182,6 +178,7 @@ impl SlurpGeom {
             });
 
         // restore the original fade animation
+        #[cfg(feature = "hyprland")]
         Self::reset_fade_animation(&orig_fade_anim);
 
         match sel {

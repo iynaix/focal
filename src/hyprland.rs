@@ -50,16 +50,18 @@ impl FocalMonitors for HyprMonitors {
             .map(|mon| mon.active_workspace.id)
             .collect();
 
-        let windows = Clients::get().expect("unable to get clients");
-        windows
-            .iter()
-            .filter(|&win| (active_wksps.contains(&win.workspace.id)))
-            .map(|win| SlurpGeom {
-                x: win.at.0.into(),
-                y: win.at.1.into(),
-                w: win.size.0.into(),
-                h: win.size.1.into(),
-            })
-            .collect()
+        // do not error out on a different version of hyprland where the serialization might fail
+        Clients::get().map_or(Vec::new(), |windows| {
+            windows
+                .iter()
+                .filter(|&win| (active_wksps.contains(&win.workspace.id)))
+                .map(|win| SlurpGeom {
+                    x: win.at.0.into(),
+                    y: win.at.1.into(),
+                    w: win.size.0.into(),
+                    h: win.size.1.into(),
+                })
+                .collect()
+        })
     }
 }

@@ -1,5 +1,7 @@
-use execute::command;
-use std::{path::PathBuf, process::Stdio};
+use std::{
+    path::PathBuf,
+    process::{Command, Stdio},
+};
 
 #[derive(Default)]
 pub struct WfRecorder {
@@ -29,7 +31,7 @@ impl WfRecorder {
     }
 
     pub fn record(self) {
-        let mut wfrecorder = command!("wf-recorder");
+        let mut wfrecorder = Command::new("wf-recorder");
 
         if !self.filter.is_empty() {
             wfrecorder.arg("--filter").arg(&self.filter);

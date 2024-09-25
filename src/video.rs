@@ -1,6 +1,6 @@
 use clap::{ArgGroup, Args, Subcommand, ValueEnum};
 use serde::{Deserialize, Serialize};
-use std::{path::PathBuf, vec};
+use std::{path::PathBuf, process::Command, vec};
 
 use crate::{
     check_programs, cli::CommonArgs, create_parent_dirs, iso8601_filename, monitor::FocalMonitors,
@@ -171,7 +171,7 @@ impl Screencast {
         .expect("unable to set ctrl-c handler");
 
         // copy the video file to clipboard
-        command!("wl-copy")
+        Command::new("wl-copy")
             .arg("--type")
             .arg("text/uri-list")
             .execute_input(&format!("file://{}", self.output.display()))
@@ -244,7 +244,7 @@ impl Screencast {
             std::fs::remove_file(&thumb_path).expect("failed to remove notification thumbnail");
         }
 
-        command!("ffmpeg")
+        Command::new("ffmpeg")
             .arg("-i")
             .arg(video)
             // from 3s in the video
