@@ -43,6 +43,7 @@ pub struct FocalMonitor {
     pub y: i32,
     pub w: i32,
     pub h: i32,
+    pub scale: f32,
     pub rotation: Rotation,
 }
 

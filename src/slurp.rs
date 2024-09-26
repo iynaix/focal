@@ -85,11 +85,20 @@ impl SlurpGeom {
             });
 
         // get coordinates relative to monitor
-        let (x, y) = (x - mon.x, y - mon.y);
+        let (mut w, mut h) = (w, h);
+        let (mut x, mut y) = (x - mon.x, y - mon.y);
+
+        // handle monitor scaling
+        if mon.scale != 1.0 {
+            x = (x as f32 * mon.scale).round() as i32;
+            y = (y as f32 * mon.scale).round() as i32;
+            w = (w as f32 * mon.scale).round() as i32;
+            h = (h as f32 * mon.scale).round() as i32;
+        }
 
         // h264 requires the width and height to be even
-        let w = round2(w);
-        let h = round2(h);
+        w = round2(w);
+        h = round2(h);
 
         let transpose = mon.rotation.ffmpeg_transpose();
         let filter = format!(

@@ -12,6 +12,7 @@ use serde_derive::Deserialize;
 pub struct GetOutput {
     pub name: String,
     pub rect: Rect,
+    pub scale: f32,
     pub transform: String,
     pub focused: bool,
 }
@@ -63,6 +64,7 @@ fn to_focal_monitor(mon: &GetOutput) -> FocalMonitor {
         y: mon.rect.y,
         w: mon.rect.width,
         h: mon.rect.height,
+        scale: mon.scale,
         rotation: match mon.transform.as_str() {
             "normal" => Rotation::Normal,
             "90" => Rotation::Normal90,

@@ -15,6 +15,7 @@ fn to_focal_monitor(mon: &Monitor) -> FocalMonitor {
         y: mon.y,
         w: mon.width.into(),
         h: mon.height.into(),
+        scale: mon.scale,
         rotation: match mon.transform {
             Transforms::Normal => Rotation::Normal,
             Transforms::Normal90 => Rotation::Normal90,
