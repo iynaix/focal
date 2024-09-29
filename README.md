@@ -83,6 +83,7 @@ Captures a screenshot.
       --selection
       --monitor
       --all
+      --freeze              Freezes the screen before selecting an area.
   -t, --delay <DELAY>       Delay in seconds before capturing
   -s, --slurp <SLURP>       Options to pass to slurp
       --no-rounded-windows  Do not show rounded corners when capturing a window. (Hyprland only)

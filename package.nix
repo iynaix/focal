@@ -10,6 +10,7 @@
   rofi-wayland,
   slurp,
   tesseract,
+  hyprpicker,
   wf-recorder,
   wl-clipboard,
   xdg-utils,
@@ -78,6 +79,7 @@ rustPlatform.buildRustPackage {
           procps
           rofi-wayland
           slurp
+          hyprpicker
           wf-recorder
           wl-clipboard
           xdg-utils

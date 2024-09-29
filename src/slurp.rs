@@ -89,7 +89,10 @@ impl SlurpGeom {
         let (mut x, mut y) = (x - mon.x, y - mon.y);
 
         // handle monitor scaling
-        if mon.scale != 1.0 {
+        #[allow(clippy::cast_precision_loss)]
+        #[allow(clippy::cast_possible_truncation)]
+        // mon.scale != 1.0
+        if (mon.scale - 1.0).abs() > f32::EPSILON {
             x = (x as f32 * mon.scale).round() as i32;
             y = (y as f32 * mon.scale).round() as i32;
             w = (w as f32 * mon.scale).round() as i32;

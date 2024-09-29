@@ -35,6 +35,7 @@
                 slurp
                 sway
                 tesseract
+                hyprpicker
                 wl-clipboard
                 xdg-utils # xdg-open
               ];

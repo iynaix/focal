@@ -85,9 +85,18 @@ impl AreaArgs {
         .multiple(false)
         .args(["rofi", "area", "selection", "monitor", "all"]),
 ))]
+#[command(group(
+    ArgGroup::new("freeze_mode")
+        .required(false)
+        .multiple(false)
+        .args(["rofi", "area", "selection"]),
+))]
 pub struct ImageArgs {
     #[command(flatten)]
     pub area_args: AreaArgs,
+
+    #[arg(long, action, help = "Freezes the screen before selecting an area.")]
+    pub freeze: bool,
 
     #[command(flatten)]
     pub common_args: CommonArgs,
@@ -196,9 +205,11 @@ impl Grim {
     }
 }
 
+#[allow(clippy::struct_excessive_bools)]
 pub struct Screenshot {
     pub delay: Option<u64>,
     pub no_rounded_windows: bool,
+    pub freeze: bool,
     pub edit: Option<String>,
     pub icons: bool,
     pub notify: bool,
@@ -239,10 +250,28 @@ impl Screenshot {
     }
 
     pub fn selection(&self) {
+        if self.freeze {
+            Command::new("hyprpicker")
+                .arg("-r")
+                .arg("-z")
+                .spawn()
+                .expect("could not freeze screen");
+            std::thread::sleep(std::time::Duration::from_millis(200));
+        }
+
         std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
         let (geom, is_window) = SlurpGeom::prompt(&self.slurp);
 
-        let do_capture = || self.capture("", &geom.to_string());
+        if self.freeze {
+            Command::new("pkill")
+                .arg("hyprpicker")
+                .spawn()
+                .expect("could not unfreeze screen");
+        }
+
+        let do_capture = || {
+            self.capture("", &geom.to_string());
+        };
 
         #[cfg(feature = "hyprland")]
         if is_window && self.no_rounded_windows {
@@ -428,6 +457,7 @@ pub fn main(args: ImageArgs) {
     let mut screenshot = Screenshot {
         output,
         delay: args.common_args.delay,
+        freeze: args.freeze,
         edit: args.edit,
         no_rounded_windows: args.common_args.no_rounded_windows,
         icons: !args.rofi_args.no_icons,
