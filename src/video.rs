@@ -81,8 +81,15 @@ pub struct VideoArgs {
     #[arg(long, action, help = "Stops any previous video recordings")]
     pub stop: bool,
 
-    #[arg(long, action, help = "Capture video with audio")]
-    pub audio: bool,
+    #[arg(
+        long,
+        num_args = 0..=1,
+        value_name = "DEVICE",
+        default_missing_value = "",
+        help = "Capture video with audio, optionally specifying an audio device",
+        long_help = "Capture video with audio, optionally specifying an audio device\nYou can find your device by running: pactl list sources | grep Name"
+    )]
+    pub audio: Option<String>,
 
     #[arg(
         long,
@@ -155,7 +162,7 @@ impl LockFile {
 pub struct Screencast {
     pub delay: Option<u64>,
     pub icons: bool,
-    pub audio: bool,
+    pub audio: Option<String>,
     pub no_rounded_windows: bool,
     pub notify: bool,
     pub duration: Option<u64>,
@@ -186,7 +193,7 @@ impl Screencast {
         };
 
         WfRecorder::new(mon, self.output.clone())
-            .audio(self.audio)
+            .audio(&self.audio)
             .filter(filter)
             .record();
 
@@ -329,8 +336,8 @@ impl Screencast {
             .run();
 
         // custom keyboard code selected
-        if !self.audio {
-            self.audio = exit_code == 10;
+        if self.audio.is_none() {
+            self.audio = (exit_code == 10).then_some(String::new());
         }
 
         let sel = sel

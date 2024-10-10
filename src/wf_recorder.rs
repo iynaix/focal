@@ -6,7 +6,7 @@ use std::{
 #[derive(Default)]
 pub struct WfRecorder {
     monitor: String,
-    audio: bool,
+    audio: Option<String>,
     video: PathBuf,
     filter: String,
 }
@@ -20,8 +20,8 @@ impl WfRecorder {
         }
     }
 
-    pub const fn audio(mut self, audio: bool) -> Self {
-        self.audio = audio;
+    pub fn audio(mut self, audio: &Option<String>) -> Self {
+        self.audio.clone_from(audio);
         self
     }
 
@@ -37,8 +37,12 @@ impl WfRecorder {
             wfrecorder.arg("--filter").arg(&self.filter);
         }
 
-        if self.audio {
+        if let Some(device) = &self.audio {
             wfrecorder.arg("--audio");
+
+            if !device.is_empty() {
+                wfrecorder.arg("--device").arg(device);
+            }
         }
 
         wfrecorder
