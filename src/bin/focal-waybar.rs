@@ -36,6 +36,13 @@ struct Cli {
 
     #[arg(
         long,
+        default_value = "1",
+        help = "Interval in seconds in which the module is updated"
+    )]
+    interval: u64,
+
+    #[arg(
+        long,
         value_name = "MESSAGE",
         default_value = "REC",
         help = "Message to display in waybar module when recording"
@@ -85,35 +92,38 @@ fn main() {
         return;
     }
 
-    let lock_exists = LockFile::exists();
+    loop {
+        let lock_exists = LockFile::exists();
 
-    if args.toggle {
-        if lock_exists {
-            // stop the video
-            Command::new("focal")
-                .arg("video")
-                .args(&args.focal_args)
-                .output()
-                .expect("Failed to execute focal");
-            update_waybar(&args.stopped, &args);
-        } else {
-            // start recording
-            update_waybar(&args.recording, &args);
+        if args.toggle {
+            if lock_exists {
+                // stop the video
+                Command::new("focal")
+                    .arg("video")
+                    .args(&args.focal_args)
+                    .output()
+                    .expect("Failed to execute focal");
+                update_waybar(&args.stopped, &args);
+            } else {
+                // start recording
+                update_waybar(&args.recording, &args);
 
-            Command::new("focal")
-                .arg("video")
-                .args(&args.focal_args)
-                .output()
-                .expect("Failed to execute focal");
+                Command::new("focal")
+                    .arg("video")
+                    .args(&args.focal_args)
+                    .output()
+                    .expect("Failed to execute focal");
+            }
         }
-        std::process::exit(0);
-    }
 
-    // no toggle, simple update
-    if lock_exists {
-        update_waybar(&args.recording, &args);
-    } else {
-        update_waybar(&args.stopped, &args);
+        // no toggle, simple update
+        if lock_exists {
+            update_waybar(&args.recording, &args);
+        } else {
+            update_waybar(&args.stopped, &args);
+        }
+
+        std::thread::sleep(std::time::Duration::from_secs(args.interval));
     }
 }
 

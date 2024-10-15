@@ -151,6 +151,7 @@ Arguments:
 Options:
       --toggle               Start / stop focal recording
       --signal <N>           Signal number to update module (SIGRTMIN+N), default is 1 [default: 1]
+      --interval <INTERVAL>  Interval in seconds in which the module is updated [default: 1]
       --recording <MESSAGE>  Message to display in waybar module when recording [default: REC]
       --stopped <MESSAGE>    Message to display in waybar module when not recording [default: ]
   -h, --help                 Print help
