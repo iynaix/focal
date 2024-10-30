@@ -3,7 +3,7 @@ use focal::{
     cli::{generate_completions, GenerateArgs},
     video::LockFile,
 };
-use std::{env, path::PathBuf, process::Command};
+use std::env;
 
 #[derive(Subcommand, Debug)]
 pub enum FocalWaybarSubcommands {
@@ -23,24 +23,6 @@ struct Cli {
     #[command(subcommand)]
     pub command: Option<FocalWaybarSubcommands>,
 
-    #[arg(long, help = "Start / stop focal recording")]
-    toggle: bool,
-
-    #[arg(
-        long,
-        value_name = "N",
-        default_value = "1",
-        help = "Signal number to update module (SIGRTMIN+N), default is 1"
-    )]
-    signal: u8,
-
-    #[arg(
-        long,
-        default_value = "1",
-        help = "Interval in seconds in which the module is updated"
-    )]
-    interval: u64,
-
     #[arg(
         long,
         value_name = "MESSAGE",
@@ -56,32 +38,6 @@ struct Cli {
         help = "Message to display in waybar module when not recording"
     )]
     stopped: String,
-
-    // captures leftover arguments to be passed to `focal video`
-    #[arg(
-        allow_hyphen_values = true,
-        num_args = 0..,
-        help = "Additional arguments to pass to 'focal video'"
-    )]
-    pub focal_args: Vec<String>,
-}
-
-fn update_waybar(message: &str, args: &Cli) {
-    println!("{message}");
-
-    // waybar is wrapped on nixos
-    let waybar_process = if PathBuf::from("/etc/NIXOS").exists() {
-        ".waybar-wrapped"
-    } else {
-        "waybar"
-    };
-
-    Command::new("pkill")
-        .arg("--signal")
-        .arg(format!("SIGRTMIN+{}", args.signal))
-        .arg(waybar_process)
-        .output()
-        .expect("Failed to execute pkill");
 }
 
 fn main() {
@@ -92,57 +48,10 @@ fn main() {
         return;
     }
 
-    loop {
-        let lock_exists = LockFile::exists();
-
-        if args.toggle {
-            if lock_exists {
-                // stop the video
-                Command::new("focal")
-                    .arg("video")
-                    .args(&args.focal_args)
-                    .output()
-                    .expect("Failed to execute focal");
-                update_waybar(&args.stopped, &args);
-            } else {
-                // start recording
-                update_waybar(&args.recording, &args);
-
-                Command::new("focal")
-                    .arg("video")
-                    .args(&args.focal_args)
-                    .output()
-                    .expect("Failed to execute focal");
-            }
-        }
-
-        // no toggle, simple update
-        if lock_exists {
-            update_waybar(&args.recording, &args);
-        } else {
-            update_waybar(&args.stopped, &args);
-        }
-
-        std::thread::sleep(std::time::Duration::from_secs(args.interval));
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_focal_args() {
-        let cmd = "focal-waybar --toggle --signal 1 --recording ABC --stopped STOP --audio --rofi";
-        let args = Cli::try_parse_from(cmd.split_whitespace());
-        assert!(args.is_ok(), "{cmd}");
-        if let Ok(args) = args {
-            let msg = "test focal args";
-            assert!(args.toggle, "{msg}");
-            assert_eq!(args.signal, 1, "{msg}");
-            assert_eq!(args.recording, "ABC", "{msg}");
-            assert_eq!(args.stopped, "STOP", "{msg}");
-            assert_eq!(args.focal_args, ["--audio", "--rofi"], "{msg}");
-        }
-    }
+    let output = if LockFile::exists() {
+        args.recording
+    } else {
+        args.stopped
+    };
+    println!("{output}");
 }

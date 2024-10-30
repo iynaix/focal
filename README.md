@@ -143,15 +143,9 @@ An optional `focal-waybar` script is available for [waybar](https://github.com/A
 $ focal-waybar --help
 Updates waybar module with focal's recording status.
 
-Usage: focal-waybar [OPTIONS] [FOCAL_ARGS]...
-
-Arguments:
-  [FOCAL_ARGS]...  Additional arguments to pass to 'focal video'
+Usage: focal-waybar [OPTIONS]
 
 Options:
-      --toggle               Start / stop focal recording
-      --signal <N>           Signal number to update module (SIGRTMIN+N), default is 1 [default: 1]
-      --interval <INTERVAL>  Interval in seconds in which the module is updated [default: 1]
       --recording <MESSAGE>  Message to display in waybar module when recording [default: REC]
       --stopped <MESSAGE>    Message to display in waybar module when not recording [default: ]
   -h, --help                 Print help
@@ -163,11 +157,11 @@ Create a custom waybar module similar to the following:
 ```jsonc
 {
   "custom/focal": {
-    "exec": "focal-waybar --signal 1 --recording 'REC'",
+    "exec": "focal-waybar --recording 'REC'",
     "format": "{}",
-    "interval": "once",
+    // interval to poll for updated recording status
+    "interval": 1,
     "on-click": "focal video --stop",
-    "signal": 1
   },
 }
 ```
@@ -176,12 +170,12 @@ focal video recordings can then be started / stopped using keybindings such as:
 
 **hyprland**:
 ```
-bind=$mainMod, backslash, exec, focal-waybar --toggle --signal 1 --recording 'REC' --rofi
+bind=$mainMod, backslash, exec, focal video --rofi --audio
 ```
 
 **sway**:
 ```
-bindsym $mod+backslash exec "focal-waybar --toggle --signal 1 --recording 'REC' --rofi"
+bindsym $mod+backslash exec "focal video --rofi --audio"
 ```
 
 ## Packaging
