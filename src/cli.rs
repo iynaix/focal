@@ -1,14 +1,15 @@
-use crate::{image::ImageArgs, video::VideoArgs};
+use crate::image::ImageArgs;
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use clap_complete::{generate, Shell};
 
 #[derive(Subcommand, Debug)]
-pub enum FocalSubcommands {
+pub enum FocalSubcommand {
     #[command(name = "image", about = "Captures a screenshot.")]
     Image(ImageArgs),
 
+    #[cfg(feature = "video")]
     #[command(name = "video", about = "Captures a video.")]
-    Video(VideoArgs),
+    Video(crate::video::VideoArgs),
 
     #[command(name = "generate", about = "Generate shell completions", hide = true)]
     Generate(GenerateArgs),
@@ -60,7 +61,7 @@ pub struct CommonArgs {
 )]
 pub struct Cli {
     #[command(subcommand)]
-    pub command: FocalSubcommands,
+    pub command: FocalSubcommand,
 }
 
 pub fn generate_completions(

@@ -22,10 +22,11 @@ notify-rust = "4.11.3"
 ctrlc = "3.4.5"
 
 [features]
-default = ["hyprland", "ocr"]
+default = ["hyprland", "ocr", "video"]
 hyprland = []
 sway = []
 ocr = []
+video = []
 
 [lints.rust]
 unsafe_code = "forbid"

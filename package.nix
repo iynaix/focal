@@ -18,6 +18,7 @@
   sway,
   backend ? "hyprland",
   ocr ? true,
+  video ? true,
 }:
 assert lib.assertOneOf "backend" backend [
   "hyprland"
@@ -51,6 +52,10 @@ rustPlatform.buildRustPackage {
       "--features"
       backend
     ]
+    ++ lib.optionals video [
+      "--features"
+      "video"
+    ]
     ++ lib.optionals ocr [
       "--features"
       "ocr"
@@ -74,19 +79,21 @@ rustPlatform.buildRustPackage {
     let
       binaries =
         [
-          ffmpeg
           grim
           procps
           rofi-wayland
           slurp
           hyprpicker
-          wf-recorder
           wl-clipboard
           xdg-utils
         ]
-        ++ lib.optional (backend == "hyprland") hyprland
-        ++ lib.optional (backend == "sway") sway
-        ++ lib.optional ocr tesseract;
+        ++ lib.optionals (backend == "hyprland") [ hyprland ]
+        ++ lib.optionals (backend == "sway") [ sway ]
+        ++ lib.optionals video [
+          ffmpeg
+          wf-recorder
+        ]
+        ++ lib.optionals ocr [ tesseract ];
     in
     "wrapProgram $out/bin/focal --prefix PATH : ${lib.makeBinPath binaries}";
 
