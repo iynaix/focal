@@ -1,15 +1,30 @@
-use crate::image::ImageArgs;
+use std::path::PathBuf;
+
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use clap_complete::{generate, Shell};
 
+#[allow(clippy::module_name_repetitions)]
+#[derive(Args, Debug)]
+pub struct RofiArgs {
+    #[arg(long, action, help = "Display rofi menu for selection options")]
+    pub rofi: bool,
+
+    #[arg(long, action, help = "Do not show icons for rofi menu")]
+    pub no_icons: bool,
+
+    #[arg(long, action, help = "Path to a rofi theme")]
+    pub theme: Option<PathBuf>,
+}
+
+#[allow(clippy::module_name_repetitions)]
 #[derive(Subcommand, Debug)]
 pub enum FocalSubcommand {
     #[command(name = "image", about = "Captures a screenshot.")]
-    Image(ImageArgs),
+    Image(super::image::ImageArgs),
 
     #[cfg(feature = "video")]
     #[command(name = "video", about = "Captures a video.")]
-    Video(crate::video::VideoArgs),
+    Video(super::video::VideoArgs),
 
     #[command(name = "generate", about = "Generate shell completions", hide = true)]
     Generate(GenerateArgs),

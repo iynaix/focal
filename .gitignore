@@ -1,3 +1,5 @@
 .direnv
 .devenv
 result
+debug/
+target/

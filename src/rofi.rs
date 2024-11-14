@@ -3,21 +3,7 @@ use std::{
     process::{Command, Stdio},
 };
 
-use clap::Args;
 use execute::Execute;
-
-#[allow(clippy::module_name_repetitions)]
-#[derive(Args, Debug)]
-pub struct RofiArgs {
-    #[arg(long, action, help = "Display rofi menu for selection options")]
-    pub rofi: bool,
-
-    #[arg(long, action, help = "Do not show icons for rofi menu")]
-    pub no_icons: bool,
-
-    #[arg(long, action, help = "Path to a rofi theme")]
-    pub theme: Option<PathBuf>,
-}
 
 pub struct Rofi {
     choices: Vec<String>,
