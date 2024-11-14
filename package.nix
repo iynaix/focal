@@ -19,6 +19,7 @@
   backend ? "hyprland",
   ocr ? true,
   video ? true,
+  focalWaybar ? true,
 }:
 assert lib.assertOneOf "backend" backend [
   "hyprland"
@@ -59,6 +60,10 @@ rustPlatform.buildRustPackage {
     ++ lib.optionals ocr [
       "--features"
       "ocr"
+    ]
+    ++ lib.optionals focalWaybar [
+      "--features"
+      "waybar"
     ];
 
   nativeBuildInputs = [
@@ -66,14 +71,20 @@ rustPlatform.buildRustPackage {
     makeWrapper
   ];
 
-  postInstall = ''
-    for cmd in focal focal-waybar; do
-      installShellCompletion --cmd $cmd \
-        --bash <($out/bin/$cmd generate bash) \
-        --fish <($out/bin/$cmd generate fish) \
-        --zsh <($out/bin/$cmd generate zsh)
-    done
-  '';
+  postInstall =
+    let
+      bins = [ "focal" ] ++ lib.optionals focalWaybar [ "focal-waybar" ];
+    in
+    ''
+      for cmd in ${lib.concatStringsSep " " bins}; do
+        installShellCompletion --cmd $cmd \
+          --bash <($out/bin/$cmd generate bash) \
+          --fish <($out/bin/$cmd generate fish) \
+          --zsh <($out/bin/$cmd generate zsh)
+      done
+
+      installManPage target/man/*
+    '';
 
   postFixup =
     let

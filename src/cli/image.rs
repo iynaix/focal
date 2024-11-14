@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use super::focal::{CommonArgs, RofiArgs};
+use super::{CommonArgs, RofiArgs};
 use clap::{ArgGroup, Args, Subcommand, ValueEnum};
 
 #[derive(Subcommand, ValueEnum, Debug, Clone)]

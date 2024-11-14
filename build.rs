@@ -2,19 +2,22 @@
 #[path = "src/cli/mod.rs"]
 mod cli;
 
-use clap::{Command, CommandFactory};
+use clap::CommandFactory;
 use clap_mangen::Man;
 use std::{fs, path::PathBuf};
 
-fn generate_man_pages(cmd: &Command) -> Result<(), Box<dyn std::error::Error>> {
+fn generate_man_pages() -> Result<(), Box<dyn std::error::Error>> {
+    let focal_cmd = cli::Cli::command();
     let man_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target/man");
     fs::create_dir_all(&man_dir)?;
 
+    // main focal man page
     let mut buffer = Vec::default();
-    Man::new(cmd.clone()).render(&mut buffer)?;
+    Man::new(focal_cmd.clone()).render(&mut buffer)?;
     fs::write(man_dir.join("focal.1"), buffer)?;
 
-    for subcmd in cmd.get_subcommands().filter(|c| !c.is_hide_set()) {
+    // subcommand man pages
+    for subcmd in focal_cmd.get_subcommands().filter(|c| !c.is_hide_set()) {
         let subcmd_name = format!("focal-{}", subcmd.get_name());
         let subcmd = subcmd.clone().name(&subcmd_name);
 
@@ -27,6 +30,11 @@ fn generate_man_pages(cmd: &Command) -> Result<(), Box<dyn std::error::Error>> {
         fs::write(man_dir.join(subcmd_name + ".1"), buffer)?;
     }
 
+    // focal-waybar man page
+    let mut buffer = Vec::default();
+    Man::new(cli::waybar::Cli::command()).render(&mut buffer)?;
+    fs::write(man_dir.join("focal-waybar.1"), buffer)?;
+
     Ok(())
 }
 
@@ -38,8 +46,7 @@ fn main() {
     }
     println!("cargo:rerun-if-env-changed=NIX_RELEASE_VERSION");
 
-    let cmd = cli::Cli::command();
-    if let Err(err) = generate_man_pages(&cmd) {
-        println!("cargo::warning=Error generating man pages: {err}");
+    if let Err(err) = generate_man_pages() {
+        println!("cargo:warning=Error generating man pages: {err}");
     }
 }

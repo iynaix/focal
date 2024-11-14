@@ -56,6 +56,7 @@
         };
         default = focal;
         no-ocr = focal.override { ocr = false; };
+        no-waybar = focal.override { focalWaybar = false; };
         focal-hyprland = focal.override { backend = "hyprland"; };
         focal-sway = focal.override { backend = "sway"; };
         focal-image = focal.override { video = false; };

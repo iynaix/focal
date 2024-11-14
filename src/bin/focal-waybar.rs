@@ -1,44 +1,11 @@
-use clap::{CommandFactory, Parser, Subcommand};
+use clap::{CommandFactory, Parser};
 use focal::{
-    cli::{generate_completions, GenerateArgs},
+    cli::{
+        generate_completions,
+        waybar::{Cli, FocalWaybarSubcommands},
+    },
     video::LockFile,
 };
-use std::env;
-
-#[derive(Subcommand, Debug)]
-pub enum FocalWaybarSubcommands {
-    #[command(name = "generate", about = "Generate shell completions", hide = true)]
-    Generate(GenerateArgs),
-}
-
-#[derive(Parser, Debug)]
-#[command(
-    name = "focal-waybar",
-    about = "Updates waybar module with focal's recording status.",
-    author,
-    version = env!("CARGO_PKG_VERSION"),
-)]
-struct Cli {
-    // subcommand for generating shell completions
-    #[command(subcommand)]
-    pub command: Option<FocalWaybarSubcommands>,
-
-    #[arg(
-        long,
-        value_name = "MESSAGE",
-        default_value = "REC",
-        help = "Message to display in waybar module when recording"
-    )]
-    recording: String,
-
-    #[arg(
-        long,
-        value_name = "MESSAGE",
-        default_value = "",
-        help = "Message to display in waybar module when not recording"
-    )]
-    stopped: String,
-}
 
 fn main() {
     let args = Cli::parse();

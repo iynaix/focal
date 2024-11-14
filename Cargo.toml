@@ -33,6 +33,12 @@ hyprland = []
 sway = []
 ocr = []
 video = []
+waybar = []
+
+[[bin]]
+name = "focal-waybar"
+path = "src/bin/focal-waybar.rs"
+required-features = ["waybar"]
 
 [lints.rust]
 unsafe_code = "forbid"
