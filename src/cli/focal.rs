@@ -4,19 +4,6 @@ use clap::{Args, Parser, Subcommand, ValueEnum};
 use clap_complete::{generate, Shell};
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(Args, Debug)]
-pub struct RofiArgs {
-    #[arg(long, action, help = "Display rofi menu for selection options")]
-    pub rofi: bool,
-
-    #[arg(long, action, help = "Do not show icons for rofi menu")]
-    pub no_icons: bool,
-
-    #[arg(long, action, help = "Path to a rofi theme")]
-    pub theme: Option<PathBuf>,
-}
-
-#[allow(clippy::module_name_repetitions)]
 #[derive(Subcommand, Debug)]
 pub enum FocalSubcommand {
     #[command(name = "image", about = "Captures a screenshot.")]
@@ -66,12 +53,27 @@ pub struct CommonArgs {
     pub no_save: bool,
 }
 
+#[allow(clippy::module_name_repetitions)]
+#[derive(Args, Debug)]
+pub struct RofiArgs {
+    #[arg(long, action, help = "Display rofi menu for selection options")]
+    pub rofi: bool,
+
+    #[arg(long, action, help = "Do not show icons for rofi menu")]
+    pub no_icons: bool,
+
+    #[arg(long, action, help = "Path to a rofi theme")]
+    pub theme: Option<PathBuf>,
+}
+
+
 #[derive(Parser, Debug)]
 #[command(
     name = "focal",
     about = "focal is a rofi menu for capturing and copying screenshots or videos on hyprland / sway.",
     author,
     version = env!("CARGO_PKG_VERSION"),
+    infer_subcommands = true,
     flatten_help = true
 )]
 pub struct Cli {

@@ -7,23 +7,23 @@ edition = "2021"
 build = "build.rs"
 
 [dependencies]
-chrono = "0.4.38"
-clap = { version = "4.5.21", features = ["derive", "string"] }
+chrono = "0.4.39"
+clap = { version = "4.5.23", features = ["derive", "string"] }
 clap_complete = "4.5.38"
 clap_mangen = "0.2.24"
 ctrlc = "3.4.5"
 dirs = "5.0.1"
 execute = "0.2.13"
-hyprland = { version = "0.4.0-beta.1" }
+hyprland = { version = "0.4.0-beta.2" }
 notify-rust = "4.11.3"
 regex = "1.11.1"
-serde = "1.0.215"
-serde_derive = "1.0.215"
-serde_json = "1.0.132"
+serde = "1.0.216"
+serde_derive = "1.0.216"
+serde_json = "1.0.133"
 which = "7.0.0"
 
 [build-dependencies]
-clap = { version = "4.5.21", features = ["derive", "string"] }
+clap = { version = "4.5.23", features = ["derive", "string"] }
 clap_complete = "4.5.38"
 clap_mangen = "0.2.24"
 

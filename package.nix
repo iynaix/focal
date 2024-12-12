@@ -47,24 +47,12 @@ rustPlatform.buildRustPackage {
 
   cargoLock.lockFile = ./Cargo.lock;
 
-  cargoBuildFlags =
-    [
-      "--no-default-features"
-      "--features"
-      backend
-    ]
-    ++ lib.optionals video [
-      "--features"
-      "video"
-    ]
-    ++ lib.optionals ocr [
-      "--features"
-      "ocr"
-    ]
-    ++ lib.optionals focalWaybar [
-      "--features"
-      "waybar"
-    ];
+  buildNoDefaultFeatures = true;
+  buildFeatures =
+    [ backend ]
+    ++ lib.optionals video [ "video" ]
+    ++ lib.optionals ocr [ "ocr" ]
+    ++ lib.optionals focalWaybar [ "waybar" ];
 
   nativeBuildInputs = [
     installShellFiles
