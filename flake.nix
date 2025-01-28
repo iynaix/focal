@@ -16,7 +16,9 @@
     let
       forEachSystem =
         function:
-        nixpkgs.lib.genAttrs [ "x86_64-linux" ] (system: function nixpkgs.legacyPackages.${system});
+        nixpkgs.lib.genAttrs [ "x86_64-linux" "aarch64-linux" ] (
+          system: function nixpkgs.legacyPackages.${system}
+        );
     in
     {
       devShells = forEachSystem (pkgs: {
