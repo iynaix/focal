@@ -23,12 +23,23 @@ focal is a rofi menu for capturing and copying screenshots or videos on hyprland
 ### NixOS
 ```nix
 {
-  inputs.focal = {
-    url = "github:iynaix/focal";
-    inputs.nixpkgs.follows = "nixpkgs"; # override this repo's nixpkgs snapshot
+  inputs.focal.url = "github:iynaix/focal";
+}
+```
+
+A [focal cachix](https://focal.cachix.org) is also available, providing prebuilt binaries. To use it, add the following to your configuration:
+```nix
+{
+  nix.settings = {
+    substituters = ["https://focal.cachix.org"];
+    trusted-public-keys = ["focal.cachix.org-1:/YkOWkXNH2uK7TnskrVMvda8LyCe4iIbMM1sZN2AOXY="];
   };
 }
 ```
+
+> [!Warning]
+> Overriding the `wfetch` input using a `inputs.nixpkgs.follows` invalidates the cache and will cause the package to be rebuilt.
+
 
 Then, include it in your `environment.systemPackages` or `home.packages` by referencing the input:
 ```nix
