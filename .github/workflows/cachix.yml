@@ -3,7 +3,13 @@ on:
   pull_request:
   push:
 jobs:
-  tests:
+  build:
+    strategy:
+      matrix:
+        package:
+          - focal
+          - focal-sway
+
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -12,7 +18,6 @@ jobs:
         nix_path: nixpkgs=channel:nixos-unstable
     - uses: cachix/cachix-action@v14
       with:
-        name: wfetch
-        # If you chose API tokens for write access OR if you have a private cache
+        name: focal
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-    - run: nix build .
+    - run: nix build .#${{ matrix.package }}
