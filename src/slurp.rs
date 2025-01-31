@@ -144,7 +144,7 @@ impl SlurpGeom {
     }
 
     #[cfg(feature = "hyprland")]
-    pub fn reset_fade_animation(anim: &Option<String>) {
+    pub fn reset_fade_animation(anim: Option<&String>) {
         use hyprland::keyword::Keyword;
 
         if let Some(anim) = anim {
@@ -153,7 +153,7 @@ impl SlurpGeom {
     }
 
     /// returns the selected geometry and if a window was selected
-    pub fn prompt(slurp_args: &Option<String>) -> (Self, bool) {
+    pub fn prompt(slurp_args: Option<&String>) -> (Self, bool) {
         let window_geoms = Monitors::window_geoms();
 
         #[cfg(feature = "hyprland")]
@@ -191,7 +191,7 @@ impl SlurpGeom {
 
         // restore the original fade animation
         #[cfg(feature = "hyprland")]
-        Self::reset_fade_animation(&orig_fade_anim);
+        Self::reset_fade_animation(orig_fade_anim.as_ref());
 
         match sel {
             Ok(ref s) if s.is_empty() => {

@@ -20,8 +20,8 @@ impl WfRecorder {
         }
     }
 
-    pub fn audio(mut self, audio: &Option<String>) -> Self {
-        self.audio.clone_from(audio);
+    pub fn audio(mut self, audio: Option<&String>) -> Self {
+        self.audio = audio.map(std::string::ToString::to_string);
         self
     }
 
@@ -54,6 +54,8 @@ impl WfRecorder {
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
             .spawn()
-            .expect("failed to spawn wf-recorder");
+            .expect("failed to spawn wf-recorder")
+            .wait()
+            .expect("failed to wait for wf-recorder");
     }
 }

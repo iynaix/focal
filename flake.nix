@@ -64,9 +64,4 @@
           };
         };
     };
-
-  nixConfig = {
-    extra-substituters = [ "https://focal.cachix.org" ];
-    extra-trusted-public-keys = [ "focal.cachix.org-1:/YkOWkXNH2uK7TnskrVMvda8LyCe4iIbMM1sZN2AOXY=" ];
-  };
 }

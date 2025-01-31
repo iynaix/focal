@@ -60,7 +60,7 @@ impl Grim {
         if notify {
             show_notification(
                 &format!("Screenshot captured to {}", &self.output.display()),
-                &Some(self.output),
+                Some(&self.output),
             );
         }
     }
@@ -116,18 +116,22 @@ impl Screenshot {
                 .arg("-r")
                 .arg("-z")
                 .spawn()
-                .expect("could not freeze screen");
+                .expect("could not freeze screen")
+                .wait()
+                .expect("could not wait for freeze screen");
             std::thread::sleep(std::time::Duration::from_millis(200));
         }
 
         std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
-        let (geom, is_window) = SlurpGeom::prompt(&self.slurp);
+        let (geom, is_window) = SlurpGeom::prompt(self.slurp.as_ref());
 
         if self.freeze {
             Command::new("pkill")
                 .arg("hyprpicker")
                 .spawn()
-                .expect("could not unfreeze screen");
+                .expect("could not unfreeze screen")
+                .wait()
+                .expect("could not wait for unfreeze screen");
         }
 
         let do_capture = || {
@@ -200,12 +204,12 @@ impl Screenshot {
 
         if self.notify {
             if let Ok(copied_text) = std::str::from_utf8(&output.stdout) {
-                show_notification(copied_text, &None);
+                show_notification(copied_text, None);
             }
         }
     }
 
-    pub fn rofi(&mut self, theme: &Option<PathBuf>) {
+    pub fn rofi(&mut self, theme: Option<&PathBuf>) {
         let mut opts = vec!["󰒉\tSelection", "󰍹\tMonitor", "󰍺\tAll"];
 
         // don't show "All" option if single monitor
@@ -269,7 +273,7 @@ impl Screenshot {
     }
 
     /// prompts the user for delay using rofi if not provided as a cli flag
-    fn rofi_delay(theme: &Option<PathBuf>) -> u64 {
+    fn rofi_delay(theme: Option<&PathBuf>) -> u64 {
         let delay_options = ["0s", "3s", "5s", "10s"];
 
         let mut rofi = Rofi::new(&delay_options).message("Select a delay");
@@ -328,7 +332,7 @@ pub fn main(args: ImageArgs) {
     };
 
     if args.rofi_args.rofi {
-        screenshot.rofi(&args.rofi_args.theme);
+        screenshot.rofi(args.rofi_args.theme.as_ref());
     } else if let Some(area) = args.area_args.parse() {
         match area {
             CaptureArea::Monitor => screenshot.monitor(),

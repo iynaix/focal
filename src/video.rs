@@ -82,7 +82,7 @@ impl Screencast {
         };
 
         WfRecorder::new(mon, self.output.clone())
-            .audio(&self.audio)
+            .audio(self.audio.as_ref())
             .filter(filter)
             .record();
 
@@ -157,12 +157,12 @@ impl Screencast {
         // show notifcation with the video thumbnail
         show_notification(
             &format!("Video captured to {}", video.display()),
-            &Some(thumb_path),
+            Some(&thumb_path),
         );
     }
 
     pub fn selection(&self) {
-        let (geom, is_window) = SlurpGeom::prompt(&self.slurp);
+        let (geom, is_window) = SlurpGeom::prompt(self.slurp.as_ref());
         let (mon, filter) = geom.to_ffmpeg_geom();
 
         let do_capture = |rounding: Option<i64>| {
@@ -196,7 +196,7 @@ impl Screencast {
         self.capture(&mon.name, &transpose, None);
     }
 
-    pub fn rofi(&mut self, theme: &Option<PathBuf>) {
+    pub fn rofi(&mut self, theme: Option<&PathBuf>) {
         let mut opts = vec!["󰒉\tSelection", "󰍹\tMonitor", "󰍺\tAll"];
 
         // don't show "All" option if single monitor
@@ -213,7 +213,7 @@ impl Screencast {
 
         let mut rofi = Rofi::new(&opts);
 
-        if let Some(theme) = &theme {
+        if let Some(theme) = theme {
             rofi = rofi.theme(theme.clone());
         }
 
@@ -253,7 +253,7 @@ impl Screencast {
     }
 
     /// prompts the user for delay using rofi if not provided as a cli flag
-    fn rofi_delay(theme: &Option<PathBuf>) -> u64 {
+    fn rofi_delay(theme: Option<&PathBuf>) -> u64 {
         let delay_options = ["0s", "3s", "5s", "10s"];
 
         let mut rofi = Rofi::new(&delay_options).message("Select a delay");
@@ -313,7 +313,7 @@ pub fn main(args: VideoArgs) {
     };
 
     if args.rofi_args.rofi {
-        screencast.rofi(&args.rofi_args.theme);
+        screencast.rofi(args.rofi_args.theme.as_ref());
     } else if let Some(area) = args.area_args.parse() {
         match area {
             CaptureArea::Monitor => screencast.monitor(),

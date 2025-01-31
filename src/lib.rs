@@ -44,7 +44,7 @@ pub fn command_json<T: serde::de::DeserializeOwned>(cmd: &mut Command) -> T {
     serde_json::from_str(&output_str).expect("unable to parse json from command")
 }
 
-pub fn show_notification(body: &str, output: &Option<PathBuf>) {
+pub fn show_notification(body: &str, output: Option<&PathBuf>) {
     let mut notification = notify_rust::Notification::new();
 
     notification.body(body);
@@ -66,7 +66,9 @@ pub fn show_notification(body: &str, output: &Option<PathBuf>) {
                 std::process::Command::new("xdg-open")
                     .arg(output)
                     .spawn()
-                    .expect("Failed to open file");
+                    .expect("Failed to open file")
+                    .wait()
+                    .expect("Failed to wait for xdg-open");
             }
         });
     }
