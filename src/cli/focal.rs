@@ -66,11 +66,10 @@ pub struct RofiArgs {
     pub theme: Option<PathBuf>,
 }
 
-
 #[derive(Parser, Debug)]
 #[command(
     name = "focal",
-    about = "focal is a rofi menu for capturing and copying screenshots or videos on hyprland / sway.",
+    about = "focal is a cli / rofi menu for capturing and copying screenshots or videos on hyprland / sway.",
     author,
     version = env!("CARGO_PKG_VERSION"),
     infer_subcommands = true,
