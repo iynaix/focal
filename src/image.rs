@@ -123,7 +123,7 @@ impl Screenshot {
         }
 
         std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
-        let (geom, is_window) = SlurpGeom::prompt(self.slurp.as_ref());
+        let (geom, is_window) = SlurpGeom::prompt(self.slurp.as_deref());
 
         if self.freeze {
             Command::new("pkill")

@@ -20,7 +20,7 @@ impl WfRecorder {
         }
     }
 
-    pub fn audio(mut self, audio: Option<&String>) -> Self {
+    pub fn audio(mut self, audio: Option<&str>) -> Self {
         self.audio = audio.map(std::string::ToString::to_string);
         self
     }

@@ -82,7 +82,7 @@ impl Screencast {
         };
 
         WfRecorder::new(mon, self.output.clone())
-            .audio(self.audio.as_ref())
+            .audio(self.audio.as_deref())
             .filter(filter)
             .record();
 
@@ -162,7 +162,7 @@ impl Screencast {
     }
 
     pub fn selection(&self) {
-        let (geom, is_window) = SlurpGeom::prompt(self.slurp.as_ref());
+        let (geom, is_window) = SlurpGeom::prompt(self.slurp.as_deref());
         let (mon, filter) = geom.to_ffmpeg_geom();
 
         let do_capture = |rounding: Option<i64>| {
