@@ -2,47 +2,47 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     systems.url = "github:nix-systems/default-linux";
-    devenv.url = "github:cachix/devenv";
   };
 
   outputs =
     inputs@{
-      devenv,
       flake-parts,
       nixpkgs,
       self,
       ...
     }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      imports = [ devenv.flakeModule ];
       systems = import inputs.systems;
 
       perSystem =
         { pkgs, ... }:
         {
           devShells = {
-            default = devenv.lib.mkShell {
-              inherit inputs pkgs;
-              modules = [
-                {
-                  # https://devenv.sh/reference/options/
-                  dotenv.disableHint = true;
+            default = pkgs.mkShell {
+              packages = with pkgs; [
+                cargo-edit
+                grim
+                hyprland
+                rofi-wayland
+                slurp
+                sway
+                tesseract
+                hyprpicker
+                wl-clipboard
+                xdg-utils # xdg-open
+              ];
 
-                  packages = with pkgs; [
-                    cargo-edit
-                    grim
-                    hyprland
-                    rofi-wayland
-                    slurp
-                    sway
-                    tesseract
-                    hyprpicker
-                    wl-clipboard
-                    xdg-utils # xdg-open
-                  ];
+              env = {
+                # Required by rust-analyzer
+                RUST_SRC_PATH = "${pkgs.rustPlatform.rustLibSrc}";
+              };
 
-                  languages.rust.enable = true;
-                }
+              nativeBuildInputs = with pkgs; [
+                cargo
+                rustc
+                rust-analyzer
+                rustfmt
+                clippy
               ];
             };
           };
