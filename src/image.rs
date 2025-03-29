@@ -4,14 +4,14 @@ use std::{
 };
 
 use crate::{
-    check_programs,
+    Monitors, Rofi, SlurpGeom, check_programs,
     cli::{
-        image::{CaptureArea, ImageArgs},
         Cli,
+        image::{CaptureArea, ImageArgs},
     },
     create_parent_dirs, iso8601_filename,
     monitor::FocalMonitors,
-    show_notification, Monitors, Rofi, SlurpGeom,
+    show_notification,
 };
 use clap::CommandFactory;
 use execute::Execute;
@@ -255,7 +255,10 @@ impl Screenshot {
             .unwrap_or_default();
 
         match sel {
-            "Selection" => self.selection(),
+            "Selection" => {
+                self.delay = Some(Self::rofi_delay(theme));
+                self.selection();
+            }
             "Monitor" => {
                 self.delay = Some(Self::rofi_delay(theme));
                 self.monitor();
