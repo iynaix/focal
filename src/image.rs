@@ -81,15 +81,6 @@ pub struct Screenshot {
 
 impl Screenshot {
     fn capture(&self, monitor: &str, geometry: &str) {
-        if self.ocr.is_none() {
-            // copy the image file to clipboard
-            Command::new("wl-copy")
-                .arg("--type")
-                .arg("text/uri-list")
-                .execute_input(&format!("file://{}", self.output.display()))
-                .expect("failed to copy image to clipboard");
-        }
-
         // small delay before capture
         std::thread::sleep(std::time::Duration::from_millis(500));
 
@@ -100,8 +91,17 @@ impl Screenshot {
 
         if self.ocr.is_some() {
             self.ocr();
-        } else if self.edit.is_some() {
-            self.edit();
+        } else {
+            if self.edit.is_some() {
+                self.edit();
+            }
+
+            let mut img = std::fs::File::open(&self.output).expect("failed to open image");
+            Command::new("wl-copy")
+                .arg("--type")
+                .arg("image/png")
+                .execute_input_reader(&mut img)
+                .expect("failed to copy image to clipboard");
         }
     }
 
