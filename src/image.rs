@@ -215,7 +215,7 @@ impl Screenshot {
         // don't show "All" option if single monitor
         if Monitors::all().len() == 1 {
             opts.pop();
-        };
+        }
 
         if !self.icons {
             opts = opts
@@ -272,7 +272,7 @@ impl Screenshot {
                 std::process::exit(1);
             }
             _ => unimplemented!("Invalid rofi selection"),
-        };
+        }
     }
 
     /// prompts the user for delay using rofi if not provided as a cli flag

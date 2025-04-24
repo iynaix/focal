@@ -2,13 +2,12 @@ use serde::{Deserialize, Serialize};
 use std::{path::PathBuf, process::Command, vec};
 
 use crate::{
-    check_programs,
+    Monitors, Rofi, SlurpGeom, check_programs,
     cli::video::{CaptureArea, VideoArgs},
     create_parent_dirs, iso8601_filename,
     monitor::FocalMonitors,
     show_notification,
     wf_recorder::WfRecorder,
-    Monitors, Rofi, SlurpGeom,
 };
 use execute::Execute;
 
@@ -202,7 +201,7 @@ impl Screencast {
         // don't show "All" option if single monitor
         if Monitors::all().len() == 1 {
             opts.pop();
-        };
+        }
 
         if !self.icons {
             opts = opts
@@ -249,7 +248,7 @@ impl Screencast {
                 std::process::exit(1);
             }
             _ => unimplemented!("Invalid rofi selection"),
-        };
+        }
     }
 
     /// prompts the user for delay using rofi if not provided as a cli flag
