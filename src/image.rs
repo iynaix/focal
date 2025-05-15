@@ -255,10 +255,7 @@ impl Screenshot {
             .unwrap_or_default();
 
         match sel {
-            "Selection" => {
-                self.delay = Some(Self::rofi_delay(theme));
-                self.selection();
-            }
+            "Selection" => self.selection(),
             "Monitor" => {
                 self.delay = Some(Self::rofi_delay(theme));
                 self.monitor();
