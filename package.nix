@@ -14,8 +14,6 @@
   wf-recorder,
   wl-clipboard,
   xdg-utils,
-  hyprland,
-  sway,
   backend ? "hyprland",
   ocr ? true,
   video ? true,
@@ -24,6 +22,7 @@
 assert lib.assertOneOf "backend" backend [
   "hyprland"
   "sway"
+  "niri"
 ];
 rustPlatform.buildRustPackage {
   pname = "focal";
@@ -86,8 +85,6 @@ rustPlatform.buildRustPackage {
           wl-clipboard
           xdg-utils
         ]
-        ++ lib.optionals (backend == "hyprland") [ hyprland ]
-        ++ lib.optionals (backend == "sway") [ sway ]
         ++ lib.optionals video [
           ffmpeg
           wf-recorder

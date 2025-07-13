@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
-use clap_complete::{generate, Shell};
+use clap_complete::{Shell, generate};
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Subcommand, Debug)]
@@ -38,11 +38,10 @@ pub struct CommonArgs {
     #[arg(short, long, help = "Options to pass to slurp")]
     pub slurp: Option<String>,
 
-    // not available for sway
     #[arg(
         long,
         hide = cfg!(not(feature = "hyprland")),
-        help = "Do not show rounded corners when capturing a window. (Hyprland only)"
+        help = "Do not show rounded corners when capturing a window."
     )]
     pub no_rounded_windows: bool,
 

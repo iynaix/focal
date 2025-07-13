@@ -30,7 +30,8 @@ pub struct AreaArgs {
         long,
         group = "area_shortcuts",
         help = "",
-        long_help = "Shorthand for --area selection"
+        long_help = "Shorthand for --area selection",
+        hide = cfg!(feature = "niri")
     )]
     pub selection: bool,
 

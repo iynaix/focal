@@ -35,8 +35,7 @@ impl LockFile {
 
     pub fn read() -> std::io::Result<Self> {
         let content = std::fs::read_to_string(Self::path())?;
-        serde_json::from_str(&content)
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+        serde_json::from_str(&content).map_err(std::io::Error::other)
     }
 
     pub fn remove() {
@@ -115,10 +114,11 @@ impl Screencast {
         if let Ok(LockFile { video, rounding }) = LockFile::read() {
             LockFile::remove();
 
-            #[cfg(feature = "hyprland")]
-            if let Some(rounding) = rounding {
-                hyprland::keyword::Keyword::set("decoration:rounding", rounding)
-                    .expect("unable to restore rounding");
+            if cfg!(feature = "hyprland") {
+                if let Some(rounding) = rounding {
+                    hyprland::keyword::Keyword::set("decoration:rounding", rounding)
+                        .expect("unable to restore rounding");
+                }
             }
 
             // show notification with the video thumbnail
@@ -161,6 +161,10 @@ impl Screencast {
     }
 
     pub fn selection(&self) {
+        if cfg!(feature = "niri") {
+            unimplemented!("Video selection capture with niri is not supported");
+        }
+
         let (geom, is_window) = SlurpGeom::prompt(self.slurp.as_deref());
         let (mon, filter) = geom.to_ffmpeg_geom();
 
@@ -169,8 +173,7 @@ impl Screencast {
             self.capture(&mon, &filter, rounding);
         };
 
-        #[cfg(feature = "hyprland")]
-        if is_window && self.no_rounded_windows {
+        if cfg!(feature = "hyprland") && is_window && self.no_rounded_windows {
             use hyprland::keyword::{Keyword, OptionValue};
 
             if let Ok(Keyword {

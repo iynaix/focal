@@ -1,15 +1,14 @@
 use std::process::Command;
 
 use crate::{
-    command_json,
+    SlurpGeom, command_json,
     monitor::{FocalMonitor, FocalMonitors, Rotation},
-    SlurpGeom,
 };
 
 use serde_derive::Deserialize;
 
 #[derive(Debug, Deserialize)]
-pub struct GetOutput {
+struct GetOutput {
     pub name: String,
     pub rect: Rect,
     pub scale: f32,
@@ -18,7 +17,7 @@ pub struct GetOutput {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct Rect {
+struct Rect {
     pub x: i32,
     pub y: i32,
     pub width: i32,
@@ -26,7 +25,7 @@ pub struct Rect {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct GetTreeWindowNode {
+struct GetTreeWindowNode {
     pub rect: Rect,
     pub nodes: Vec<GetTreeWindowNode>,
     // visible is only available in leaf (window) nodes

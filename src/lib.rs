@@ -10,6 +10,11 @@ mod sway;
 #[cfg(feature = "sway")]
 use sway::SwayMonitors as Monitors;
 
+#[cfg(feature = "niri")]
+mod niri;
+#[cfg(feature = "niri")]
+use niri::NiriMonitors as Monitors;
+
 pub mod cli;
 pub mod image;
 mod monitor;

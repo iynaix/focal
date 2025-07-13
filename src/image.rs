@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    Monitors, Rofi, SlurpGeom, check_programs,
+    Monitors, Rofi, check_programs,
     cli::{
         Cli,
         image::{CaptureArea, ImageArgs},
@@ -105,11 +105,42 @@ impl Screenshot {
         }
     }
 
+    // use niri's inbuilt screenshot
+    #[cfg(feature = "niri")]
+    pub fn monitor(&self) {
+        std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
+
+        std::process::Command::new("niri")
+            .arg("msg")
+            .arg("action")
+            .arg("screenshot-screen")
+            .spawn()
+            .expect("unable to run `niri msg action screenshot-screen`")
+            .wait()
+            .expect("unable to wait for niri screenshot-screen");
+    }
+
+    #[cfg(not(feature = "niri"))]
     pub fn monitor(&self) {
         std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
         self.capture(&Monitors::focused().name, "");
     }
 
+    #[cfg(feature = "niri")]
+    pub fn selection(&self) {
+        std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
+
+        std::process::Command::new("niri")
+            .arg("msg")
+            .arg("action")
+            .arg("screenshot")
+            .spawn()
+            .expect("unable to run `niri msg action screenshot`")
+            .wait()
+            .expect("unable to wait for niri screenshot");
+    }
+
+    #[cfg(not(feature = "niri"))]
     pub fn selection(&self) {
         if self.freeze {
             Command::new("hyprpicker")
@@ -123,7 +154,7 @@ impl Screenshot {
         }
 
         std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
-        let (geom, is_window) = SlurpGeom::prompt(self.slurp.as_deref());
+        let (geom, is_window) = crate::SlurpGeom::prompt(self.slurp.as_deref());
 
         if self.freeze {
             Command::new("pkill")
@@ -157,6 +188,10 @@ impl Screenshot {
     }
 
     pub fn all(&self) {
+        if cfg!(feature = "niri") {
+            unimplemented!("Capturing all screens with niri is not supported");
+        }
+
         let (w, h) = Monitors::total_dimensions();
 
         std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
@@ -164,6 +199,10 @@ impl Screenshot {
     }
 
     fn edit(&self) {
+        if cfg!(feature = "niri") {
+            unimplemented!("Editing screenshots with niri is currently not supported");
+        }
+
         if let Some(prog) = &self.edit {
             if prog.ends_with("swappy") {
                 Command::new("swappy")
@@ -183,6 +222,10 @@ impl Screenshot {
     }
 
     fn ocr(&self) {
+        if cfg!(feature = "niri") {
+            unimplemented!("OCR with niri is currently not supported");
+        }
+
         let mut cmd = Command::new("tesseract");
         cmd.arg(&self.output).arg("-");
 

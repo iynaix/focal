@@ -46,6 +46,7 @@ pub struct AreaArgs {
     #[arg(
         long,
         group = "area_shortcuts",
+        hide = cfg!(feature = "niri"),
         help = "",
         long_help = "Shorthand for --area all"
     )]
@@ -84,7 +85,12 @@ pub struct ImageArgs {
     #[command(flatten)]
     pub area_args: AreaArgs,
 
-    #[arg(long, action, help = "Freezes the screen before selecting an area.")]
+    #[arg(
+        long,
+        action,
+        help = "Freezes the screen before selecting an area.",
+        hide = cfg!(feature = "niri"))
+    ]
     pub freeze: bool,
 
     #[command(flatten)]
@@ -99,7 +105,8 @@ pub struct ImageArgs {
         action,
         help = "Edit screenshot using COMMAND\nThe image path will be passed as $IMAGE",
         value_name = "COMMAND",
-        conflicts_with = "ocr"
+        conflicts_with = "ocr",
+        hide = cfg!(feature = "niri")
     )]
     pub edit: Option<String>,
 
@@ -112,7 +119,7 @@ pub struct ImageArgs {
         help = "Runs OCR on the selected text",
         long_help = "Runs OCR on the selected text, defaulting to English\nSupported languages can be shown using 'tesseract --list-langs'",
         conflicts_with = "edit",
-        hide = cfg!(not(feature = "ocr"))
+        hide = cfg!(not(feature = "ocr")) || cfg!(feature = "niri")
     )]
     pub ocr: Option<String>,
 
