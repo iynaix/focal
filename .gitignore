@@ -1,5 +1,6 @@
 .direnv
 .devenv
+.envrc
 result
 debug/
 target/

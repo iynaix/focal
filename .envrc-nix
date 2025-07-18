@@ -1,0 +1,6 @@
+# to use the Nix flake development shell, symlink or copy this file to `.envrc` for direnv to read it.
+
+watch_file flake.nix
+watch_file flake.lock
+
+use flake
