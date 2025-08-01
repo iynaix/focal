@@ -23,10 +23,8 @@
               packages = with pkgs; [
                 cargo-edit
                 grim
-                hyprland
                 rofi-wayland
                 slurp
-                sway
                 tesseract
                 hyprpicker
                 wl-clipboard

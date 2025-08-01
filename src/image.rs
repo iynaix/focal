@@ -13,8 +13,11 @@ use crate::{
     monitor::FocalMonitors,
     show_notification,
 };
+use arboard::Clipboard;
 use clap::CommandFactory;
 use execute::Execute;
+use image::{ImageBuffer, Rgba};
+use std::time::{Duration, Instant};
 
 #[derive(Default)]
 struct Grim {
@@ -80,6 +83,26 @@ pub struct Screenshot {
 }
 
 impl Screenshot {
+    fn edit_or_ocr(&self) {
+        if self.ocr.is_some() {
+            self.ocr();
+        } else {
+            if self.edit.is_some() {
+                self.edit();
+            }
+
+            // copying not needed for niri, since it already does that
+            if cfg!(not(feature = "niri")) {
+                let mut img = std::fs::File::open(&self.output).expect("failed to open image");
+                Command::new("wl-copy")
+                    .arg("--type")
+                    .arg("image/png")
+                    .execute_input_reader(&mut img)
+                    .expect("failed to copy image to clipboard");
+            }
+        }
+    }
+
     fn capture(&self, monitor: &str, geometry: &str) {
         // small delay before capture
         std::thread::sleep(std::time::Duration::from_millis(500));
@@ -89,20 +112,7 @@ impl Screenshot {
             .monitor(monitor)
             .capture(self.ocr.is_none() && self.notify);
 
-        if self.ocr.is_some() {
-            self.ocr();
-        } else {
-            if self.edit.is_some() {
-                self.edit();
-            }
-
-            let mut img = std::fs::File::open(&self.output).expect("failed to open image");
-            Command::new("wl-copy")
-                .arg("--type")
-                .arg("image/png")
-                .execute_input_reader(&mut img)
-                .expect("failed to copy image to clipboard");
-        }
+        self.edit_or_ocr();
     }
 
     // use niri's inbuilt screenshot
@@ -118,6 +128,8 @@ impl Screenshot {
             .expect("unable to run `niri msg action screenshot-screen`")
             .wait()
             .expect("unable to wait for niri screenshot-screen");
+
+        self.edit_or_ocr();
     }
 
     #[cfg(not(feature = "niri"))]
@@ -138,6 +150,8 @@ impl Screenshot {
             .expect("unable to run `niri msg action screenshot`")
             .wait()
             .expect("unable to wait for niri screenshot");
+
+        self.edit_or_ocr();
     }
 
     #[cfg(not(feature = "niri"))]
@@ -198,9 +212,49 @@ impl Screenshot {
         self.capture("", &format!("0,0 {w}x{h}"));
     }
 
+    fn image_from_clipboard(&self) -> Option<PathBuf> {
+        let mut clipboard = Clipboard::new().expect("failed to get clipboard");
+        let start_time = Instant::now();
+        let timeout = Duration::from_secs(1); // Set the maximum duration to 1 second
+        let check_interval = Duration::from_millis(100); // Check every 100 milliseconds
+
+        let mut image_found = false;
+
+        while start_time.elapsed() < timeout {
+            if let Ok(image_data) = clipboard.get_image() {
+                // println!(
+                //     "Image found on clipboard: {}x{} pixels (after {}ms)",
+                //     image_data.width,
+                //     image_data.height,
+                //     start_time.elapsed().as_millis()
+                // );
+
+                // save the image
+                #[allow(clippy::cast_possible_truncation)]
+                if let Some(img) = ImageBuffer::<Rgba<u8>, _>::from_raw(
+                    image_data.width as u32,
+                    image_data.height as u32,
+                    image_data.bytes.into_owned(),
+                ) {
+                    img.save(&self.output)
+                        .expect("unable to save image to file");
+                }
+
+                image_found = true;
+                break;
+            }
+
+            // Wait for the next check interval
+            std::thread::sleep(check_interval);
+        }
+
+        image_found.then(|| self.output.clone())
+    }
+
     fn edit(&self) {
-        if cfg!(feature = "niri") {
-            unimplemented!("Editing screenshots with niri is currently not supported");
+        if cfg!(feature = "niri") && self.image_from_clipboard().is_none() {
+            eprintln!("No image found on clipboard.");
+            std::process::exit(1);
         }
 
         if let Some(prog) = &self.edit {
@@ -222,8 +276,9 @@ impl Screenshot {
     }
 
     fn ocr(&self) {
-        if cfg!(feature = "niri") {
-            unimplemented!("OCR with niri is currently not supported");
+        if cfg!(feature = "niri") && self.image_from_clipboard().is_none() {
+            eprintln!("No image found on clipboard.");
+            std::process::exit(1);
         }
 
         let mut cmd = Command::new("tesseract");
@@ -240,9 +295,9 @@ impl Screenshot {
             .execute_output()
             .expect("Failed to run tesseract");
 
-        Command::new("wl-copy")
-            .stdout(Stdio::piped())
-            .execute_input(&output.stdout)
+        let mut clipboard = Clipboard::new().expect("failed to get clipboard");
+        clipboard
+            .set_text(String::from_utf8_lossy(&output.stdout))
             .expect("unable to copy ocr text");
 
         if self.notify {

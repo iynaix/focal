@@ -105,8 +105,7 @@ pub struct ImageArgs {
         action,
         help = "Edit screenshot using COMMAND\nThe image path will be passed as $IMAGE",
         value_name = "COMMAND",
-        conflicts_with = "ocr",
-        hide = cfg!(feature = "niri")
+        conflicts_with = "ocr"
     )]
     pub edit: Option<String>,
 
@@ -119,7 +118,7 @@ pub struct ImageArgs {
         help = "Runs OCR on the selected text",
         long_help = "Runs OCR on the selected text, defaulting to English\nSupported languages can be shown using 'tesseract --list-langs'",
         conflicts_with = "edit",
-        hide = cfg!(not(feature = "ocr")) || cfg!(feature = "niri")
+        hide = cfg!(not(feature = "ocr"))
     )]
     pub ocr: Option<String>,
 
