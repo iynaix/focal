@@ -9,6 +9,7 @@ jobs:
         package:
           - focal
           - focal-sway
+          - focal-niri
 
     runs-on: ubuntu-latest
     steps:
