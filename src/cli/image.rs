@@ -7,13 +7,15 @@ use clap::{ArgGroup, Args, Subcommand, ValueEnum};
 pub enum CaptureArea {
     Monitor,
     Selection,
+    Window,
     All,
 }
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Args, Debug)]
 #[command(group(
     ArgGroup::new("area_shortcuts")
-        .args(["area", "selection", "monitor", "all"])
+        .args(["area", "window", "selection", "monitor", "all"])
         .multiple(false)
 ))]
 pub struct AreaArgs {
@@ -39,6 +41,14 @@ pub struct AreaArgs {
         long,
         group = "area_shortcuts",
         help = "",
+        long_help = "Shorthand for --area window"
+    )]
+    pub window: bool,
+
+    #[arg(
+        long,
+        group = "area_shortcuts",
+        help = "",
         long_help = "Shorthand for --area monitor"
     )]
     pub monitor: bool,
@@ -57,6 +67,8 @@ impl AreaArgs {
     pub fn parse(&self) -> Option<CaptureArea> {
         if self.selection {
             Some(CaptureArea::Selection)
+        } else if self.window {
+            Some(CaptureArea::Window)
         } else if self.monitor {
             Some(CaptureArea::Monitor)
         } else if self.all {
@@ -73,7 +85,7 @@ impl AreaArgs {
     ArgGroup::new("required_mode")
         .required(true)
         .multiple(false)
-        .args(["rofi", "area", "selection", "monitor", "all"]),
+        .args(["rofi", "area", "selection", "window", "monitor", "all"]),
 ))]
 #[command(group(
     ArgGroup::new("freeze_mode")

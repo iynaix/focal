@@ -138,6 +138,37 @@ impl Screenshot {
         self.capture(&Monitors::focused().name, "");
     }
 
+    pub fn window(&self) {
+        if cfg!(not(feature = "niri")) {
+            self.selection();
+        } else {
+            use niri_ipc::{Action, Request, Response, Window, socket::Socket};
+
+            std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
+
+            let mut socket = Socket::connect().expect("failed to connect to niri socket");
+            let Ok(Response::PickedWindow(window)) = socket
+                .send(Request::PickWindow)
+                .expect("failed to send PickWindow request to niri")
+            else {
+                panic!("unexpected response from niri, should be PickWindow");
+            };
+
+            let Some(Window { id, .. }) = window else {
+                eprintln!("No window was picked.");
+                std::process::exit(1);
+            };
+
+            socket
+                .send(Request::Action(Action::ScreenshotWindow {
+                    id: Some(id),
+                    write_to_disk: true,
+                }))
+                .expect("failed to send ScreenshotWindow request to niri")
+                .expect("failed to screenshot window");
+        }
+    }
+
     #[cfg(feature = "niri")]
     pub fn selection(&self) {
         std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
@@ -308,7 +339,13 @@ impl Screenshot {
     }
 
     pub fn rofi(&mut self, theme: Option<&PathBuf>) {
-        let mut opts = vec!["󰒉\tSelection", "󰍹\tMonitor", "󰍺\tAll"];
+        let mut opts = vec![
+            "󰒉\tSelection",
+            #[cfg(feature = "niri")]
+            "󰖯\tWindow",
+            "󰍹\tMonitor",
+            "󰍺\tAll",
+        ];
 
         // don't show "All" option if single monitor
         if Monitors::all().len() == 1 {
@@ -354,6 +391,16 @@ impl Screenshot {
 
         match sel {
             "Selection" => self.selection(),
+            "Window" => {
+                self.delay = Some(Self::rofi_delay(theme));
+
+                // TODO: use slurp to highlight geometry when selecting window?
+                if cfg!(feature = "niri") {
+                    self.window();
+                } else {
+                    self.selection();
+                }
+            }
             "Monitor" => {
                 self.delay = Some(Self::rofi_delay(theme));
                 self.monitor();
@@ -434,6 +481,14 @@ pub fn main(args: ImageArgs) {
     } else if let Some(area) = args.area_args.parse() {
         match area {
             CaptureArea::Monitor => screenshot.monitor(),
+            CaptureArea::Window => {
+                // TODO: use slurp to highlight geometry when selecting window?
+                if cfg!(feature = "niri") {
+                    screenshot.window();
+                } else {
+                    screenshot.selection();
+                }
+            }
             CaptureArea::Selection => screenshot.selection(),
             CaptureArea::All => screenshot.all(),
         }
