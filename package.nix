@@ -23,6 +23,7 @@ assert lib.assertOneOf "backend" backend [
   "hyprland"
   "sway"
   "niri"
+  "mango"
 ];
 rustPlatform.buildRustPackage {
   pname = "focal";
@@ -47,11 +48,12 @@ rustPlatform.buildRustPackage {
   cargoLock.lockFile = ./Cargo.lock;
 
   buildNoDefaultFeatures = true;
-  buildFeatures =
-    [ backend ]
-    ++ lib.optionals video [ "video" ]
-    ++ lib.optionals ocr [ "ocr" ]
-    ++ lib.optionals focalWaybar [ "waybar" ];
+  buildFeatures = [
+    backend
+  ]
+  ++ lib.optionals video [ "video" ]
+  ++ lib.optionals ocr [ "ocr" ]
+  ++ lib.optionals focalWaybar [ "waybar" ];
 
   nativeBuildInputs = [
     installShellFiles
@@ -75,21 +77,20 @@ rustPlatform.buildRustPackage {
 
   postFixup =
     let
-      binaries =
-        [
-          grim
-          procps
-          rofi-wayland
-          slurp
-          hyprpicker
-          wl-clipboard
-          xdg-utils
-        ]
-        ++ lib.optionals video [
-          ffmpeg
-          wf-recorder
-        ]
-        ++ lib.optionals ocr [ tesseract ];
+      binaries = [
+        grim
+        procps
+        rofi-wayland
+        slurp
+        hyprpicker
+        wl-clipboard
+        xdg-utils
+      ]
+      ++ lib.optionals video [
+        ffmpeg
+        wf-recorder
+      ]
+      ++ lib.optionals ocr [ tesseract ];
     in
     "wrapProgram $out/bin/focal --prefix PATH : ${lib.makeBinPath binaries}";
 

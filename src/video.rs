@@ -161,10 +161,6 @@ impl Screencast {
     }
 
     pub fn selection(&self) {
-        if cfg!(feature = "niri") {
-            unimplemented!("Video selection capture with niri is not supported");
-        }
-
         let (geom, is_window) = SlurpGeom::prompt(self.slurp.as_deref());
         let (mon, filter) = geom.to_ffmpeg_geom();
 

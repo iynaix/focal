@@ -60,6 +60,8 @@
             focal-hyprland = focal.override { backend = "hyprland"; };
             focal-sway = focal.override { backend = "sway"; };
             focal-niri = focal.override { backend = "niri"; };
+            # placeholder for future, not implemented!
+            focal-mango = focal.override { backend = "mango"; };
             focal-image = focal.override { video = false; };
           };
         };

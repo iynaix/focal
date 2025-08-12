@@ -15,7 +15,7 @@ focal is a cli / rofi menu for capturing and copying screenshots or videos on hy
 - image / video is automatically copied to clipboard, ready for pasting into other programs
 - notifications that open captured file when clicked
 - all options are also available via the CLI
-- supports either hyprland or sway
+- supports hyprland / niri / sway
 - OCR support to select text from captured image (CLI only)
 
 ## Installation
@@ -45,6 +45,8 @@ Then, include it in your `environment.systemPackages` or `home.packages` by refe
 ```nix
 # for hyprland
 inputs.focal.packages.${pkgs.system}.default
+# for niri
+inputs.focal.packages.${pkgs.system}.focal-niri
 # for sway
 inputs.focal.packages.${pkgs.system}.focal-sway
 ```
@@ -54,6 +56,8 @@ Alternatively, it can also be run directly:
 ```sh
 # for hyprland
 nix run github:iynaix/focal
+# for niri
+nix run github:iynaix/focal-niri
 # for sway
 nix run github:iynaix/focal#focal-sway
 ```
@@ -78,7 +82,7 @@ paru -S focal-sway-git
 
 ```console
 $ focal --help
-focal is a cli / rofi menu for capturing and copying screenshots or videos on hyprland / sway.
+focal is a cli / rofi menu for capturing and copying screenshots or videos on hyprland / niri /sway.
 
 Usage: focal image [OPTIONS] <--rofi|--area <AREA>|--selection|--monitor|--all> [FILE]
        focal video [OPTIONS] <--rofi|--area <AREA>|--selection|--monitor|--stop> [FILE]
@@ -141,7 +145,12 @@ Example usage as a **hyprland** keybinding:
 bind=$mainMod, backslash, exec, focal image --area selection
 ```
 
-Similarly, for a **sway** keybinding:
+For a **niri** keybinding:
+```
+Mod+backslash { spawn "focal" "image" "--area" "selection" }
+```
+
+For a **sway** keybinding:
 ```
 bindsym $mod+backslash exec "focal image --area selection"
 ```
@@ -184,6 +193,11 @@ focal video recordings can then be started / stopped using keybindings such as:
 bind=$mainMod, backslash, exec, focal video --rofi --audio
 ```
 
+**niri**:
+```
+Mod+backslash { spawn "focal" "video" "--rofi" "--audio" }
+```
+
 **sway**:
 ```
 bindsym $mod+backslash exec "focal video --rofi --audio"
@@ -199,6 +213,7 @@ To build focal from source
     * [grim](https://sr.ht/~emersion/grim/)
     * [slurp](https://github.com/emersion/slurp)
     * [hyprland](https://hyprland.org/)
+    * [nir](https://github.com/YaLTeR/niri)
     * [sway](https://swaywm.org/)
     * [rofi-wayland](https://github.com/lbonn/rofi)
     * [wl-clipboard](https://github.com/bugaevc/wl-clipboard)
