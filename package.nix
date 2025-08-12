@@ -26,7 +26,7 @@ assert lib.assertOneOf "backend" backend [
   "mango"
 ];
 rustPlatform.buildRustPackage {
-  pname = "focal";
+  pname = "focal-${backend}";
 
   src = lib.fileset.toSource {
     root = ./.;
@@ -95,7 +95,7 @@ rustPlatform.buildRustPackage {
     "wrapProgram $out/bin/focal --prefix PATH : ${lib.makeBinPath binaries}";
 
   meta = with lib; {
-    description = "Focal captures screenshots / videos using rofi, with clipboard support on hyprland";
+    description = "Focal captures screenshots / videos using rofi, with clipboard support on hyprland / niri / sway";
     mainProgram = "focal";
     homepage = "https://github.com/iynaix/focal";
     license = licenses.mit;

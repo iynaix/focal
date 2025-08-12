@@ -15,6 +15,12 @@ mod niri;
 #[cfg(feature = "niri")]
 use niri::NiriMonitors as Monitors;
 
+// TODO: replace with actual implementation!
+#[cfg(feature = "mango")]
+mod hyprland;
+#[cfg(feature = "mango")]
+use hyprland::HyprMonitors as Monitors;
+
 pub mod cli;
 pub mod image;
 mod monitor;
