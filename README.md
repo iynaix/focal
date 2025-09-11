@@ -38,7 +38,7 @@ A [focal cachix](https://focal.cachix.org) is also available, providing prebuilt
 ```
 
 > [!Warning]
-> Overriding the `wfetch` input using a `inputs.nixpkgs.follows` invalidates the cache and will cause the package to be rebuilt.
+> Overriding the `focal` input using a `inputs.nixpkgs.follows` invalidates the cache and will cause the package to be rebuilt.
 
 
 Then, include it in your `environment.systemPackages` or `home.packages` by referencing the input:
@@ -66,6 +66,12 @@ OCR support can be optionally disabled through the use of an override:
 ```nix
 (inputs.focal.packages.${pkgs.system}.default.override { ocr = false; })
 ```
+
+> [!Note]
+> `rofi` now has wayland support on `nixos-unstable`. To use `rofi-wayland` for `nixos-25.05`, you can use the following override:
+> ```nix
+> (inputs.focal.packages.${pkgs.system}.default.override { rofi = pkgs.rofi-wayland; })
+> ```
 
 ### Arch Linux
 
@@ -214,6 +220,7 @@ To build focal from source
     * [slurp](https://github.com/emersion/slurp)
     * [hyprland](https://hyprland.org/)
     * [nir](https://github.com/YaLTeR/niri)
+    * [rofi](https://github.com/davatorium/rofi)
     * [sway](https://swaywm.org/)
     * [wl-clipboard](https://github.com/bugaevc/wl-clipboard)
     * [wf-recorder](https://github.com/ammen99/wf-recorder)
