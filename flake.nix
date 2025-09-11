@@ -23,7 +23,7 @@
               packages = with pkgs; [
                 cargo-edit
                 grim
-                rofi-wayland
+                rofi
                 slurp
                 tesseract
                 hyprpicker

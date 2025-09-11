@@ -215,7 +215,6 @@ To build focal from source
     * [hyprland](https://hyprland.org/)
     * [nir](https://github.com/YaLTeR/niri)
     * [sway](https://swaywm.org/)
-    * [rofi-wayland](https://github.com/lbonn/rofi)
     * [wl-clipboard](https://github.com/bugaevc/wl-clipboard)
     * [wf-recorder](https://github.com/ammen99/wf-recorder)
     * [ffmpeg](https://www.ffmpeg.org/)

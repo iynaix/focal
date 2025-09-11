@@ -7,7 +7,7 @@
   ffmpeg,
   grim,
   procps,
-  rofi-wayland,
+  rofi,
   slurp,
   tesseract,
   hyprpicker,
@@ -80,7 +80,7 @@ rustPlatform.buildRustPackage {
       binaries = [
         grim
         procps
-        rofi-wayland
+        rofi
         slurp
         hyprpicker
         wl-clipboard
