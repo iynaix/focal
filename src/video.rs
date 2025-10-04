@@ -114,11 +114,11 @@ impl Screencast {
         if let Ok(LockFile { video, rounding }) = LockFile::read() {
             LockFile::remove();
 
-            if cfg!(feature = "hyprland") {
-                if let Some(rounding) = rounding {
-                    hyprland::keyword::Keyword::set("decoration:rounding", rounding)
-                        .expect("unable to restore rounding");
-                }
+            if cfg!(feature = "hyprland")
+                && let Some(rounding) = rounding
+            {
+                hyprland::keyword::Keyword::set("decoration:rounding", rounding)
+                    .expect("unable to restore rounding");
             }
 
             // show notification with the video thumbnail

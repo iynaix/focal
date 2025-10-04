@@ -44,28 +44,28 @@ impl Grim {
         self
     }
 
-    pub fn capture(self, notify: bool) {
+    pub fn capture(&self) {
         let mut grim = Command::new("grim");
 
         if !self.monitor.is_empty() {
-            grim.arg("-o").arg(self.monitor);
+            grim.arg("-o").arg(&self.monitor);
         }
 
         if !self.geometry.is_empty() {
-            grim.arg("-g").arg(self.geometry);
+            grim.arg("-g").arg(&self.geometry);
         }
 
         grim.arg(&self.output)
             .execute()
             .expect("unable to execute grim");
+    }
 
-        // show a notification
-        if notify {
-            show_notification(
-                &format!("Screenshot captured to {}", &self.output.display()),
-                Some(&self.output),
-            );
-        }
+    /// show a notification
+    pub fn notify(&self) {
+        show_notification(
+            &format!("Screenshot captured to {}", &self.output.display()),
+            Some(&self.output),
+        );
     }
 }
 
@@ -107,12 +107,17 @@ impl Screenshot {
         // small delay before capture
         std::thread::sleep(std::time::Duration::from_millis(500));
 
-        Grim::new(self.output.clone())
+        let grim = Grim::new(self.output.clone())
             .geometry(geometry)
-            .monitor(monitor)
-            .capture(self.ocr.is_none() && self.notify);
+            .monitor(monitor);
+
+        grim.capture();
 
         self.edit_or_ocr();
+
+        if self.ocr.is_none() && self.notify {
+            grim.notify();
+        }
     }
 
     // use niri's inbuilt screenshot
@@ -315,10 +320,10 @@ impl Screenshot {
         let mut cmd = Command::new("tesseract");
         cmd.arg(&self.output).arg("-");
 
-        if let Some(lang) = &self.ocr {
-            if !lang.is_empty() {
-                cmd.arg("-l").arg(lang);
-            }
+        if let Some(lang) = &self.ocr
+            && !lang.is_empty()
+        {
+            cmd.arg("-l").arg(lang);
         }
 
         let output = cmd
@@ -331,10 +336,10 @@ impl Screenshot {
             .set_text(String::from_utf8_lossy(&output.stdout))
             .expect("unable to copy ocr text");
 
-        if self.notify {
-            if let Ok(copied_text) = std::str::from_utf8(&output.stdout) {
-                show_notification(copied_text, None);
-            }
+        if self.notify
+            && let Ok(copied_text) = std::str::from_utf8(&output.stdout)
+        {
+            show_notification(copied_text, None);
         }
     }
 
