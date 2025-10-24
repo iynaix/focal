@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use super::{CommonArgs, RofiArgs};
+use crate::cli::focal::{CommonArgs, RofiArgs};
 use clap::{ArgGroup, Args, Subcommand, ValueEnum};
 
 #[derive(Subcommand, ValueEnum, Debug, Clone)]
@@ -56,7 +56,7 @@ pub struct AreaArgs {
     #[arg(
         long,
         group = "area_shortcuts",
-        hide = cfg!(feature = "niri"),
+        hide = std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default() == "niri",
         help = "",
         long_help = "Shorthand for --area all"
     )]
@@ -101,8 +101,8 @@ pub struct ImageArgs {
         long,
         action,
         help = "Freezes the screen before selecting an area.",
-        hide = cfg!(feature = "niri"))
-    ]
+        hide = std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default() == "niri",
+    )]
     pub freeze: bool,
 
     #[command(flatten)]

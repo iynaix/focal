@@ -14,19 +14,12 @@
   wf-recorder,
   wl-clipboard,
   xdg-utils,
-  backend ? "hyprland",
   ocr ? true,
   video ? true,
   focalWaybar ? true,
 }:
-assert lib.assertOneOf "backend" backend [
-  "hyprland"
-  "sway"
-  "niri"
-  "mango"
-];
 rustPlatform.buildRustPackage {
-  pname = "focal-${backend}";
+  pname = "focal";
 
   src = lib.fileset.toSource {
     root = ./.;
@@ -48,12 +41,10 @@ rustPlatform.buildRustPackage {
   cargoLock.lockFile = ./Cargo.lock;
 
   buildNoDefaultFeatures = true;
-  buildFeatures = [
-    backend
-  ]
-  ++ lib.optionals video [ "video" ]
-  ++ lib.optionals ocr [ "ocr" ]
-  ++ lib.optionals focalWaybar [ "waybar" ];
+  buildFeatures =
+    lib.optionals video [ "video" ]
+    ++ lib.optionals ocr [ "ocr" ]
+    ++ lib.optionals focalWaybar [ "waybar" ];
 
   nativeBuildInputs = [
     installShellFiles

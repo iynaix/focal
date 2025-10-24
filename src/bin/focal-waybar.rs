@@ -1,7 +1,7 @@
 use clap::{CommandFactory, Parser};
 use focal::{
     cli::{
-        generate_completions,
+        focal::generate_completions,
         waybar::{Cli, FocalWaybarSubcommands},
     },
     video::LockFile,

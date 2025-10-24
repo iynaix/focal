@@ -1,5 +1,5 @@
 use clap::{CommandFactory, Parser};
-use focal::cli::{generate_completions, Cli, FocalSubcommand};
+use focal::cli::focal::{Cli, FocalSubcommand, generate_completions};
 
 fn main() {
     let args = Cli::parse();

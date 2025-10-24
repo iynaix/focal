@@ -40,7 +40,7 @@ pub struct CommonArgs {
 
     #[arg(
         long,
-        hide = cfg!(not(feature = "hyprland")),
+        hide = std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default() != "Hyprland",
         help = "Do not show rounded corners when capturing a window."
     )]
     pub no_rounded_windows: bool,
@@ -91,7 +91,7 @@ pub fn generate_completions(
     }
 }
 
-// write tests for exclusive arguments
+// tests for exclusive arguments
 #[cfg(test)]
 mod tests {
     use super::*;

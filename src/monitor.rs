@@ -49,24 +49,19 @@ pub struct FocalMonitor {
 
 pub trait FocalMonitors {
     /// returns a vector of all monitors
-    fn all() -> Vec<FocalMonitor>
-    where
-        Self: std::marker::Sized;
+    fn all(&self) -> Vec<FocalMonitor>;
 
     /// returns the focused monitor
-    fn focused() -> FocalMonitor;
+    fn focused(&self) -> FocalMonitor;
 
     /// returns geometries of all visible (active) windows across all monitors
-    fn window_geoms() -> Vec<SlurpGeom>;
+    fn window_geoms(&self) -> Vec<SlurpGeom>;
 
     /// total dimensions across all monitors
-    fn total_dimensions() -> (i32, i32)
-    where
-        Self: std::marker::Sized,
-    {
+    fn total_dimensions(&self) -> (i32, i32) {
         let mut w = 0;
         let mut h = 0;
-        for mon in Self::all() {
+        for mon in self.all() {
             w = w.max(mon.x + mon.w);
             h = h.max(mon.y + mon.h);
         }

@@ -35,7 +35,7 @@ fn to_focal_monitor(mon: &Output) -> FocalMonitor {
 }
 
 impl FocalMonitors for NiriMonitors {
-    fn all() -> Vec<FocalMonitor> {
+    fn all(&self) -> Vec<FocalMonitor> {
         let Ok(Response::Outputs(monitors)) = Socket::connect()
             .expect("failed to connect to niri socket")
             .send(Request::Outputs)
@@ -51,7 +51,7 @@ impl FocalMonitors for NiriMonitors {
             .collect()
     }
 
-    fn focused() -> FocalMonitor {
+    fn focused(&self) -> FocalMonitor {
         let Ok(Response::FocusedOutput(Some(monitor))) = Socket::connect()
             .expect("failed to connect to niri socket")
             .send(Request::Outputs)
@@ -69,7 +69,7 @@ impl FocalMonitors for NiriMonitors {
         to_focal_monitor(&monitor)
     }
 
-    fn window_geoms() -> Vec<SlurpGeom> {
+    fn window_geoms(&self) -> Vec<SlurpGeom> {
         // TODO: niri currently doesn't expose window geometries
         Vec::new()
     }

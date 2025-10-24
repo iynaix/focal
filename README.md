@@ -43,23 +43,13 @@ A [focal cachix](https://focal.cachix.org) is also available, providing prebuilt
 
 Then, include it in your `environment.systemPackages` or `home.packages` by referencing the input:
 ```nix
-# for hyprland
 inputs.focal.packages.${pkgs.system}.default
-# for niri
-inputs.focal.packages.${pkgs.system}.focal-niri
-# for sway
-inputs.focal.packages.${pkgs.system}.focal-sway
 ```
 
 Alternatively, it can also be run directly:
 
 ```sh
-# for hyprland
 nix run github:iynaix/focal
-# for niri
-nix run github:iynaix/focal-niri
-# for sway
-nix run github:iynaix/focal#focal-sway
 ```
 
 OCR support can be optionally disabled through the use of an override:
@@ -75,13 +65,11 @@ OCR support can be optionally disabled through the use of an override:
 
 ### Arch Linux
 
-Arch Linux users can install from the [AUR](https://aur.archlinux.org/) or [AUR-git](https://aur.archlinux.org/packages/focal-hyprland-git).
+Arch Linux users can install from the [AUR](https://aur.archlinux.org/) or [AUR-git](https://aur.archlinux.org/packages/focal).
 
 ```sh
-# for hyprland
+# focal detects the window manager at runtime, so focal-hyprland works for all other supported WMs as well
 paru -S focal-hyprland-git
-# for sway
-paru -S focal-sway-git
 ```
 
 ## Usage

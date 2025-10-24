@@ -1,25 +1,8 @@
 use std::{path::PathBuf, process::Command};
 
-#[cfg(feature = "hyprland")]
 mod hyprland;
-#[cfg(feature = "hyprland")]
-use hyprland::HyprMonitors as Monitors;
-
-#[cfg(feature = "sway")]
-mod sway;
-#[cfg(feature = "sway")]
-use sway::SwayMonitors as Monitors;
-
-#[cfg(feature = "niri")]
 mod niri;
-#[cfg(feature = "niri")]
-use niri::NiriMonitors as Monitors;
-
-// TODO: replace with actual implementation!
-#[cfg(feature = "mango")]
-mod hyprland;
-#[cfg(feature = "mango")]
-use hyprland::HyprMonitors as Monitors;
+mod sway;
 
 pub mod cli;
 pub mod image;
@@ -33,6 +16,8 @@ pub use image::Screenshot;
 pub use rofi::Rofi;
 pub use slurp::SlurpGeom;
 pub use video::Screencast;
+
+use crate::monitor::FocalMonitors;
 
 pub fn create_parent_dirs(path: PathBuf) -> PathBuf {
     if let Some(parent) = path.parent()
@@ -102,5 +87,33 @@ pub fn check_programs(progs: &[&str]) {
             not_found.join(", ")
         );
         std::process::exit(1);
+    }
+}
+
+pub fn is_hyprland() -> bool {
+    std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default() == "Hyprland"
+}
+
+pub fn is_niri() -> bool {
+    std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default() == "niri"
+}
+
+pub fn is_sway() -> bool {
+    std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default() == "sway"
+}
+
+pub fn is_mango() -> bool {
+    std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default() == "mango"
+}
+
+pub fn focal_monitor() -> Box<dyn FocalMonitors> {
+    match std::env::var("XDG_CURRENT_DESKTOP")
+        .unwrap_or_default()
+        .as_str()
+    {
+        "Hyprland" => Box::new(hyprland::HyprMonitors),
+        "niri" => Box::new(niri::NiriMonitors),
+        "sway" => Box::new(sway::SwayMonitors),
+        _ => unimplemented!("Unsupported desktop environment"),
     }
 }

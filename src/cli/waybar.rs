@@ -1,4 +1,4 @@
-use super::GenerateArgs;
+use crate::cli::focal::GenerateArgs;
 use clap::{Parser, Subcommand};
 
 #[derive(Subcommand, Debug)]

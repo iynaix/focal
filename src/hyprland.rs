@@ -4,8 +4,8 @@ use hyprland::{
 };
 
 use crate::{
-    monitor::{FocalMonitor, FocalMonitors, Rotation},
     SlurpGeom,
+    monitor::{FocalMonitor, FocalMonitors, Rotation},
 };
 
 fn to_focal_monitor(mon: &Monitor) -> FocalMonitor {
@@ -32,7 +32,7 @@ fn to_focal_monitor(mon: &Monitor) -> FocalMonitor {
 pub struct HyprMonitors;
 
 impl FocalMonitors for HyprMonitors {
-    fn all() -> Vec<FocalMonitor> {
+    fn all(&self) -> Vec<FocalMonitor> {
         Monitors::get()
             .expect("unable to get monitors")
             .iter()
@@ -40,11 +40,11 @@ impl FocalMonitors for HyprMonitors {
             .collect()
     }
 
-    fn focused() -> FocalMonitor {
+    fn focused(&self) -> FocalMonitor {
         to_focal_monitor(&Monitor::get_active().expect("unable to get active monitor"))
     }
 
-    fn window_geoms() -> Vec<SlurpGeom> {
+    fn window_geoms(&self) -> Vec<SlurpGeom> {
         let active_wksps: Vec<_> = Monitors::get()
             .expect("unable to get monitors")
             .iter()

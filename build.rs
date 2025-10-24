@@ -7,7 +7,7 @@ use clap_mangen::Man;
 use std::{fs, path::PathBuf};
 
 fn generate_man_pages() -> Result<(), Box<dyn std::error::Error>> {
-    let focal_cmd = cli::Cli::command();
+    let focal_cmd = cli::focal::Cli::command();
     let man_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target/man");
     fs::create_dir_all(&man_dir)?;
 

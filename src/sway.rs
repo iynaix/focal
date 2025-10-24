@@ -32,6 +32,7 @@ struct GetTreeWindowNode {
     pub visible: Option<bool>,
 }
 
+#[allow(clippy::used_underscore_items)]
 impl GetTreeWindowNode {
     /// recursively collects all leaf nodes
     pub fn leaf_nodes(&self) -> Vec<&Self> {
@@ -97,7 +98,7 @@ fn window_geoms_cmd(cmd: &mut Command) -> Vec<SlurpGeom> {
 }
 
 impl FocalMonitors for SwayMonitors {
-    fn all() -> Vec<FocalMonitor> {
+    fn all(&self) -> Vec<FocalMonitor> {
         let monitors: Vec<GetOutput> = command_json(
             Command::new("swaymsg")
                 .arg("-t")
@@ -108,7 +109,7 @@ impl FocalMonitors for SwayMonitors {
         monitors.iter().map(to_focal_monitor).collect()
     }
 
-    fn focused() -> FocalMonitor {
+    fn focused(&self) -> FocalMonitor {
         let monitors: Vec<GetOutput> = command_json(
             Command::new("swaymsg")
                 .arg("-t")
@@ -122,7 +123,7 @@ impl FocalMonitors for SwayMonitors {
             .expect("no focused monitor")
     }
 
-    fn window_geoms() -> Vec<SlurpGeom> {
+    fn window_geoms(&self) -> Vec<SlurpGeom> {
         window_geoms_cmd(
             Command::new("swaymsg")
                 .arg("-t")

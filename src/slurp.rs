@@ -4,7 +4,7 @@ use std::{
     process::{Command, Stdio},
 };
 
-use crate::{monitor::FocalMonitors, Monitors};
+use crate::{focal_monitor, is_hyprland};
 
 #[derive(Debug)]
 pub struct ParseError {
@@ -65,18 +65,14 @@ impl std::str::FromStr for SlurpGeom {
 }
 
 const fn round2(n: i32) -> i32 {
-    if n % 2 == 1 {
-        n - 1
-    } else {
-        n
-    }
+    if n % 2 == 1 { n - 1 } else { n }
 }
 
 impl SlurpGeom {
     pub fn to_ffmpeg_geom(self) -> (String, String) {
         let Self { x, y, w, h } = self;
 
-        let monitors = Monitors::all();
+        let monitors = focal_monitor().all();
         let mon = monitors
             .iter()
             .find(|m| x >= m.x && x <= m.x + m.w && y >= m.y && y <= m.y + m.h)
@@ -116,8 +112,7 @@ impl SlurpGeom {
         (mon.name.clone(), filter)
     }
 
-    #[cfg(feature = "hyprland")]
-    pub fn disable_fade_animation() -> Option<String> {
+    pub fn hyprland_disable_fade_animation() -> Option<String> {
         use hyprland::{
             data::{Animations, BezierIdent},
             shared::HyprData,
@@ -143,8 +138,7 @@ impl SlurpGeom {
         })
     }
 
-    #[cfg(feature = "hyprland")]
-    pub fn reset_fade_animation(anim: Option<&str>) {
+    pub fn hyprland_reset_fade_animation(anim: Option<&str>) {
         use hyprland::keyword::Keyword;
 
         if let Some(anim) = anim {
@@ -154,10 +148,13 @@ impl SlurpGeom {
 
     /// returns the selected geometry and if a window was selected
     pub fn prompt(slurp_args: Option<&str>) -> (Self, bool) {
-        let window_geoms = Monitors::window_geoms();
+        let window_geoms = focal_monitor().window_geoms();
 
-        #[cfg(feature = "hyprland")]
-        let orig_fade_anim = Self::disable_fade_animation();
+        let orig_fade_anim = if is_hyprland() {
+            Self::hyprland_disable_fade_animation()
+        } else {
+            None
+        };
 
         let slurp_geoms = window_geoms
             .iter()
@@ -190,8 +187,9 @@ impl SlurpGeom {
             });
 
         // restore the original fade animation
-        #[cfg(feature = "hyprland")]
-        Self::reset_fade_animation(orig_fade_anim.as_deref());
+        if crate::is_hyprland() {
+            Self::hyprland_reset_fade_animation(orig_fade_anim.as_deref());
+        }
 
         match sel {
             Ok(ref s) if s.is_empty() => {

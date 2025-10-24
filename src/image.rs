@@ -4,14 +4,12 @@ use std::{
 };
 
 use crate::{
-    Monitors, Rofi, check_programs,
+    Rofi, check_programs,
     cli::{
-        Cli,
+        focal::Cli,
         image::{CaptureArea, ImageArgs},
     },
-    create_parent_dirs, iso8601_filename,
-    monitor::FocalMonitors,
-    show_notification,
+    create_parent_dirs, focal_monitor, is_hyprland, is_niri, iso8601_filename, show_notification,
 };
 use arboard::Clipboard;
 use clap::CommandFactory;
@@ -92,7 +90,7 @@ impl Screenshot {
             }
 
             // copying not needed for niri, since it already does that
-            if cfg!(not(feature = "niri")) {
+            if !is_niri() {
                 let mut img = std::fs::File::open(&self.output).expect("failed to open image");
                 Command::new("wl-copy")
                     .arg("--type")
@@ -121,35 +119,29 @@ impl Screenshot {
     }
 
     // use niri's inbuilt screenshot
-    #[cfg(feature = "niri")]
     pub fn monitor(&self) {
         std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
 
-        std::process::Command::new("niri")
-            .arg("msg")
-            .arg("action")
-            .arg("screenshot-screen")
-            .spawn()
-            .expect("unable to run `niri msg action screenshot-screen`")
-            .wait()
-            .expect("unable to wait for niri screenshot-screen");
+        if is_niri() {
+            std::process::Command::new("niri")
+                .arg("msg")
+                .arg("action")
+                .arg("screenshot-screen")
+                .spawn()
+                .expect("unable to run `niri msg action screenshot-screen`")
+                .wait()
+                .expect("unable to wait for niri screenshot-screen");
 
-        self.edit_or_ocr();
-    }
-
-    #[cfg(not(feature = "niri"))]
-    pub fn monitor(&self) {
-        std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
-        self.capture(&Monitors::focused().name, "");
+            self.edit_or_ocr();
+        } else {
+            std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
+            self.capture(&focal_monitor().focused().name, "");
+        }
     }
 
     pub fn window(&self) {
-        if cfg!(not(feature = "niri")) {
-            self.selection();
-        } else {
+        if is_niri() {
             use niri_ipc::{Action, Request, Response, Window, socket::Socket};
-
-            std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
 
             let mut socket = Socket::connect().expect("failed to connect to niri socket");
             let Ok(Response::PickedWindow(window)) = socket
@@ -171,78 +163,78 @@ impl Screenshot {
                 }))
                 .expect("failed to send ScreenshotWindow request to niri")
                 .expect("failed to screenshot window");
+        } else {
+            self.selection();
         }
     }
 
-    #[cfg(feature = "niri")]
     pub fn selection(&self) {
-        std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
+        if is_niri() {
+            std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
 
-        std::process::Command::new("niri")
-            .arg("msg")
-            .arg("action")
-            .arg("screenshot")
-            .spawn()
-            .expect("unable to run `niri msg action screenshot`")
-            .wait()
-            .expect("unable to wait for niri screenshot");
-
-        self.edit_or_ocr();
-    }
-
-    #[cfg(not(feature = "niri"))]
-    pub fn selection(&self) {
-        if self.freeze {
-            Command::new("hyprpicker")
-                .arg("-r")
-                .arg("-z")
+            std::process::Command::new("niri")
+                .arg("msg")
+                .arg("action")
+                .arg("screenshot")
                 .spawn()
-                .expect("could not freeze screen")
+                .expect("unable to run `niri msg action screenshot`")
                 .wait()
-                .expect("could not wait for freeze screen");
-            std::thread::sleep(std::time::Duration::from_millis(200));
-        }
+                .expect("unable to wait for niri screenshot");
 
-        std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
-        let (geom, is_window) = crate::SlurpGeom::prompt(self.slurp.as_deref());
-
-        if self.freeze {
-            Command::new("pkill")
-                .arg("hyprpicker")
-                .spawn()
-                .expect("could not unfreeze screen")
-                .wait()
-                .expect("could not wait for unfreeze screen");
-        }
-
-        let do_capture = || {
-            self.capture("", &geom.to_string());
-        };
-
-        #[cfg(feature = "hyprland")]
-        if is_window && self.no_rounded_windows {
-            use hyprland::keyword::Keyword;
-
-            if let Ok(Keyword {
-                value: rounding, ..
-            }) = Keyword::get("decoration:rounding")
-            {
-                Keyword::set("decoration:rounding", 0).expect("unable to disable rounding");
-                do_capture();
-                Keyword::set("decoration:rounding", rounding).expect("unable to restore rounding");
-                return;
+            self.edit_or_ocr();
+        } else {
+            if self.freeze {
+                Command::new("hyprpicker")
+                    .arg("-r")
+                    .arg("-z")
+                    .spawn()
+                    .expect("could not freeze screen")
+                    .wait()
+                    .expect("could not wait for freeze screen");
+                std::thread::sleep(std::time::Duration::from_millis(200));
             }
-        }
 
-        do_capture();
+            std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
+            let (geom, is_window) = crate::SlurpGeom::prompt(self.slurp.as_deref());
+
+            if self.freeze {
+                Command::new("pkill")
+                    .arg("hyprpicker")
+                    .spawn()
+                    .expect("could not unfreeze screen")
+                    .wait()
+                    .expect("could not wait for unfreeze screen");
+            }
+
+            let do_capture = || {
+                self.capture("", &geom.to_string());
+            };
+
+            if is_hyprland() && is_window && self.no_rounded_windows {
+                use hyprland::keyword::Keyword;
+
+                if let Ok(Keyword {
+                    value: rounding, ..
+                }) = Keyword::get("decoration:rounding")
+                {
+                    Keyword::set("decoration:rounding", 0).expect("unable to disable rounding");
+                    do_capture();
+                    Keyword::set("decoration:rounding", rounding)
+                        .expect("unable to restore rounding");
+                    return;
+                }
+            }
+
+            do_capture();
+        }
     }
 
     pub fn all(&self) {
-        if cfg!(feature = "niri") {
+        if is_niri() {
             unimplemented!("Capturing all screens with niri is not supported");
         }
 
-        let (w, h) = Monitors::total_dimensions();
+        let (w, h) = focal_monitor().total_dimensions();
 
         std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
         self.capture("", &format!("0,0 {w}x{h}"));
@@ -288,7 +280,7 @@ impl Screenshot {
     }
 
     fn edit(&self) {
-        if cfg!(feature = "niri") && self.image_from_clipboard().is_none() {
+        if is_niri() && self.image_from_clipboard().is_none() {
             eprintln!("No image found on clipboard.");
             std::process::exit(1);
         }
@@ -312,7 +304,7 @@ impl Screenshot {
     }
 
     fn ocr(&self) {
-        if cfg!(feature = "niri") && self.image_from_clipboard().is_none() {
+        if is_niri() && self.image_from_clipboard().is_none() {
             eprintln!("No image found on clipboard.");
             std::process::exit(1);
         }
@@ -344,16 +336,14 @@ impl Screenshot {
     }
 
     pub fn rofi(&mut self, theme: Option<&PathBuf>) {
-        let mut opts = vec![
-            "󰒉\tSelection",
-            #[cfg(feature = "niri")]
-            "󰖯\tWindow",
-            "󰍹\tMonitor",
-            "󰍺\tAll",
-        ];
+        let mut opts = vec!["󰒉\tSelection", "󰍹\tMonitor", "󰍺\tAll"];
+
+        if is_niri() {
+            opts.insert(1, "󰍹\tWindow");
+        }
 
         // don't show "All" option if single monitor
-        if Monitors::all().len() == 1 {
+        if focal_monitor().all().len() == 1 {
             opts.pop();
         }
 
@@ -399,8 +389,8 @@ impl Screenshot {
             "Window" => {
                 self.delay = Some(Self::rofi_delay(theme));
 
-                // TODO: use slurp to highlight geometry when selecting window?
-                if cfg!(feature = "niri") {
+                // TODO: use slurp to highlight geometry when selecting window for niri?
+                if is_niri() {
                     self.window();
                 } else {
                     self.selection();
@@ -487,8 +477,8 @@ pub fn main(args: ImageArgs) {
         match area {
             CaptureArea::Monitor => screenshot.monitor(),
             CaptureArea::Window => {
-                // TODO: use slurp to highlight geometry when selecting window?
-                if cfg!(feature = "niri") {
+                // TODO: use slurp to highlight geometry when selecting window for niri?
+                if is_niri() {
                     screenshot.window();
                 } else {
                     screenshot.selection();

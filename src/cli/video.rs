@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use super::{CommonArgs, RofiArgs};
+use crate::cli::focal::{CommonArgs, RofiArgs};
 use clap::{ArgGroup, Args, Subcommand, ValueEnum};
 
 #[derive(Subcommand, ValueEnum, Debug, Clone)]

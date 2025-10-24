@@ -2,11 +2,9 @@ use serde::{Deserialize, Serialize};
 use std::{path::PathBuf, process::Command, vec};
 
 use crate::{
-    Monitors, Rofi, SlurpGeom, check_programs,
+    Rofi, SlurpGeom, check_programs,
     cli::video::{CaptureArea, VideoArgs},
-    create_parent_dirs, iso8601_filename,
-    monitor::FocalMonitors,
-    show_notification,
+    create_parent_dirs, focal_monitor, is_hyprland, iso8601_filename, show_notification,
     wf_recorder::WfRecorder,
 };
 use execute::Execute;
@@ -114,7 +112,7 @@ impl Screencast {
         if let Ok(LockFile { video, rounding }) = LockFile::read() {
             LockFile::remove();
 
-            if cfg!(feature = "hyprland")
+            if is_hyprland()
                 && let Some(rounding) = rounding
             {
                 hyprland::keyword::Keyword::set("decoration:rounding", rounding)
@@ -169,7 +167,7 @@ impl Screencast {
             self.capture(&mon, &filter, rounding);
         };
 
-        if cfg!(feature = "hyprland") && is_window && self.no_rounded_windows {
+        if is_hyprland() && is_window && self.no_rounded_windows {
             use hyprland::keyword::{Keyword, OptionValue};
 
             if let Ok(Keyword {
@@ -189,7 +187,7 @@ impl Screencast {
     pub fn monitor(&self) {
         std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
 
-        let mon = Monitors::focused();
+        let mon = focal_monitor().focused();
         let transpose = mon.rotation.ffmpeg_transpose();
         self.capture(&mon.name, &transpose, None);
     }
@@ -198,7 +196,7 @@ impl Screencast {
         let mut opts = vec!["󰒉\tSelection", "󰍹\tMonitor", "󰍺\tAll"];
 
         // don't show "All" option if single monitor
-        if Monitors::all().len() == 1 {
+        if focal_monitor().all().len() == 1 {
             opts.pop();
         }
 
