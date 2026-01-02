@@ -123,14 +123,17 @@ impl Screenshot {
         std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
 
         if is_niri() {
-            std::process::Command::new("niri")
-                .arg("msg")
-                .arg("action")
-                .arg("screenshot-screen")
-                .spawn()
-                .expect("unable to run `niri msg action screenshot-screen`")
-                .wait()
-                .expect("unable to wait for niri screenshot-screen");
+            use niri_ipc::{Action, Request, socket::Socket};
+
+            let mut socket = Socket::connect().expect("failed to connect to niri socket");
+            socket
+                .send(Request::Action(Action::ScreenshotScreen {
+                    path: None,
+                    show_pointer: false,
+                    write_to_disk: true,
+                }))
+                .expect("failed to send ScreenshotScreen request to niri")
+                .expect("failed to screenshot screen");
 
             self.edit_or_ocr();
         } else {
@@ -171,16 +174,18 @@ impl Screenshot {
 
     pub fn selection(&self) {
         if is_niri() {
+            use niri_ipc::{Action, Request, socket::Socket};
+
             std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
 
-            std::process::Command::new("niri")
-                .arg("msg")
-                .arg("action")
-                .arg("screenshot")
-                .spawn()
-                .expect("unable to run `niri msg action screenshot`")
-                .wait()
-                .expect("unable to wait for niri screenshot");
+            let mut socket = Socket::connect().expect("failed to connect to niri socket");
+            socket
+                .send(Request::Action(Action::Screenshot {
+                    path: None,
+                    show_pointer: false,
+                }))
+                .expect("failed to send Screenshot request to niri")
+                .expect("failed to capture screenshot");
 
             self.edit_or_ocr();
         } else {
