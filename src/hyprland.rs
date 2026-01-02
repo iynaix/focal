@@ -55,7 +55,7 @@ impl FocalMonitors for HyprMonitors {
         Clients::get().map_or(Vec::new(), |windows| {
             windows
                 .iter()
-                .filter(|&win| (active_wksps.contains(&win.workspace.id)))
+                .filter(|&win| active_wksps.contains(&win.workspace.id))
                 .map(|win| SlurpGeom {
                     x: win.at.0.into(),
                     y: win.at.1.into(),

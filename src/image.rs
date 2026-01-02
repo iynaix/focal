@@ -159,6 +159,7 @@ impl Screenshot {
             socket
                 .send(Request::Action(Action::ScreenshotWindow {
                     id: Some(id),
+                    path: None,
                     write_to_disk: true,
                 }))
                 .expect("failed to send ScreenshotWindow request to niri")
@@ -323,10 +324,9 @@ impl Screenshot {
             .execute_output()
             .expect("Failed to run tesseract");
 
-        let mut clipboard = Clipboard::new().expect("failed to get clipboard");
-        clipboard
-            .set_text(String::from_utf8_lossy(&output.stdout))
-            .expect("unable to copy ocr text");
+        Command::new("wl-copy")
+            .execute_input(&output.stdout)
+            .expect("failed to copy ocr text to clipboard");
 
         if self.notify
             && let Ok(copied_text) = std::str::from_utf8(&output.stdout)
