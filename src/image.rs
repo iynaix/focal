@@ -108,6 +108,17 @@ impl Screenshot {
 
         grim.capture();
 
+        // wait for up to 5s for the file to appear
+        let mut attempts = 0;
+        while !self.output.exists() && attempts < 50 {
+            std::thread::sleep(std::time::Duration::from_millis(100));
+            attempts += 1;
+        }
+        if !self.output.exists() {
+            eprintln!("No image was captured by grim!");
+            std::process::exit(1);
+        }
+
         self.edit_or_ocr();
 
         if self.ocr.is_none() && self.notify {
