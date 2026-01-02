@@ -7,7 +7,6 @@ edition = "2024"
 build = "build.rs"
 
 [dependencies]
-arboard = { version = "3.6.1", features = ["wayland-data-control"] }
 chrono = "0.4.42"
 clap = { version = "4.5.53", features = ["derive", "string"] }
 clap_complete = "4.5.64"

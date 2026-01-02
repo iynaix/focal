@@ -11,11 +11,8 @@ use crate::{
     },
     create_parent_dirs, focal_monitor, is_hyprland, is_niri, iso8601_filename, show_notification,
 };
-use arboard::Clipboard;
 use clap::CommandFactory;
 use execute::Execute;
-use image::{ImageBuffer, Rgba};
-use std::time::{Duration, Instant};
 
 #[derive(Default)]
 struct Grim {
@@ -128,7 +125,12 @@ impl Screenshot {
             let mut socket = Socket::connect().expect("failed to connect to niri socket");
             socket
                 .send(Request::Action(Action::ScreenshotScreen {
-                    path: None,
+                    path: Some(
+                        self.output
+                            .to_str()
+                            .expect("invalid output path")
+                            .to_string(),
+                    ),
                     show_pointer: false,
                     write_to_disk: true,
                 }))
@@ -162,7 +164,12 @@ impl Screenshot {
             socket
                 .send(Request::Action(Action::ScreenshotWindow {
                     id: Some(id),
-                    path: None,
+                    path: Some(
+                        self.output
+                            .to_str()
+                            .expect("invalid output path")
+                            .to_string(),
+                    ),
                     write_to_disk: true,
                 }))
                 .expect("failed to send ScreenshotWindow request to niri")
@@ -181,7 +188,12 @@ impl Screenshot {
             let mut socket = Socket::connect().expect("failed to connect to niri socket");
             socket
                 .send(Request::Action(Action::Screenshot {
-                    path: None,
+                    path: Some(
+                        self.output
+                            .to_str()
+                            .expect("invalid output path")
+                            .to_string(),
+                    ),
                     show_pointer: false,
                 }))
                 .expect("failed to send Screenshot request to niri")
@@ -246,51 +258,7 @@ impl Screenshot {
         self.capture("", &format!("0,0 {w}x{h}"));
     }
 
-    fn image_from_clipboard(&self) -> Option<PathBuf> {
-        let mut clipboard = Clipboard::new().expect("failed to get clipboard");
-        let start_time = Instant::now();
-        let timeout = Duration::from_secs(1); // Set the maximum duration to 1 second
-        let check_interval = Duration::from_millis(100); // Check every 100 milliseconds
-
-        let mut image_found = false;
-
-        while start_time.elapsed() < timeout {
-            if let Ok(image_data) = clipboard.get_image() {
-                // println!(
-                //     "Image found on clipboard: {}x{} pixels (after {}ms)",
-                //     image_data.width,
-                //     image_data.height,
-                //     start_time.elapsed().as_millis()
-                // );
-
-                // save the image
-                #[allow(clippy::cast_possible_truncation)]
-                if let Some(img) = ImageBuffer::<Rgba<u8>, _>::from_raw(
-                    image_data.width as u32,
-                    image_data.height as u32,
-                    image_data.bytes.into_owned(),
-                ) {
-                    img.save(&self.output)
-                        .expect("unable to save image to file");
-                }
-
-                image_found = true;
-                break;
-            }
-
-            // Wait for the next check interval
-            std::thread::sleep(check_interval);
-        }
-
-        image_found.then(|| self.output.clone())
-    }
-
     fn edit(&self) {
-        if is_niri() && self.image_from_clipboard().is_none() {
-            eprintln!("No image found on clipboard.");
-            std::process::exit(1);
-        }
-
         if let Some(prog) = &self.edit {
             if prog.ends_with("swappy") {
                 Command::new("swappy")
@@ -310,11 +278,6 @@ impl Screenshot {
     }
 
     fn ocr(&self) {
-        if is_niri() && self.image_from_clipboard().is_none() {
-            eprintln!("No image found on clipboard.");
-            std::process::exit(1);
-        }
-
         let mut cmd = Command::new("tesseract");
         cmd.arg(&self.output).arg("-");
 
