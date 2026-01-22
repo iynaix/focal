@@ -191,10 +191,12 @@ impl Screenshot {
     }
 
     pub fn selection(&self) {
+        let delay = self.delay.unwrap_or(0);
+
         if is_niri() {
             use niri_ipc::{Action, Request, socket::Socket};
 
-            std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
+            std::thread::sleep(std::time::Duration::from_secs(delay));
 
             let mut socket = Socket::connect().expect("failed to connect to niri socket");
             socket
@@ -212,28 +214,23 @@ impl Screenshot {
 
             self.edit_or_ocr();
         } else {
-            if self.freeze {
-                Command::new("hyprpicker")
-                    .arg("-r")
-                    .arg("-z")
+            // freeze screen before delay to capture selection
+            let picker_process = if self.freeze || delay > 0 {
+                let child = Command::new("hyprpicker")
+                    .arg("-rz")
                     .spawn()
-                    .expect("could not freeze screen")
-                    .wait()
-                    .expect("could not wait for freeze screen");
+                    .expect("could not freeze screen");
                 std::thread::sleep(std::time::Duration::from_millis(200));
-            }
+                Some(child)
+            } else {
+                None
+            };
 
-            std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
             let (geom, is_window) = crate::SlurpGeom::prompt(self.slurp.as_deref());
+            // kill hyprpicker so it doesn't ask for a color
+            picker_process.map(|mut p| p.kill().ok());
 
-            if self.freeze {
-                Command::new("pkill")
-                    .arg("hyprpicker")
-                    .spawn()
-                    .expect("could not unfreeze screen")
-                    .wait()
-                    .expect("could not wait for unfreeze screen");
-            }
+            std::thread::sleep(std::time::Duration::from_secs(delay));
 
             let do_capture = || {
                 self.capture("", &geom.to_string());
@@ -364,7 +361,10 @@ impl Screenshot {
             .unwrap_or_default();
 
         match sel {
-            "Selection" => self.selection(),
+            "Selection" => {
+                self.delay = Some(Self::rofi_delay(theme));
+                self.selection();
+            }
             "Window" => {
                 self.delay = Some(Self::rofi_delay(theme));
 
