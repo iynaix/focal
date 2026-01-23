@@ -69,8 +69,6 @@ pub struct Screenshot {
     pub delay: Option<u64>,
     pub no_rounded_windows: bool,
     pub freeze: bool,
-    /// did the trigger a screenshot from rofi?
-    pub from_rofi: bool,
     pub edit: Option<String>,
     pub icons: bool,
     pub notify: bool,
@@ -218,11 +216,6 @@ impl Screenshot {
         } else {
             // freeze screen before delay to capture selection
             let picker_process = if self.freeze || delay > 0 {
-                // wait 1s for rofi to disappear
-                if self.from_rofi {
-                    std::thread::sleep(std::time::Duration::from_secs(1));
-                }
-
                 let child = Command::new("hyprpicker")
                     .arg("-rz")
                     .spawn()
@@ -407,7 +400,8 @@ impl Screenshot {
             rofi = rofi.theme(theme.clone());
         }
 
-        let (sel, _) = rofi.run();
+        // disable the animations on hyprland so the delay rofi closing animation will not be captured by hyprpicker
+        let (sel, _) = rofi.run_without_animation();
 
         if sel.is_empty() {
             eprintln!("No delay selection was made.");
@@ -449,7 +443,6 @@ pub fn main(args: ImageArgs) {
         output,
         delay: args.common_args.delay,
         freeze: args.freeze,
-        from_rofi: args.rofi_args.rofi,
         edit: args.edit,
         no_rounded_windows: args.common_args.no_rounded_windows,
         icons: !args.rofi_args.no_icons,

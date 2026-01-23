@@ -1,3 +1,4 @@
+use crate::is_hyprland;
 use std::{
     path::PathBuf,
     process::{Command, Stdio},
@@ -94,5 +95,24 @@ impl Rofi {
             .to_string();
 
         (selection, exit_code)
+    }
+
+    /// runs rofi without animations, re-enabling the animation afterwards if needed
+    pub fn run_without_animation(self) -> (String, i32) {
+        use hyprland::keyword::{Keyword, OptionValue};
+
+        if is_hyprland()
+            && let Ok(Keyword {
+                value: OptionValue::Int(1),
+                ..
+            }) = Keyword::get("animations:enabled")
+        {
+            Keyword::set("animations:enabled", 0).expect("unable to disable animations");
+            let ret = self.run();
+            Keyword::set("animations:enabled", 1).expect("unable to enable animations");
+            ret
+        } else {
+            self.run()
+        }
     }
 }
