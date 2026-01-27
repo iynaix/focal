@@ -312,10 +312,10 @@ impl Screenshot {
     }
 
     pub fn rofi(&mut self, theme: Option<&PathBuf>) {
-        let mut opts = vec!["󰒉\tSelection", "󰍹\tMonitor", "󰍺\tAll"];
+        let mut opts = vec!["󰒉\tSelection", "󰍹\tWindow", "󰍹\tMonitor"];
 
-        if is_niri() {
-            opts.insert(1, "󰍹\tWindow");
+        if !is_niri() {
+            opts.push("󰍺\tAll");
         }
 
         // don't show "All" option if single monitor
