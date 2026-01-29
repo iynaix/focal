@@ -507,8 +507,9 @@ pub fn main(args: ImageArgs) {
         match area {
             CaptureArea::Monitor => screenshot.monitor(),
             CaptureArea::Window => {
-                // TODO: use slurp to highlight geometry when selecting window for niri?
+                // TODO: use slurp to highlight geometry when selecting window?
                 // requires niri to expose all window geometry in the IPC
+                // mango: https://github.com/DreamMaoMao/mangowc/issues/418
                 if is_niri() || is_mango() {
                     screenshot.window();
                 } else {

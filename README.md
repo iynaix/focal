@@ -1,6 +1,6 @@
 # focal
 
-focal is a cli / rofi menu for capturing and copying screenshots or videos on hyprland / sway.
+focal is a cli / rofi menu for capturing and copying screenshots or videos on hyprland / niri / mango / sway.
 
 <!-- 93859049_p0.webp -->
 <img src="https://i.imgur.com/3DrXV0I.png" alt="main menu" width="49%" /> <img src="https://i.imgur.com/3kKoNJv.png" alt="delay menu" width="49%" />
@@ -15,7 +15,7 @@ focal is a cli / rofi menu for capturing and copying screenshots or videos on hy
 - image / video is automatically copied to clipboard, ready for pasting into other programs
 - notifications that open captured file when clicked
 - all options are also available via the CLI
-- supports hyprland / niri / sway
+- supports hyprland / niri / mango / sway
 - OCR support to select text from captured image (CLI only)
 
 ## Installation
@@ -144,6 +144,11 @@ For a **niri** keybinding:
 Mod+backslash { spawn "focal" "image" "--area" "selection" }
 ```
 
+For a **mango** keybinding:
+```
+bind=SUPER, backslash, exec, focal image --area selection
+```
+
 For a **sway** keybinding:
 ```
 bindsym $mod+backslash exec "focal image --area selection"
@@ -207,9 +212,10 @@ To build focal from source
     * [grim](https://sr.ht/~emersion/grim/)
     * [slurp](https://github.com/emersion/slurp)
     * [hyprland](https://hyprland.org/)
-    * [nir](https://github.com/YaLTeR/niri)
-    * [rofi](https://github.com/davatorium/rofi)
+    * [niri](https://github.com/YaLTeR/niri)
+    * [mango](https://github.com/DreamMaoMao/mangowc)
     * [sway](https://swaywm.org/)
+    * [rofi](https://github.com/davatorium/rofi)
     * [wl-clipboard](https://github.com/bugaevc/wl-clipboard)
     * [wf-recorder](https://github.com/ammen99/wf-recorder)
     * [ffmpeg](https://www.ffmpeg.org/)
