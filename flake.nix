@@ -28,6 +28,7 @@
                 tesseract
                 hyprpicker
                 wl-clipboard
+                wlr-randr # for mango
                 xdg-utils # xdg-open
               ];
 
@@ -59,6 +60,7 @@
             no-waybar = focal.override { focalWaybar = false; };
             focal-hyprland = focal;
             focal-sway = focal;
+            focal-mango = focal;
             focal-niri = focal;
             focal-image = focal.override { video = false; };
           };

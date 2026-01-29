@@ -1,6 +1,7 @@
 use std::{path::PathBuf, process::Command};
 
 mod hyprland;
+mod mango;
 mod niri;
 mod sway;
 
@@ -114,6 +115,7 @@ pub fn focal_monitor() -> Box<dyn FocalMonitors> {
         "Hyprland" => Box::new(hyprland::HyprMonitors),
         "niri" => Box::new(niri::NiriMonitors),
         "sway" => Box::new(sway::SwayMonitors),
+        "mango" => Box::new(mango::MangoMonitors),
         _ => unimplemented!("Unsupported desktop environment"),
     }
 }

@@ -26,7 +26,7 @@ impl fmt::Display for ParseError {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct SlurpGeom {
     pub w: i32,
     pub h: i32,
@@ -187,7 +187,7 @@ impl SlurpGeom {
             });
 
         // restore the original fade animation
-        if crate::is_hyprland() {
+        if is_hyprland() {
             Self::hyprland_reset_fade_animation(orig_fade_anim.as_deref());
         }
 

@@ -9,7 +9,8 @@ use crate::{
         focal::Cli,
         image::{CaptureArea, ImageArgs},
     },
-    create_parent_dirs, focal_monitor, is_hyprland, is_niri, iso8601_filename, show_notification,
+    create_parent_dirs, focal_monitor, is_hyprland, is_mango, is_niri, iso8601_filename,
+    show_notification,
 };
 use clap::CommandFactory;
 use execute::Execute;
@@ -126,10 +127,10 @@ impl Screenshot {
         }
     }
 
-    // use niri's inbuilt screenshot
     pub fn monitor(&self) {
         std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
 
+        // use niri's inbuilt screenshot
         if is_niri() {
             use niri_ipc::{Action, Request, socket::Socket};
 
@@ -155,64 +156,112 @@ impl Screenshot {
         }
     }
 
+    fn niri_window(&self) {
+        use niri_ipc::{Action, Request, Response, Window, socket::Socket};
+
+        let mut socket = Socket::connect().expect("failed to connect to niri socket");
+        let Ok(Response::PickedWindow(window)) = socket
+            .send(Request::PickWindow)
+            .expect("failed to send PickWindow request to niri")
+        else {
+            panic!("unexpected response from niri, should be PickWindow");
+        };
+
+        let Some(Window { id, .. }) = window else {
+            eprintln!("No window was picked.");
+            std::process::exit(1);
+        };
+
+        socket
+            .send(Request::Action(Action::ScreenshotWindow {
+                id: Some(id),
+                path: Some(
+                    self.output
+                        .to_str()
+                        .expect("invalid output path")
+                        .to_string(),
+                ),
+                write_to_disk: true,
+            }))
+            .expect("failed to send ScreenshotWindow request to niri")
+            .expect("failed to screenshot window");
+    }
+
+    fn mango_window(&self) {
+        let delay = self.delay.unwrap_or(0);
+
+        let mon_name = focal_monitor().focused().name;
+
+        let output = Command::new("mmsg")
+            .arg("-x")
+            .stdout(Stdio::piped())
+            .output()
+            .expect("Failed to execute mmsg -x");
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+
+        // create a geom of the window to be captured
+        let mut geom = crate::SlurpGeom::default();
+        for line in stdout.lines() {
+            let parts: Vec<_> = line.split(' ').collect();
+            if parts.len() != 3 {
+                continue;
+            }
+
+            if parts[0] != mon_name {
+                continue;
+            }
+
+            match parts[1] {
+                "x" => geom.x = parts[2].parse().expect("Invalid x"),
+                "y" => geom.y = parts[2].parse().expect("Invalid y"),
+                "width" => geom.w = parts[2].parse().expect("Invalid width"),
+                "height" => geom.h = parts[2].parse().expect("Invalid height"),
+                _ => {}
+            }
+        }
+
+        std::thread::sleep(std::time::Duration::from_secs(delay));
+        self.capture("", &geom.to_string());
+    }
+
     pub fn window(&self) {
         if is_niri() {
-            use niri_ipc::{Action, Request, Response, Window, socket::Socket};
-
-            let mut socket = Socket::connect().expect("failed to connect to niri socket");
-            let Ok(Response::PickedWindow(window)) = socket
-                .send(Request::PickWindow)
-                .expect("failed to send PickWindow request to niri")
-            else {
-                panic!("unexpected response from niri, should be PickWindow");
-            };
-
-            let Some(Window { id, .. }) = window else {
-                eprintln!("No window was picked.");
-                std::process::exit(1);
-            };
-
-            socket
-                .send(Request::Action(Action::ScreenshotWindow {
-                    id: Some(id),
-                    path: Some(
-                        self.output
-                            .to_str()
-                            .expect("invalid output path")
-                            .to_string(),
-                    ),
-                    write_to_disk: true,
-                }))
-                .expect("failed to send ScreenshotWindow request to niri")
-                .expect("failed to screenshot window");
+            self.niri_window();
+        } else if is_mango() {
+            self.mango_window();
         } else {
             self.selection();
         }
+    }
+
+    fn niri_selection(&self, delay: u64) {
+        use niri_ipc::{Action, Request, socket::Socket};
+
+        std::thread::sleep(std::time::Duration::from_secs(delay));
+
+        let mut socket = Socket::connect().expect("failed to connect to niri socket");
+        socket
+            .send(Request::Action(Action::Screenshot {
+                path: Some(
+                    self.output
+                        .to_str()
+                        .expect("invalid output path")
+                        .to_string(),
+                ),
+                show_pointer: false,
+            }))
+            .expect("failed to send Screenshot request to niri")
+            .expect("failed to capture screenshot");
+
+        self.edit_or_ocr();
     }
 
     pub fn selection(&self) {
         let delay = self.delay.unwrap_or(0);
 
         if is_niri() {
-            use niri_ipc::{Action, Request, socket::Socket};
-
-            std::thread::sleep(std::time::Duration::from_secs(delay));
-
-            let mut socket = Socket::connect().expect("failed to connect to niri socket");
-            socket
-                .send(Request::Action(Action::Screenshot {
-                    path: Some(
-                        self.output
-                            .to_str()
-                            .expect("invalid output path")
-                            .to_string(),
-                    ),
-                    show_pointer: false,
-                }))
-                .expect("failed to send Screenshot request to niri")
-                .expect("failed to capture screenshot");
-
-            self.edit_or_ocr();
+            self.niri_selection(delay);
         } else {
             // freeze screen before delay to capture selection
             let picker_process = if self.freeze || delay > 0 {
@@ -256,8 +305,8 @@ impl Screenshot {
     }
 
     pub fn all(&self) {
-        if is_niri() {
-            unimplemented!("Capturing all screens with niri is not supported");
+        if is_niri() || is_mango() {
+            unimplemented!("Capturing all screens is not supported");
         }
 
         let (w, h) = focal_monitor().total_dimensions();
@@ -314,7 +363,7 @@ impl Screenshot {
     pub fn rofi(&mut self, theme: Option<&PathBuf>) {
         let mut opts = vec!["󰒉\tSelection", "󰍹\tWindow", "󰍹\tMonitor"];
 
-        if !is_niri() {
+        if !(is_niri() || is_mango()) {
             opts.push("󰍺\tAll");
         }
 
@@ -369,6 +418,7 @@ impl Screenshot {
                 self.delay = Some(Self::rofi_delay(theme));
 
                 // TODO: use slurp to highlight geometry when selecting window for niri?
+                // requires niri to expose all window geometry in the IPC
                 if is_niri() {
                     self.window();
                 } else {
@@ -458,7 +508,8 @@ pub fn main(args: ImageArgs) {
             CaptureArea::Monitor => screenshot.monitor(),
             CaptureArea::Window => {
                 // TODO: use slurp to highlight geometry when selecting window for niri?
-                if is_niri() {
+                // requires niri to expose all window geometry in the IPC
+                if is_niri() || is_mango() {
                     screenshot.window();
                 } else {
                     screenshot.selection();

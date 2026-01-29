@@ -20,5 +20,4 @@ fn main() {
     } else {
         args.stopped
     };
-    println!("{output}");
 }

@@ -27,7 +27,7 @@ struct Rect {
 #[derive(Debug, Deserialize)]
 struct GetTreeWindowNode {
     pub rect: Rect,
-    pub nodes: Vec<GetTreeWindowNode>,
+    pub nodes: Vec<Self>,
     // visible is only available in leaf (window) nodes
     pub visible: Option<bool>,
 }

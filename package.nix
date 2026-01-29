@@ -13,6 +13,7 @@
   hyprpicker,
   wf-recorder,
   wl-clipboard,
+  wlr-randr,
   xdg-utils,
   ocr ? true,
   video ? true,
@@ -75,6 +76,7 @@ rustPlatform.buildRustPackage {
         slurp
         hyprpicker
         wl-clipboard
+        wlr-randr
         xdg-utils
       ]
       ++ lib.optionals video [
@@ -86,7 +88,7 @@ rustPlatform.buildRustPackage {
     "wrapProgram $out/bin/focal --prefix PATH : ${lib.makeBinPath binaries}";
 
   meta = with lib; {
-    description = "Focal captures screenshots / videos using rofi, with clipboard support on hyprland / niri / sway";
+    description = "Focal captures screenshots / videos using rofi, with clipboard support on hyprland / niri / mango / sway";
     mainProgram = "focal";
     homepage = "https://github.com/iynaix/focal";
     license = licenses.mit;
