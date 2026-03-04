@@ -39,7 +39,11 @@ rustPlatform.buildRustPackage {
   # inject version from nix into the build
   env.NIX_RELEASE_VERSION = version;
 
-  cargoLock.lockFile = ./Cargo.lock;
+  cargoLock = {
+    lockFile = ./Cargo.lock;
+    # enable for niri-ipc git
+    allowBuiltinFetchGit = true;
+  };
 
   buildNoDefaultFeatures = true;
   buildFeatures =

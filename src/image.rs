@@ -181,6 +181,7 @@ impl Screenshot {
                         .expect("invalid output path")
                         .to_string(),
                 ),
+                show_pointer: false,
                 write_to_disk: true,
             }))
             .expect("failed to send ScreenshotWindow request to niri")
