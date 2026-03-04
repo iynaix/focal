@@ -375,7 +375,7 @@ impl Screenshot {
         if !self.icons {
             opts = opts
                 .iter()
-                .map(|s| s.split('\t').collect::<Vec<&str>>()[1])
+                .map(|s| s.split('\t').nth(1).expect("could not get nth(1)"))
                 .collect();
         }
 
