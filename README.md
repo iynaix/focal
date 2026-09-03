@@ -159,64 +159,6 @@ For a **sway** keybinding:
 bindsym $mod+backslash exec "focal image --area selection"
 ```
 
-### Optional Waybar Module
-
-An optional `focal-waybar` script is available for [waybar](https://github.com/Alexays/Waybar) to indicate when a recording is in progress.
-
-```console
-$ focal-waybar --help
-Updates waybar module with focal's recording status.
-
-Usage: focal-waybar [OPTIONS]
-
-Options:
-      --recording <MESSAGE>  Message to display in waybar module when recording [default: REC]
-      --stopped <MESSAGE>    Message to display in waybar module when not recording [default: ]
-  -h, --help                 Print help
-  -V, --version              Print version
-```
-
-Create a custom waybar module similar to the following:
-
-```jsonc
-{
-  "custom/focal": {
-    "exec": "focal-waybar --recording 'REC'",
-    "format": "{}",
-    // interval to poll for updated recording status
-    "interval": 1,
-    "on-click": "focal video --stop",
-  },
-}
-```
-
-focal video recordings can then be started / stopped using keybindings such as:
-
-**hyprland**:
-```
-hl.bind("SUPER + backslash", hl.dsp.exec_cmd("focal video --rofi --audio"))
-```
-
-**niri**:
-```
-Mod+backslash { spawn "focal" "video" "--rofi" "--audio" }
-```
-
-**umbriel**:
-```
-"Mod+backslash" = "focal video --rofi --audio"
-```
-
-**mango**:
-```
-bind=SUPER, backslash, exec, focal video --rofi --audio
-```
-
-**sway**:
-```
-bindsym $mod+backslash exec "focal video --rofi --audio"
-```
-
 ## Packaging
 
 To build focal from source
