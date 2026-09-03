@@ -4,6 +4,7 @@ mod hyprland;
 mod mango;
 mod niri;
 mod sway;
+mod umbriel;
 
 pub mod cli;
 pub mod image;
@@ -116,6 +117,7 @@ pub fn focal_monitor() -> Box<dyn FocalMonitors> {
         "niri" => Box::new(niri::NiriMonitors),
         "sway" => Box::new(sway::SwayMonitors),
         "mango" => Box::new(mango::MangoMonitors),
+        "umbriel" => Box::new(umbriel::UmbrielMonitors),
         _ => unimplemented!("Unsupported desktop environment"),
     }
 }

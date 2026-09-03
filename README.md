@@ -1,6 +1,6 @@
 # focal
 
-focal is a cli / rofi menu for capturing and copying screenshots or videos on hyprland / niri / mango / sway.
+focal is a cli / rofi menu for capturing and copying screenshots or videos on hyprland / niri / umbriel / mango / sway.
 
 <!-- 93859049_p0.webp -->
 <img src="https://i.imgur.com/3DrXV0I.png" alt="main menu" width="49%" /> <img src="https://i.imgur.com/3kKoNJv.png" alt="delay menu" width="49%" />
@@ -15,7 +15,7 @@ focal is a cli / rofi menu for capturing and copying screenshots or videos on hy
 - image / video is automatically copied to clipboard, ready for pasting into other programs
 - notifications that open captured file when clicked
 - all options are also available via the CLI
-- supports hyprland / niri / mango / sway
+- supports hyprland / niri / umbriel / mango / sway
 - OCR support to select text from captured image (CLI only)
 
 ## Installation
@@ -76,7 +76,7 @@ paru -S focal-hyprland-git
 
 ```console
 $ focal --help
-focal is a cli / rofi menu for capturing and copying screenshots or videos on hyprland / niri /sway.
+focal is a cli / rofi menu for capturing and copying screenshots or videos on hyprland / niri / umbriel / mango / sway.
 
 Usage: focal image [OPTIONS] <--rofi|--area <AREA>|--selection|--monitor|--all> [FILE]
        focal video [OPTIONS] <--rofi|--area <AREA>|--selection|--monitor|--stop> [FILE]
@@ -136,12 +136,17 @@ Print this message or the help of the given subcommand(s)
 
 Example usage as a **hyprland** keybinding:
 ```
-bind=$mainMod, backslash, exec, focal image --area selection
+hl.bind("SUPER + backslash", hl.dsp.exec_cmd("focal image --area selection"))
 ```
 
 For a **niri** keybinding:
 ```
 Mod+backslash { spawn "focal" "image" "--area" "selection" }
+```
+
+For a **umbriel** keybinding:
+```
+"Mod+backslash" = "focal image --area selection"
 ```
 
 For a **mango** keybinding:
@@ -189,12 +194,22 @@ focal video recordings can then be started / stopped using keybindings such as:
 
 **hyprland**:
 ```
-bind=$mainMod, backslash, exec, focal video --rofi --audio
+hl.bind("SUPER + backslash", hl.dsp.exec_cmd("focal video --rofi --audio"))
 ```
 
 **niri**:
 ```
 Mod+backslash { spawn "focal" "video" "--rofi" "--audio" }
+```
+
+**umbriel**:
+```
+"Mod+backslash" = "focal video --rofi --audio"
+```
+
+**mango**:
+```
+bind=SUPER, backslash, exec, focal video --rofi --audio
 ```
 
 **sway**:
@@ -213,6 +228,7 @@ To build focal from source
     * [slurp](https://github.com/emersion/slurp)
     * [hyprland](https://hyprland.org/)
     * [niri](https://github.com/YaLTeR/niri)
+    * [umbriel](https://github.com/noctalia-dev/umbriel)
     * [mango](https://github.com/DreamMaoMao/mangowc)
     * [sway](https://swaywm.org/)
     * [rofi](https://github.com/davatorium/rofi)
