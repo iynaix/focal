@@ -8,6 +8,29 @@ use crate::{
 use serde_derive::Deserialize;
 
 #[derive(Debug, Deserialize)]
+pub struct UmbrielMonitor {
+    pub enabled: bool,
+    pub modes: Vec<UmbrielMonitorMode>,
+    pub name: String,
+    pub position: UmbrielMonitorPosition,
+    pub scale: f32,
+    pub transform: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UmbrielMonitorMode {
+    pub current: bool,
+    pub height: i32,
+    pub width: i32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UmbrielMonitorPosition {
+    pub x: i32,
+    pub y: i32,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct UmbrielWorkspace {
     pub index: i32,
     pub active: bool,
@@ -29,82 +52,39 @@ pub struct UmbrielMonitors;
 
 impl FocalMonitors for UmbrielMonitors {
     fn all(&self) -> Vec<FocalMonitor> {
-        let cmd = std::process::Command::new("umbriel")
-            .arg("outputs")
-            .output()
-            .expect("Failed to execute umbriel outputs");
-        let output = String::from_utf8(cmd.stdout).expect("unable to parse utf8 from command");
+        let mons: Vec<UmbrielMonitor> =
+            command_json(Command::new("umbriel").arg("outputs").arg("--json"));
 
-        output
-            .split("\n\n")
+        mons.into_iter()
             .filter_map(|mon| {
-                let mut focal_mon = FocalMonitor::default();
-
-                for line in mon.split("\n") {
-                    match line.split_once(":") {
-                        Some((k, v)) => {
-                            let v = v.trim();
-
-                            match k.trim() {
-                                "Enabled" => {
-                                    // skip disabled monitors
-                                    if v.to_lowercase() != "yes" {
-                                        return None;
-                                    }
-                                }
-                                "Position" => {
-                                    let pos = v.split_once(",").expect("Invalid position");
-                                    focal_mon.x = pos.0.parse().expect("Invalid position x");
-                                    focal_mon.y = pos.1.parse().expect("Invalid position y");
-                                }
-                                "Transform" => {
-                                    focal_mon.rotation = match v.to_lowercase().as_str() {
-                                        "normal" => Rotation::Normal,
-                                        "90" => Rotation::Normal90,
-                                        "270" => Rotation::Normal270,
-                                        "180" => Rotation::Normal180,
-                                        "flipped" => Rotation::Flipped,
-                                        "flipped-90" => Rotation::Flipped90,
-                                        "flipped-180" => Rotation::Flipped180,
-                                        "flipped-270" => Rotation::Flipped270,
-                                        _ => unimplemented!("Invalid monitor transform"),
-                                    };
-                                }
-                                "Scale" => {
-                                    focal_mon.scale = v.parse().expect("Invalid scale");
-                                }
-                                _ => {}
-                            };
-                        }
-                        // modes have no key
-                        None => {
-                            if line.contains(" Hz") {
-                                if line.contains("current") {
-                                    let mode = line
-                                        .trim()
-                                        .split_once(" ")
-                                        .expect("Invalid mode")
-                                        .0
-                                        .split_once("x")
-                                        .expect("Invalid mode");
-
-                                    focal_mon.w = mode.0.parse().expect("Invalid width");
-                                    focal_mon.h = mode.1.parse().expect("Invalid height");
-                                }
-                            } else if line != "" {
-                                focal_mon.name = line
-                                    .trim()
-                                    .split_once(" ")
-                                    .expect("Unable to parse monitor name")
-                                    .0
-                                    .trim()
-                                    .to_string();
-                            }
-                        }
-                    }
+                if !mon.enabled {
+                    return None;
                 }
 
-                Some(focal_mon)
+                // ignore if no current mode
+                let Some(mode) = mon.modes.iter().find(|mode| mode.current) else {
+                    return None;
+                };
+
+                Some(FocalMonitor {
+                    name: mon.name,
+                    x: mon.position.x,
+                    y: mon.position.y,
+                    w: mode.width,
+                    h: mode.height,
+                    scale: mon.scale,
+                    rotation: match mon.transform.to_lowercase().as_str() {
+                        "normal" => Rotation::Normal,
+                        "90" => Rotation::Normal90,
+                        "270" => Rotation::Normal270,
+                        "180" => Rotation::Normal180,
+                        "flipped" => Rotation::Flipped,
+                        "flipped-90" => Rotation::Flipped90,
+                        "flipped-180" => Rotation::Flipped180,
+                        "flipped-270" => Rotation::Flipped270,
+                        _ => unimplemented!("Invalid monitor transform"),
+                    },
+                })
             })
             .collect()
     }
