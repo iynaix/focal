@@ -111,6 +111,9 @@ pub struct ImageArgs {
     #[command(flatten)]
     pub rofi_args: RofiArgs,
 
+    #[arg(long, help = "Capture using noctalia's screenshot tool")]
+    pub noctalia: bool,
+
     #[arg(
         short,
         long,
@@ -148,6 +151,10 @@ impl ImageArgs {
         if self.rofi_args.rofi {
             progs.push("rofi");
             progs.push("slurp");
+        }
+
+        if self.noctalia {
+            progs.push("noctalia");
         }
 
         if matches!(self.area_args.parse(), Some(CaptureArea::Selection)) {

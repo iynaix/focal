@@ -103,6 +103,7 @@ Captures a screenshot.
       --theme <THEME>       Path to a rofi theme
   -e, --edit <COMMAND>      Edit screenshot using COMMAND
                             The image path will be passed as $IMAGE
+      --noctalia            Capture using noctalia's screenshot tool
       --ocr [<LANG>]        Runs OCR on the selected text
   -h, --help                Print help (see more with '--help')
   [FILE]                Files are created in XDG_PICTURES_DIR/Screenshots if not specified

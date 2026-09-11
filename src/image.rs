@@ -73,6 +73,7 @@ pub struct Screenshot {
     pub edit: Option<String>,
     pub icons: bool,
     pub notify: bool,
+    pub noctalia: bool,
     pub slurp: Option<String>,
     pub ocr: Option<String>,
     pub output: PathBuf,
@@ -129,6 +130,17 @@ impl Screenshot {
 
     pub fn monitor(&self) {
         std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
+
+        // use noctalia's inbuilt screenshot
+        if self.noctalia {
+            Command::new("noctalia")
+                .arg("msg")
+                .arg("screenshot-fullscreen")
+                .stdout(Stdio::piped())
+                .output()
+                .expect("Failed to execute noctalia screenshot-fullscreen");
+            return;
+        }
 
         // use niri's inbuilt screenshot
         if is_niri() {
@@ -261,6 +273,17 @@ impl Screenshot {
     pub fn selection(&self) {
         let delay = self.delay.unwrap_or(0);
 
+        // use noctalia's inbuilt screenshot
+        if self.noctalia {
+            Command::new("noctalia")
+                .arg("msg")
+                .arg("screenshot-region")
+                .stdout(Stdio::piped())
+                .output()
+                .expect("Failed to execute noctalia screenshot-region");
+            return;
+        }
+
         if is_niri() {
             self.niri_selection(delay);
         } else {
@@ -308,6 +331,17 @@ impl Screenshot {
     pub fn all(&self) {
         if is_niri() || is_mango() {
             unimplemented!("Capturing all screens is not supported");
+        }
+
+        if self.noctalia {
+            Command::new("noctalia")
+                .arg("msg")
+                .arg("screenshot-fullscreen")
+                .arg("all")
+                .stdout(Stdio::piped())
+                .output()
+                .expect("Failed to execute noctalia screenshot-fullscreen all");
+            return;
         }
 
         let (w, h) = focal_monitor().total_dimensions();
@@ -492,6 +526,7 @@ pub fn main(args: ImageArgs) {
 
     let mut screenshot = Screenshot {
         output,
+        noctalia: args.noctalia,
         delay: args.common_args.delay,
         freeze: args.freeze,
         edit: args.edit,
@@ -507,16 +542,7 @@ pub fn main(args: ImageArgs) {
     } else if let Some(area) = args.area_args.parse() {
         match area {
             CaptureArea::Monitor => screenshot.monitor(),
-            CaptureArea::Window => {
-                // TODO: use slurp to highlight geometry when selecting window?
-                // requires niri to expose all window geometry in the IPC
-                // mango: https://github.com/DreamMaoMao/mangowc/issues/418
-                if is_niri() || is_mango() {
-                    screenshot.window();
-                } else {
-                    screenshot.selection();
-                }
-            }
+            CaptureArea::Window => screenshot.window(),
             CaptureArea::Selection => screenshot.selection(),
             CaptureArea::All => screenshot.all(),
         }

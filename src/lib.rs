@@ -108,6 +108,10 @@ pub fn is_mango() -> bool {
     std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default() == "mango"
 }
 
+pub fn is_umbriel() -> bool {
+    std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default() == "umbriel"
+}
+
 pub fn focal_monitor() -> Box<dyn FocalMonitors> {
     match std::env::var("XDG_CURRENT_DESKTOP")
         .unwrap_or_default()
