@@ -4,13 +4,14 @@ use std::{
     process::{Command, Stdio},
 };
 
+use color_eyre::eyre::{OptionExt, Result};
 use execute::Execute;
 
 pub struct Rofi {
     choices: Vec<String>,
     command: Command,
     message: String,
-    theme: PathBuf,
+    theme: Option<PathBuf>,
 }
 
 impl Rofi {
@@ -36,9 +37,7 @@ impl Rofi {
             choices: choices.iter().map(|s| s.as_ref().to_string()).collect(),
             command: cmd,
             message: String::new(),
-            theme: dirs::cache_dir()
-                .expect("could not get $XDG_CACHE_HOME")
-                .join("wallust/rofi-menu-noinput.rasi"),
+            theme: None,
         }
     }
 
@@ -50,7 +49,7 @@ impl Rofi {
 
     #[must_use]
     pub fn theme(mut self, theme: PathBuf) -> Self {
-        self.theme = theme;
+        self.theme = Some(theme);
         self
     }
 
@@ -60,11 +59,13 @@ impl Rofi {
         self
     }
 
-    pub fn run(self) -> (String, i32) {
+    pub fn run(self) -> Result<(String, i32)> {
         let mut cmd = self.command;
 
-        if self.theme.exists() {
-            cmd.arg("-theme").arg(self.theme);
+        if let Some(theme) = self.theme
+            && theme.exists()
+        {
+            cmd.arg("-theme").arg(theme);
         }
 
         if !self.message.is_empty() {
@@ -84,21 +85,19 @@ impl Rofi {
         let output = cmd
             .stdout(Stdio::piped())
             // use | as separator
-            .execute_input_output(self.choices.join("|").as_bytes())
-            .expect("failed to run rofi");
+            .execute_input_output(self.choices.join("|").as_bytes())?;
 
-        let exit_code = output.status.code().expect("rofi has not exited");
-        let selection = std::str::from_utf8(&output.stdout)
-            .expect("failed to parse utf8 from rofi selection")
+        let exit_code = output.status.code().ok_or_eyre("rofi has not exited")?;
+        let selection = std::str::from_utf8(&output.stdout)?
             .strip_suffix('\n')
             .unwrap_or_default()
             .to_string();
 
-        (selection, exit_code)
+        Ok((selection, exit_code))
     }
 
     /// runs rofi without animations, re-enabling the animation afterwards if needed
-    pub fn run_without_animation(self) -> (String, i32) {
+    pub fn run_without_animation(self) -> Result<(String, i32)> {
         use hyprland::keyword::{Keyword, OptionValue};
 
         if is_hyprland()
@@ -107,10 +106,10 @@ impl Rofi {
                 ..
             }) = Keyword::get("animations:enabled")
         {
-            Keyword::set("animations:enabled", 0).expect("unable to disable animations");
+            Keyword::set("animations:enabled", 0)?;
             let ret = self.run();
-            Keyword::set("animations:enabled", 1).expect("unable to enable animations");
-            ret
+            Keyword::set("animations:enabled", 1)?;
+            return ret;
         } else {
             self.run()
         }

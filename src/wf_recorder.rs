@@ -1,3 +1,4 @@
+use color_eyre::eyre::Result;
 use std::{
     path::PathBuf,
     process::{Command, Stdio},
@@ -30,7 +31,7 @@ impl WfRecorder {
         self
     }
 
-    pub fn record(self) {
+    pub fn record(self) -> Result<()> {
         let mut wfrecorder = Command::new("wf-recorder");
 
         if !self.filter.is_empty() {
@@ -53,9 +54,9 @@ impl WfRecorder {
             .arg(&self.video)
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
-            .spawn()
-            .expect("failed to spawn wf-recorder")
-            .wait()
-            .expect("failed to wait for wf-recorder");
+            .spawn()?
+            .wait()?;
+
+        Ok(())
     }
 }

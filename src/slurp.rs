@@ -1,3 +1,4 @@
+use color_eyre::eyre::{OptionExt, Result};
 use execute::Execute;
 use std::{
     fmt,
@@ -18,6 +19,8 @@ impl ParseError {
         }
     }
 }
+
+impl std::error::Error for ParseError {}
 
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -44,12 +47,10 @@ impl std::str::FromStr for SlurpGeom {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let re = regex::Regex::new(r"[,\sx]+").expect("Failed to create regex for slurp geom");
+        let re = regex::Regex::new(r"[,\sx]+")
+            .map_err(|_| ParseError::new("could not create slurp regex"))?;
 
-        let parts: Vec<_> = re
-            .split(s)
-            .map(|s| s.parse::<i32>().expect("Failed to parse slurp"))
-            .collect();
+        let parts: Vec<_> = re.split(s).filter_map(|s| s.parse::<i32>().ok()).collect();
 
         if parts.len() != 4 {
             return Err(ParseError::new("Slurp geom must have 4 parts"));
@@ -69,10 +70,10 @@ const fn round2(n: i32) -> i32 {
 }
 
 impl SlurpGeom {
-    pub fn to_ffmpeg_geom(self) -> (String, String) {
+    pub fn to_ffmpeg_geom(self) -> Result<(String, String)> {
         let Self { x, y, w, h } = self;
 
-        let monitors = focal_monitor().all();
+        let monitors = focal_monitor().all()?;
         let mon = monitors
             .iter()
             .find(|m| x >= m.x && x <= m.x + m.w && y >= m.y && y <= m.y + m.h)
@@ -109,49 +110,55 @@ impl SlurpGeom {
             }
         );
 
-        (mon.name.clone(), filter)
+        Ok((mon.name.clone(), filter))
     }
 
-    pub fn hyprland_disable_fade_animation() -> Option<String> {
+    pub fn hyprland_disable_fade_animation() -> Result<String> {
         use hyprland::{
             data::{Animations, BezierIdent},
             shared::HyprData,
         };
 
         // remove fade animation
-        let anims = Animations::get().expect("unable to get animations");
-        anims.0.iter().find_map(|a| {
-            (a.name == "fadeLayers").then(|| {
-                let beizer = match &a.bezier {
-                    BezierIdent::None => "",
-                    BezierIdent::Default => "default",
-                    BezierIdent::Specified(s) => s.as_str(),
-                };
-                format!(
-                    "{},{},{},{}",
-                    a.name,
-                    std::convert::Into::<u8>::into(a.enabled),
-                    a.speed,
-                    beizer
-                )
+        let anims = Animations::get()?;
+        anims
+            .0
+            .iter()
+            .find_map(|a| {
+                (a.name == "fadeLayers").then(|| {
+                    let beizer = match &a.bezier {
+                        BezierIdent::None => "",
+                        BezierIdent::Default => "default",
+                        BezierIdent::Specified(s) => s.as_str(),
+                    };
+                    format!(
+                        "{},{},{},{}",
+                        a.name,
+                        std::convert::Into::<u8>::into(a.enabled),
+                        a.speed,
+                        beizer
+                    )
+                })
             })
-        })
+            .ok_or_eyre("No fade animations found")
     }
 
-    pub fn hyprland_reset_fade_animation(anim: Option<&str>) {
+    pub fn hyprland_reset_fade_animation(anim: Option<&str>) -> Result<()> {
         use hyprland::keyword::Keyword;
 
         if let Some(anim) = anim {
-            Keyword::set("animations", anim).expect("unable to set animations");
+            Keyword::set("animations", anim)?;
         }
+
+        Ok(())
     }
 
     /// returns the selected geometry and if a window was selected
-    pub fn prompt(slurp_args: Option<&str>) -> (Self, bool) {
-        let window_geoms = focal_monitor().window_geoms();
+    pub fn prompt(slurp_args: Option<&str>) -> Result<(Self, bool)> {
+        let window_geoms = focal_monitor().window_geoms()?;
 
         let orig_fade_anim = if is_hyprland() {
-            Self::hyprland_disable_fade_animation()
+            Self::hyprland_disable_fade_animation().ok()
         } else {
             None
         };
@@ -188,7 +195,7 @@ impl SlurpGeom {
 
         // restore the original fade animation
         if is_hyprland() {
-            Self::hyprland_reset_fade_animation(orig_fade_anim.as_deref());
+            Self::hyprland_reset_fade_animation(orig_fade_anim.as_deref())?;
         }
 
         match sel {
@@ -200,13 +207,17 @@ impl SlurpGeom {
                 eprintln!("Invalid slurp selection");
                 std::process::exit(1);
             }
-            Ok(sel) => window_geoms
-                .into_iter()
-                .find(|geom| geom.to_string() == sel)
-                .map_or_else(
-                    || (sel.parse().expect("Failed to parse slurp selection"), false),
-                    |sel| (sel, true),
-                ),
+            Ok(sel) => {
+                let geom_and_flag =
+                    if let Some(geom) = window_geoms.into_iter().find(|g| g.to_string() == sel) {
+                        (geom, true)
+                    } else {
+                        let parsed = sel.parse()?;
+                        (parsed, false)
+                    };
+
+                Ok(geom_and_flag)
+            }
         }
     }
 }

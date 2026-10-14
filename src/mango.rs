@@ -2,6 +2,7 @@ use crate::{
     SlurpGeom, command_json,
     monitor::{FocalMonitor, FocalMonitors, Rotation},
 };
+use color_eyre::eyre::{OptionExt, Result};
 use std::process::{Command, Stdio};
 
 use serde_derive::Deserialize;
@@ -67,49 +68,50 @@ fn to_focal_monitor(mon: &WlrMonitor) -> FocalMonitor {
 }
 
 impl FocalMonitors for MangoMonitors {
-    fn all(&self) -> Vec<FocalMonitor> {
-        let monitors: Vec<WlrMonitor> = command_json(Command::new("wlr-randr").arg("--json"));
+    fn all(&self) -> Result<Vec<FocalMonitor>> {
+        let monitors: Vec<WlrMonitor> = command_json(Command::new("wlr-randr").arg("--json"))?;
 
-        monitors
+        Ok(monitors
             .iter()
             .filter(|mon| mon.enabled)
             .map(to_focal_monitor)
-            .collect()
+            .collect())
     }
 
-    fn focused(&self) -> FocalMonitor {
+    fn focused(&self) -> Result<FocalMonitor> {
         let output = Command::new("mmsg")
             .arg("-g")
             .stdout(Stdio::piped())
-            .output()
-            .expect("Failed to execute mmsg -g");
+            .output()?;
 
         let stdout = String::from_utf8_lossy(&output.stdout);
 
         let sel_mon = stdout
             .lines()
             .find(|line| line.ends_with("selmon 1"))
-            .map_or_else(
-                || {
-                    eprintln!("Unable to get focused monitor.");
-                    std::process::exit(1);
-                },
-                |line| line.split(' ').next().expect("invalid selmon").to_string(),
-            );
+            .ok_or_else(|| {
+                eprintln!("Unable to get focused monitor.");
+                std::process::exit(1);
+            })?
+            .split(' ')
+            .next()
+            .ok_or_eyre("invalid selmon")?
+            .to_string();
 
-        self.all()
+        Ok(self
+            .all()?
             .iter()
             .find(|mon| mon.name == sel_mon)
             .unwrap_or_else(|| {
                 eprintln!("Unable to get focused monitor.");
                 std::process::exit(1);
             })
-            .clone()
+            .clone())
     }
 
-    fn window_geoms(&self) -> Vec<SlurpGeom> {
+    fn window_geoms(&self) -> Result<Vec<SlurpGeom>> {
         // TODO: mango currently doesn't expose window geometries, see:
         // https://github.com/DreamMaoMao/mangowc/issues/418
-        Vec::new()
+        Ok(Vec::new())
     }
 }

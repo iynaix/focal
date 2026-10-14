@@ -1,3 +1,4 @@
+use color_eyre::eyre::Result;
 use std::process::Command;
 
 use crate::{
@@ -5,6 +6,7 @@ use crate::{
     monitor::{FocalMonitor, FocalMonitors, Rotation},
 };
 
+use color_eyre::eyre::OptionExt;
 use serde_derive::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -51,11 +53,12 @@ pub struct UmbrielWindow {
 pub struct UmbrielMonitors;
 
 impl FocalMonitors for UmbrielMonitors {
-    fn all(&self) -> Vec<FocalMonitor> {
+    fn all(&self) -> Result<Vec<FocalMonitor>> {
         let mons: Vec<UmbrielMonitor> =
-            command_json(Command::new("umbriel").arg("outputs").arg("--json"));
+            command_json(Command::new("umbriel").arg("outputs").arg("--json"))?;
 
-        mons.into_iter()
+        Ok(mons
+            .into_iter()
             .filter_map(|mon| {
                 if !mon.enabled {
                     return None;
@@ -86,12 +89,12 @@ impl FocalMonitors for UmbrielMonitors {
                     },
                 })
             })
-            .collect()
+            .collect())
     }
 
-    fn focused(&self) -> FocalMonitor {
+    fn focused(&self) -> Result<FocalMonitor> {
         let wksps: Vec<UmbrielWorkspace> =
-            command_json(Command::new("umbriel").arg("workspaces").arg("--json"));
+            command_json(Command::new("umbriel").arg("workspaces").arg("--json"))?;
 
         let focused_mon = wksps
             .into_iter()
@@ -102,17 +105,17 @@ impl FocalMonitors for UmbrielMonitors {
                     None
                 }
             })
-            .expect("unable get focused workspace");
+            .ok_or_eyre("unable get focused workspace")?;
 
-        self.all()
+        self.all()?
             .into_iter()
             .find(|mon| mon.name == focused_mon)
-            .expect("unable to get focused monitor")
+            .ok_or_eyre("unable to get focused monitor")
     }
 
-    fn window_geoms(&self) -> Vec<SlurpGeom> {
+    fn window_geoms(&self) -> Result<Vec<SlurpGeom>> {
         let wksps: Vec<UmbrielWorkspace> =
-            command_json(Command::new("umbriel").arg("workspaces").arg("--json"));
+            command_json(Command::new("umbriel").arg("workspaces").arg("--json"))?;
 
         let active_wksps: std::collections::HashSet<_> = wksps
             .into_iter()
@@ -126,9 +129,9 @@ impl FocalMonitors for UmbrielMonitors {
             .collect();
 
         let windows: Vec<UmbrielWindow> =
-            command_json(Command::new("umbriel").arg("windows").arg("--json"));
+            command_json(Command::new("umbriel").arg("windows").arg("--json"))?;
 
-        windows
+        Ok(windows
             .iter()
             .filter_map(|win| {
                 if active_wksps.contains(&win.workspace) {
@@ -142,6 +145,6 @@ impl FocalMonitors for UmbrielMonitors {
                     None
                 }
             })
-            .collect()
+            .collect())
     }
 }

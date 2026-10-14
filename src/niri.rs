@@ -1,3 +1,4 @@
+use color_eyre::eyre::Result;
 use niri_ipc::{Output, Request, Response, Transform, socket::Socket};
 
 use crate::{
@@ -35,27 +36,21 @@ fn to_focal_monitor(mon: &Output) -> FocalMonitor {
 }
 
 impl FocalMonitors for NiriMonitors {
-    fn all(&self) -> Vec<FocalMonitor> {
-        let Ok(Response::Outputs(monitors)) = Socket::connect()
-            .expect("failed to connect to niri socket")
-            .send(Request::Outputs)
-            .expect("failed to send Outputs request to niri")
-        else {
+    fn all(&self) -> Result<Vec<FocalMonitor>> {
+        let Ok(Response::Outputs(monitors)) = Socket::connect()?.send(Request::Outputs)? else {
             panic!("unexpected response from niri, should be Outputs");
         };
 
-        monitors
+        Ok(monitors
             .iter()
             .filter_map(|(_, mon)| mon.logical.map(|_| mon))
             .map(to_focal_monitor)
-            .collect()
+            .collect())
     }
 
-    fn focused(&self) -> FocalMonitor {
-        let Ok(Response::FocusedOutput(Some(monitor))) = Socket::connect()
-            .expect("failed to connect to niri socket")
-            .send(Request::Outputs)
-            .expect("failed to send Outputs request to niri")
+    fn focused(&self) -> Result<FocalMonitor> {
+        let Ok(Response::FocusedOutput(Some(monitor))) =
+            Socket::connect()?.send(Request::Outputs)?
         else {
             panic!("unexpected response from niri, should be FocusedOutputs");
         };
@@ -66,11 +61,11 @@ impl FocalMonitors for NiriMonitors {
             monitor.name
         );
 
-        to_focal_monitor(&monitor)
+        Ok(to_focal_monitor(&monitor))
     }
 
-    fn window_geoms(&self) -> Vec<SlurpGeom> {
+    fn window_geoms(&self) -> Result<Vec<SlurpGeom>> {
         // TODO: niri currently doesn't expose window geometries
-        Vec::new()
+        Ok(Vec::new())
     }
 }

@@ -1,3 +1,4 @@
+use color_eyre::eyre::{OptionExt, Result};
 use std::process::Command;
 
 use crate::{
@@ -79,10 +80,11 @@ fn to_focal_monitor(mon: &GetOutput) -> FocalMonitor {
     }
 }
 
-fn window_geoms_cmd(cmd: &mut Command) -> Vec<SlurpGeom> {
-    let tree: GetTreeWindowNode = command_json(cmd);
+fn window_geoms_cmd(cmd: &mut Command) -> Result<Vec<SlurpGeom>> {
+    let tree: GetTreeWindowNode = command_json(cmd)?;
 
-    tree.leaf_nodes()
+    Ok(tree
+        .leaf_nodes()
         .iter()
         .filter(|&node| node.visible == Some(true))
         .map(|win_node| {
@@ -94,36 +96,36 @@ fn window_geoms_cmd(cmd: &mut Command) -> Vec<SlurpGeom> {
                 h: rect.height,
             }
         })
-        .collect()
+        .collect())
 }
 
 impl FocalMonitors for SwayMonitors {
-    fn all(&self) -> Vec<FocalMonitor> {
+    fn all(&self) -> Result<Vec<FocalMonitor>> {
         let monitors: Vec<GetOutput> = command_json(
             Command::new("swaymsg")
                 .arg("-t")
                 .arg("get_outputs")
                 .arg("--raw"),
-        );
+        )?;
 
-        monitors.iter().map(to_focal_monitor).collect()
+        Ok(monitors.iter().map(to_focal_monitor).collect())
     }
 
-    fn focused(&self) -> FocalMonitor {
+    fn focused(&self) -> Result<FocalMonitor> {
         let monitors: Vec<GetOutput> = command_json(
             Command::new("swaymsg")
                 .arg("-t")
                 .arg("get_outputs")
                 .arg("--raw"),
-        );
+        )?;
 
         monitors
             .iter()
             .find_map(|m| m.focused.then_some(to_focal_monitor(m)))
-            .expect("no focused monitor")
+            .ok_or_eyre("no focused monitor found")
     }
 
-    fn window_geoms(&self) -> Vec<SlurpGeom> {
+    fn window_geoms(&self) -> Result<Vec<SlurpGeom>> {
         window_geoms_cmd(
             Command::new("swaymsg")
                 .arg("-t")

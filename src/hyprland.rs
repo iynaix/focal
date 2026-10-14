@@ -1,3 +1,4 @@
+use color_eyre::eyre::{OptionExt, Result};
 use std::process::Command;
 
 use crate::{
@@ -41,8 +42,10 @@ pub struct HyprlandWorkspace {
     pub id: i64,
 }
 
-fn hyprland_monitors() -> Vec<HyprlandMonitor> {
-    command_json(Command::new("hyprctl").arg("monitors").arg("-j"))
+fn hyprland_monitors() -> Result<Vec<HyprlandMonitor>> {
+    Ok(command_json(
+        Command::new("hyprctl").arg("monitors").arg("-j"),
+    )?)
 }
 
 fn to_focal_monitor(mon: &HyprlandMonitor) -> FocalMonitor {
@@ -70,30 +73,30 @@ fn to_focal_monitor(mon: &HyprlandMonitor) -> FocalMonitor {
 pub struct HyprMonitors;
 
 impl FocalMonitors for HyprMonitors {
-    fn all(&self) -> Vec<FocalMonitor> {
-        hyprland_monitors().iter().map(to_focal_monitor).collect()
+    fn all(&self) -> Result<Vec<FocalMonitor>> {
+        Ok(hyprland_monitors()?.iter().map(to_focal_monitor).collect())
     }
 
-    fn focused(&self) -> FocalMonitor {
-        let monitors = hyprland_monitors();
+    fn focused(&self) -> Result<FocalMonitor> {
+        let monitors = hyprland_monitors()?;
         let curr_mon = monitors
             .iter()
             .find(|m| m.focused)
-            .expect("unable to get focused monitor");
+            .ok_or_eyre("No focused monitor found.")?;
 
-        to_focal_monitor(curr_mon)
+        Ok(to_focal_monitor(curr_mon))
     }
 
-    fn window_geoms(&self) -> Vec<SlurpGeom> {
-        let active_wksps: Vec<_> = hyprland_monitors()
+    fn window_geoms(&self) -> Result<Vec<SlurpGeom>> {
+        let active_wksps: Vec<_> = hyprland_monitors()?
             .iter()
             .map(|mon| mon.active_workspace.id)
             .collect();
 
         let all_clients: Vec<HyprlandClient> =
-            command_json(Command::new("hyprctl").arg("clients").arg("-j"));
+            command_json(Command::new("hyprctl").arg("clients").arg("-j"))?;
 
-        all_clients
+        Ok(all_clients
             .iter()
             .filter(|&win| active_wksps.contains(&win.workspace.id))
             .map(|win| SlurpGeom {
@@ -102,6 +105,6 @@ impl FocalMonitors for HyprMonitors {
                 w: win.size.0,
                 h: win.size.1,
             })
-            .collect()
+            .collect())
     }
 }

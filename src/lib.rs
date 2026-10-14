@@ -1,3 +1,4 @@
+use color_eyre::eyre::Result;
 use std::{path::PathBuf, process::Command};
 
 mod hyprland;
@@ -23,28 +24,28 @@ pub use video::Screencast;
 
 use crate::monitor::FocalMonitors;
 
-pub fn create_parent_dirs(path: PathBuf) -> PathBuf {
+pub fn create_parent_dirs(path: PathBuf) -> Result<PathBuf> {
     if let Some(parent) = path.parent()
         && !parent.exists()
     {
-        std::fs::create_dir_all(parent).expect("failed to create parent directories");
+        std::fs::create_dir_all(parent)?;
     }
 
-    path
+    Ok(path)
 }
 
 pub fn iso8601_filename() -> String {
     chrono::Local::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true)
 }
 
-pub fn command_json<T: serde::de::DeserializeOwned>(cmd: &mut Command) -> T {
-    let output = cmd.output().expect("Failed to execute command");
-    let output_str = String::from_utf8(output.stdout).expect("unable to parse utf8 from command");
+pub fn command_json<T: serde::de::DeserializeOwned>(cmd: &mut Command) -> Result<T> {
+    let output = cmd.output()?;
+    let output_str = String::from_utf8(output.stdout)?;
 
-    serde_json::from_str(&output_str).expect("unable to parse json from command")
+    Ok(serde_json::from_str(&output_str)?)
 }
 
-pub fn show_notification(body: &str, output: Option<&PathBuf>) {
+pub fn show_notification(body: &str, output: Option<&PathBuf>) -> Result<()> {
     let mut notification = notify_rust::Notification::new();
 
     notification.body(body);
@@ -57,21 +58,23 @@ pub fn show_notification(body: &str, output: Option<&PathBuf>) {
         .appname("focal")
         .timeout(3000)
         .action("open", "open")
-        .show()
-        .expect("Failed to send notification");
+        .show()?;
 
     if let Some(output) = output {
         notification.wait_for_action(|action| {
             if action == "open" {
-                std::process::Command::new("xdg-open")
-                    .arg(output)
+                if let Err(e) = std::process::Command::new("xdg-open")
+                    .arg(&output)
                     .spawn()
-                    .expect("Failed to open file")
-                    .wait()
-                    .expect("Failed to wait for xdg-open");
+                    .and_then(|mut child| child.wait())
+                {
+                    eprintln!("Failed to open file: {e}");
+                }
             }
         });
     }
+
+    Ok(())
 }
 
 /// check if all required programs are installed

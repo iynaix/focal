@@ -1,3 +1,4 @@
+use color_eyre::eyre::{OptionExt, Result, eyre};
 use std::{
     path::PathBuf,
     process::{Command, Stdio},
@@ -40,7 +41,7 @@ impl Grim {
         self
     }
 
-    pub fn capture(&self) {
+    pub fn capture(&self) -> Result<()> {
         let mut grim = Command::new("grim");
 
         if !self.monitor.is_empty() {
@@ -51,17 +52,19 @@ impl Grim {
             grim.arg("-g").arg(&self.geometry);
         }
 
-        grim.arg(&self.output)
-            .execute()
-            .expect("unable to execute grim");
+        grim.arg(&self.output).execute()?;
+
+        Ok(())
     }
 
     /// show a notification
-    pub fn notify(&self) {
+    pub fn notify(&self) -> Result<()> {
         show_notification(
             &format!("Screenshot captured to {}", &self.output.display()),
             Some(&self.output),
-        );
+        )?;
+
+        Ok(())
     }
 }
 
@@ -80,27 +83,28 @@ pub struct Screenshot {
 }
 
 impl Screenshot {
-    fn edit_or_ocr(&self) {
+    fn edit_or_ocr(&self) -> Result<()> {
         if self.ocr.is_some() {
-            self.ocr();
+            return self.ocr();
         } else {
             if self.edit.is_some() {
-                self.edit();
+                self.edit()?;
             }
 
             // copying not needed for niri, since it already does that
             if !is_niri() {
-                let mut img = std::fs::File::open(&self.output).expect("failed to open image");
+                let mut img = std::fs::File::open(&self.output)?;
                 Command::new("wl-copy")
                     .arg("--type")
                     .arg("image/png")
-                    .execute_input_reader(&mut img)
-                    .expect("failed to copy image to clipboard");
+                    .execute_input_reader(&mut img)?;
             }
         }
+
+        Ok(())
     }
 
-    fn capture(&self, monitor: &str, geometry: &str) {
+    fn capture(&self, monitor: &str, geometry: &str) -> Result<()> {
         // small delay before capture
         std::thread::sleep(std::time::Duration::from_millis(500));
 
@@ -108,7 +112,7 @@ impl Screenshot {
             .geometry(geometry)
             .monitor(monitor);
 
-        grim.capture();
+        grim.capture()?;
 
         // wait for up to 5s for the file to appear
         let mut attempts = 0;
@@ -121,14 +125,16 @@ impl Screenshot {
             std::process::exit(1);
         }
 
-        self.edit_or_ocr();
+        self.edit_or_ocr()?;
 
         if self.ocr.is_none() && self.notify {
-            grim.notify();
+            grim.notify()?;
         }
+
+        Ok(())
     }
 
-    pub fn monitor(&self) {
+    pub fn monitor(&self) -> Result<()> {
         std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
 
         // use noctalia's inbuilt screenshot
@@ -137,45 +143,41 @@ impl Screenshot {
                 .arg("msg")
                 .arg("screenshot-fullscreen")
                 .stdout(Stdio::piped())
-                .output()
-                .expect("Failed to execute noctalia screenshot-fullscreen");
-            return;
+                .output()?;
+            return Ok(());
         }
 
         // use niri's inbuilt screenshot
         if is_niri() {
             use niri_ipc::{Action, Request, socket::Socket};
 
-            let mut socket = Socket::connect().expect("failed to connect to niri socket");
+            let mut socket = Socket::connect()?;
             socket
                 .send(Request::Action(Action::ScreenshotScreen {
                     path: Some(
                         self.output
                             .to_str()
-                            .expect("invalid output path")
+                            .ok_or_eyre("invalid output path")?
                             .to_string(),
                     ),
                     show_pointer: false,
                     write_to_disk: true,
                 }))
-                .expect("failed to send ScreenshotScreen request to niri")
-                .expect("failed to screenshot screen");
+                .map_err(|_| eyre!("failed to send ScreenshotScreen request to niri"))?
+                .map_err(|_| eyre!("failed to screenshot screen"))?;
 
-            self.edit_or_ocr();
+            self.edit_or_ocr()
         } else {
             std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
-            self.capture(&focal_monitor().focused().name, "");
+            self.capture(&focal_monitor().focused()?.name, "")
         }
     }
 
-    fn niri_window(&self) {
+    fn niri_window(&self) -> Result<()> {
         use niri_ipc::{Action, Request, Response, Window, socket::Socket};
 
-        let mut socket = Socket::connect().expect("failed to connect to niri socket");
-        let Ok(Response::PickedWindow(window)) = socket
-            .send(Request::PickWindow)
-            .expect("failed to send PickWindow request to niri")
-        else {
+        let mut socket = Socket::connect()?;
+        let Ok(Response::PickedWindow(window)) = socket.send(Request::PickWindow)? else {
             panic!("unexpected response from niri, should be PickWindow");
         };
 
@@ -190,26 +192,27 @@ impl Screenshot {
                 path: Some(
                     self.output
                         .to_str()
-                        .expect("invalid output path")
+                        .ok_or_eyre("invalid output path")?
                         .to_string(),
                 ),
                 show_pointer: false,
                 write_to_disk: true,
             }))
-            .expect("failed to send ScreenshotWindow request to niri")
-            .expect("failed to screenshot window");
+            .map_err(|_| eyre!("failed to send ScreenshotWindow request to niri"))?
+            .map_err(|_| eyre!("failed to screenshot window"))?;
+
+        Ok(())
     }
 
-    fn mango_window(&self) {
+    fn mango_window(&self) -> Result<()> {
         let delay = self.delay.unwrap_or(0);
 
-        let mon_name = focal_monitor().focused().name;
+        let mon_name = focal_monitor().focused()?.name;
 
         let output = Command::new("mmsg")
             .arg("-x")
             .stdout(Stdio::piped())
-            .output()
-            .expect("Failed to execute mmsg -x");
+            .output()?;
 
         let stdout = String::from_utf8_lossy(&output.stdout);
 
@@ -226,51 +229,51 @@ impl Screenshot {
             }
 
             match parts[1] {
-                "x" => geom.x = parts[2].parse().expect("Invalid x"),
-                "y" => geom.y = parts[2].parse().expect("Invalid y"),
-                "width" => geom.w = parts[2].parse().expect("Invalid width"),
-                "height" => geom.h = parts[2].parse().expect("Invalid height"),
+                "x" => geom.x = parts[2].parse()?,
+                "y" => geom.y = parts[2].parse()?,
+                "width" => geom.w = parts[2].parse()?,
+                "height" => geom.h = parts[2].parse()?,
                 _ => {}
             }
         }
 
         std::thread::sleep(std::time::Duration::from_secs(delay));
-        self.capture("", &geom.to_string());
+        self.capture("", &geom.to_string())
     }
 
-    pub fn window(&self) {
+    pub fn window(&self) -> Result<()> {
         if is_niri() {
-            self.niri_window();
+            self.niri_window()
         } else if is_mango() {
-            self.mango_window();
+            self.mango_window()
         } else {
-            self.selection();
+            self.selection()
         }
     }
 
-    fn niri_selection(&self, delay: u64) {
+    fn niri_selection(&self, delay: u64) -> Result<()> {
         use niri_ipc::{Action, Request, socket::Socket};
 
         std::thread::sleep(std::time::Duration::from_secs(delay));
 
-        let mut socket = Socket::connect().expect("failed to connect to niri socket");
+        let mut socket = Socket::connect()?;
         socket
             .send(Request::Action(Action::Screenshot {
                 path: Some(
                     self.output
                         .to_str()
-                        .expect("invalid output path")
+                        .ok_or_eyre("invalid output path")?
                         .to_string(),
                 ),
                 show_pointer: false,
             }))
-            .expect("failed to send Screenshot request to niri")
-            .expect("failed to capture screenshot");
+            .map_err(|_| eyre!("failed to send Screenshot request to niri"))?
+            .map_err(|_| eyre!("failed to screenshot selection"))?;
 
-        self.edit_or_ocr();
+        self.edit_or_ocr()
     }
 
-    pub fn selection(&self) {
+    pub fn selection(&self) -> Result<()> {
         let delay = self.delay.unwrap_or(0);
 
         // use noctalia's inbuilt screenshot
@@ -279,35 +282,29 @@ impl Screenshot {
                 .arg("msg")
                 .arg("screenshot-region")
                 .stdout(Stdio::piped())
-                .output()
-                .expect("Failed to execute noctalia screenshot-region");
-            return;
+                .output()?;
+            return Ok(());
         }
 
         if is_niri() {
-            self.niri_selection(delay);
+            self.niri_selection(delay)
         } else {
             // freeze screen before delay to capture selection
             let picker_process = if self.freeze || delay > 0 {
-                let child = Command::new("hyprpicker")
-                    .arg("-rz")
-                    .spawn()
-                    .expect("could not freeze screen");
+                let child = Command::new("hyprpicker").arg("-rz").spawn()?;
                 std::thread::sleep(std::time::Duration::from_millis(200));
                 Some(child)
             } else {
                 None
             };
 
-            let (geom, is_window) = crate::SlurpGeom::prompt(self.slurp.as_deref());
+            let (geom, is_window) = crate::SlurpGeom::prompt(self.slurp.as_deref())?;
             // kill hyprpicker so it doesn't ask for a color
             picker_process.map(|mut p| p.kill().ok());
 
             std::thread::sleep(std::time::Duration::from_secs(delay));
 
-            let do_capture = || {
-                self.capture("", &geom.to_string());
-            };
+            let do_capture = || self.capture("", &geom.to_string());
 
             if is_hyprland() && is_window && self.no_rounded_windows {
                 use hyprland::keyword::Keyword;
@@ -316,20 +313,20 @@ impl Screenshot {
                     value: rounding, ..
                 }) = Keyword::get("decoration:rounding")
                 {
-                    Keyword::set("decoration:rounding", 0).expect("unable to disable rounding");
-                    do_capture();
-                    Keyword::set("decoration:rounding", rounding)
-                        .expect("unable to restore rounding");
-                    return;
+                    Keyword::set("decoration:rounding", 0)?;
+                    do_capture()?;
+                    Keyword::set("decoration:rounding", rounding)?;
+
+                    return Ok(());
                 }
             }
 
-            do_capture();
+            do_capture()
         }
     }
 
-    pub fn all(&self) {
-        if is_niri() || is_mango() {
+    pub fn all(&self) -> Result<()> {
+        if is_niri() || is_mango() && !self.noctalia {
             unimplemented!("Capturing all screens is not supported");
         }
 
@@ -339,18 +336,18 @@ impl Screenshot {
                 .arg("screenshot-fullscreen")
                 .arg("all")
                 .stdout(Stdio::piped())
-                .output()
-                .expect("Failed to execute noctalia screenshot-fullscreen all");
-            return;
+                .output()?;
+
+            return Ok(());
         }
 
-        let (w, h) = focal_monitor().total_dimensions();
+        let (w, h) = focal_monitor().total_dimensions()?;
 
         std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
-        self.capture("", &format!("0,0 {w}x{h}"));
+        self.capture("", &format!("0,0 {w}x{h}"))
     }
 
-    fn edit(&self) {
+    fn edit(&self) -> Result<()> {
         if let Some(prog) = &self.edit {
             if prog.ends_with("swappy") {
                 Command::new("swappy")
@@ -358,18 +355,18 @@ impl Screenshot {
                     .arg(self.output.clone())
                     .arg("--output-file")
                     .arg(self.output.clone())
-                    .execute()
-                    .expect("Failed to edit screenshot with swappy");
+                    .execute()?;
             } else {
                 std::process::Command::new(prog)
                     .arg(self.output.clone())
-                    .execute()
-                    .expect("Failed to edit screenshot");
+                    .execute()?;
             }
         }
+
+        Ok(())
     }
 
-    fn ocr(&self) {
+    fn ocr(&self) -> Result<()> {
         let mut cmd = Command::new("tesseract");
         cmd.arg(&self.output).arg("-");
 
@@ -379,23 +376,20 @@ impl Screenshot {
             cmd.arg("-l").arg(lang);
         }
 
-        let output = cmd
-            .stdout(Stdio::piped())
-            .execute_output()
-            .expect("Failed to run tesseract");
+        let output = cmd.stdout(Stdio::piped()).execute_output()?;
 
-        Command::new("wl-copy")
-            .execute_input(&output.stdout)
-            .expect("failed to copy ocr text to clipboard");
+        Command::new("wl-copy").execute_input(&output.stdout)?;
 
         if self.notify
             && let Ok(copied_text) = std::str::from_utf8(&output.stdout)
         {
-            show_notification(copied_text, None);
+            return show_notification(copied_text, None);
         }
+
+        Ok(())
     }
 
-    pub fn rofi(&mut self, theme: Option<&PathBuf>) {
+    pub fn rofi(&mut self, theme: Option<&PathBuf>) -> Result<()> {
         let mut opts = vec!["󰒉\tSelection", "󰍹\tWindow", "󰍹\tMonitor"];
 
         if !(is_niri() || is_mango()) {
@@ -403,15 +397,12 @@ impl Screenshot {
         }
 
         // don't show "All" option if single monitor
-        if focal_monitor().all().len() == 1 {
+        if focal_monitor().all()?.len() == 1 {
             opts.pop();
         }
 
         if !self.icons {
-            opts = opts
-                .iter()
-                .map(|s| s.split('\t').nth(1).expect("could not get nth(1)"))
-                .collect();
+            opts = opts.iter().filter_map(|s| s.split('\t').nth(1)).collect();
         }
 
         let mut rofi = Rofi::new(&opts);
@@ -426,7 +417,7 @@ impl Screenshot {
                 .arg("-kb-custom-1")
                 .arg("Alt-e")
                 .message("Screenshots can be edited with Alt+e")
-                .run();
+                .run()?;
 
             // no alt keycode selected, do not edit
             if exit_code != 10 {
@@ -435,7 +426,7 @@ impl Screenshot {
 
             sel
         } else {
-            rofi.run().0
+            rofi.run()?.0
         };
 
         let sel = sel
@@ -446,27 +437,27 @@ impl Screenshot {
 
         match sel {
             "Selection" => {
-                self.delay = Some(Self::rofi_delay(theme));
-                self.selection();
+                self.delay = Some(Self::rofi_delay(theme)?);
+                self.selection()
             }
             "Window" => {
-                self.delay = Some(Self::rofi_delay(theme));
+                self.delay = Some(Self::rofi_delay(theme)?);
 
                 // TODO: use slurp to highlight geometry when selecting window for niri?
                 // requires niri to expose all window geometry in the IPC
                 if is_niri() {
-                    self.window();
+                    self.window()
                 } else {
-                    self.selection();
+                    self.selection()
                 }
             }
             "Monitor" => {
-                self.delay = Some(Self::rofi_delay(theme));
-                self.monitor();
+                self.delay = Some(Self::rofi_delay(theme)?);
+                self.monitor()
             }
             "All" => {
-                self.delay = Some(Self::rofi_delay(theme));
-                self.all();
+                self.delay = Some(Self::rofi_delay(theme)?);
+                self.all()
             }
             "" => {
                 eprintln!("No capture selection was made.");
@@ -477,7 +468,7 @@ impl Screenshot {
     }
 
     /// prompts the user for delay using rofi if not provided as a cli flag
-    fn rofi_delay(theme: Option<&PathBuf>) -> u64 {
+    fn rofi_delay(theme: Option<&PathBuf>) -> Result<u64> {
         let delay_options = ["0s", "3s", "5s", "10s"];
 
         let mut rofi = Rofi::new(&delay_options).message("Select a delay");
@@ -486,28 +477,26 @@ impl Screenshot {
         }
 
         // disable the animations on hyprland so the delay rofi closing animation will not be captured by hyprpicker
-        let (sel, _) = rofi.run_without_animation();
+        let (sel, _) = rofi.run_without_animation()?;
 
         if sel.is_empty() {
             eprintln!("No delay selection was made.");
             std::process::exit(1);
         }
 
-        sel.replace('s', "")
-            .parse::<u64>()
-            .expect("Invalid delay specified")
+        Ok(sel.replace('s', "").parse::<u64>()?)
     }
 
-    pub fn noctalia_dmenu(&mut self) {
+    pub fn noctalia_dmenu(&mut self) -> Result<()> {
         let mut opts = vec!["Selection", "Window", "Monitor"];
 
         // don't show "All" option if single monitor
-        if focal_monitor().all().len() > 1 {
+        if focal_monitor().all()?.len() > 1 {
             opts.push("All");
         }
 
         let noctalia_dmenu = NoctaliaDmenu::new(&opts);
-        let (sel, _) = noctalia_dmenu.run();
+        let (sel, _) = noctalia_dmenu.run()?;
 
         let sel = sel
             .split('\t')
@@ -517,27 +506,27 @@ impl Screenshot {
 
         match sel {
             "Selection" => {
-                self.delay = Some(Self::noctalia_dmenu_delay());
-                self.selection();
+                self.delay = Some(Self::noctalia_dmenu_delay()?);
+                self.selection()
             }
             "Window" => {
-                self.delay = Some(Self::noctalia_dmenu_delay());
+                self.delay = Some(Self::noctalia_dmenu_delay()?);
 
                 // TODO: use slurp to highlight geometry when selecting window for niri?
                 // requires niri to expose all window geometry in the IPC
                 if is_niri() {
-                    self.window();
+                    self.window()
                 } else {
-                    self.selection();
+                    self.selection()
                 }
             }
             "Monitor" => {
-                self.delay = Some(Self::noctalia_dmenu_delay());
-                self.monitor();
+                self.delay = Some(Self::noctalia_dmenu_delay()?);
+                self.monitor()
             }
             "All" => {
-                self.delay = Some(Self::noctalia_dmenu_delay());
-                self.all();
+                self.delay = Some(Self::noctalia_dmenu_delay()?);
+                self.all()
             }
             "" => {
                 eprintln!("No capture selection was made.");
@@ -548,26 +537,24 @@ impl Screenshot {
     }
 
     /// prompts the user for delay using rofi if not provided as a cli flag
-    fn noctalia_dmenu_delay() -> u64 {
+    fn noctalia_dmenu_delay() -> Result<u64> {
         let delay_options = ["0s", "3s", "5s", "10s"];
 
         let noctalia_dmenu = NoctaliaDmenu::new(&delay_options).prompt("Select a delay");
 
         // disable the animations on hyprland so the delay rofi closing animation will not be captured by hyprpicker
-        let (sel, _) = noctalia_dmenu.run();
+        let (sel, _) = noctalia_dmenu.run()?;
 
         if sel.is_empty() {
             eprintln!("No delay selection was made.");
             std::process::exit(1);
         }
 
-        sel.replace('s', "")
-            .parse::<u64>()
-            .expect("Invalid delay specified")
+        Ok(sel.replace('s', "").parse::<u64>()?)
     }
 }
 
-pub fn main(args: ImageArgs) {
+pub fn main(args: ImageArgs) -> Result<()> {
     if !cfg!(feature = "ocr") && args.ocr.is_some() {
         Cli::command()
             .error(
@@ -585,11 +572,16 @@ pub fn main(args: ImageArgs) {
     let output = if args.common_args.no_save {
         PathBuf::from(format!("/tmp/{fname}"))
     } else {
-        create_parent_dirs(args.filename.unwrap_or_else(|| {
-            dirs::picture_dir()
-                .expect("could not get $XDG_PICTURES_DIR")
-                .join(format!("Screenshots/{fname}"))
-        }))
+        let path = match args.filename {
+            Some(filename) => filename,
+            None => {
+                let picture_dir =
+                    dirs::picture_dir().ok_or_eyre("could not get $XDG_PICTURES_DIR")?;
+
+                picture_dir.join(format!("Screenshots/{fname}"))
+            }
+        };
+        create_parent_dirs(path)?
     };
 
     let mut screenshot = Screenshot {
@@ -608,16 +600,18 @@ pub fn main(args: ImageArgs) {
     if args.menu_args.menu {
         // use noctalia if available
         if args.noctalia && which::which("noctalia").is_ok() {
-            screenshot.noctalia_dmenu();
+            return screenshot.noctalia_dmenu();
         } else {
-            screenshot.rofi(args.menu_args.theme.as_ref());
+            return screenshot.rofi(args.menu_args.theme.as_ref());
         }
     } else if let Some(area) = args.area_args.parse() {
-        match area {
+        return match area {
             CaptureArea::Monitor => screenshot.monitor(),
             CaptureArea::Window => screenshot.window(),
             CaptureArea::Selection => screenshot.selection(),
             CaptureArea::All => screenshot.all(),
-        }
+        };
     }
+
+    Ok(())
 }
