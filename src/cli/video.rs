@@ -76,9 +76,6 @@ pub struct VideoArgs {
     #[arg(long, action, help = "Stops any previous video recordings")]
     pub stop: bool,
 
-    #[arg(long, help = "Display menu with noctalia")]
-    pub noctalia: bool,
-
     #[arg(
         long,
         num_args = 0..=1,
@@ -109,7 +106,7 @@ impl VideoArgs {
         let mut progs = vec!["wf-recorder", "pkill"];
 
         if self.menu_args.menu {
-            if !self.noctalia {
+            if which::which("noctalia").is_err() {
                 progs.push("rofi");
             }
             progs.push("slurp");

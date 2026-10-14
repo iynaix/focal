@@ -496,7 +496,7 @@ impl Screenshot {
         }
 
         let noctalia_dmenu = NoctaliaDmenu::new(&opts);
-        let (sel, _) = noctalia_dmenu.run()?;
+        let (sel, _) = noctalia_dmenu.prompt("Select region to screenshot").run()?;
 
         let sel = sel
             .split('\t')
@@ -564,8 +564,10 @@ pub fn main(args: ImageArgs) -> Result<()> {
             .exit()
     }
 
+    let has_noctalia = which::which("noctalia").is_ok();
+
     // check if all required programs are installed
-    check_programs(&args.required_programs());
+    check_programs(&args.required_programs(has_noctalia));
 
     let fname = format!("{}.png", iso8601_filename());
 
@@ -586,7 +588,7 @@ pub fn main(args: ImageArgs) -> Result<()> {
 
     let mut screenshot = Screenshot {
         output,
-        noctalia: args.noctalia,
+        noctalia: has_noctalia,
         delay: args.common_args.delay,
         freeze: args.freeze,
         edit: args.edit,
@@ -599,7 +601,7 @@ pub fn main(args: ImageArgs) -> Result<()> {
 
     if args.menu_args.menu {
         // use noctalia if available
-        if args.noctalia && which::which("noctalia").is_ok() {
+        if has_noctalia {
             return screenshot.noctalia_dmenu();
         } else {
             return screenshot.rofi(args.menu_args.theme.as_ref());

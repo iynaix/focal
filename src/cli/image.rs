@@ -111,9 +111,6 @@ pub struct ImageArgs {
     #[command(flatten)]
     pub menu_args: MenuArgs,
 
-    #[arg(long, help = "Capture using noctalia's screenshot tool")]
-    pub noctalia: bool,
-
     #[arg(
         short,
         long,
@@ -145,18 +142,14 @@ pub struct ImageArgs {
 }
 
 impl ImageArgs {
-    pub fn required_programs(&self) -> Vec<&str> {
+    pub fn required_programs(&self, has_noctalia: bool) -> Vec<&str> {
         let mut progs = vec!["grim"];
 
         if self.menu_args.menu {
-            if !self.noctalia {
+            if !has_noctalia {
                 progs.push("rofi");
             }
             progs.push("slurp");
-        }
-
-        if self.noctalia {
-            progs.push("noctalia");
         }
 
         if matches!(self.area_args.parse(), Some(CaptureArea::Selection)) {

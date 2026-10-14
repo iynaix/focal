@@ -99,7 +99,6 @@ Captures a screenshot.
       --menu            Display graphical menu for selection options
       --no-icons        Do not show icons (rofi only)
       --theme <THEME>   Path to a rofi theme (rofi only)
-      --noctalia        Capture using noctalia's screenshot tool
   -e, --edit <COMMAND>  Edit screenshot using COMMAND
                         The image path will be passed as $IMAGE
       --ocr [<LANG>]    Runs OCR on the selected text
@@ -119,7 +118,6 @@ Captures a video.
       --no-icons            Do not show icons (rofi only)
       --theme <THEME>       Path to a rofi theme (rofi only)
       --stop                Stops any previous video recordings
-      --noctalia            Display menu with noctalia
       --audio [<DEVICE>]    Capture video with audio, optionally specifying an audio device
       --duration <SECONDS>  Duration in seconds to record
   -h, --help                Print help (see more with '--help')

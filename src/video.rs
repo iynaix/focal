@@ -270,6 +270,7 @@ impl Screencast {
             // .arg("-kb-custom-1")
             // .arg("Alt-a")
             // .message("Audio can be recorded using Alt+a")
+            .prompt("Select region to record")
             .run()?;
 
         // custom keyboard code selected
