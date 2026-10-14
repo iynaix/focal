@@ -1,8 +1,9 @@
 # focal
 
-focal is a cli / rofi menu for capturing and copying screenshots or videos on hyprland / niri / umbriel / mango / sway.
+focal is a cli / graphical menu for capturing and copying screenshots or videos on hyprland / niri / umbriel / mango / sway.
 
 <!-- 93859049_p0.webp -->
+
 <img src="https://i.imgur.com/3DrXV0I.png" alt="main menu" width="49%" /> <img src="https://i.imgur.com/3kKoNJv.png" alt="delay menu" width="49%" />
 <img src="https://i.imgur.com/5NXnkKm.png" alt="selection" width="49%" /> <img src="https://i.imgur.com/sm7PJgw.png" alt="selection" width="49%" />
 <br/>
@@ -10,8 +11,8 @@ focal is a cli / rofi menu for capturing and copying screenshots or videos on hy
 
 ## Features
 
-- rofi menu to select area / window / entire screen to capture
-- rofi menu to select delay before capture
+- graphical (rofi / noctalia) menu to select area / window / entire screen to capture
+- graphical (rofi / noctalia) menu to select delay before capture
 - image / video is automatically copied to clipboard, ready for pasting into other programs
 - notifications that open captured file when clicked
 - all options are also available via the CLI
@@ -21,6 +22,7 @@ focal is a cli / rofi menu for capturing and copying screenshots or videos on hy
 ## Installation
 
 ### NixOS
+
 ```nix
 {
   inputs.focal.url = "github:iynaix/focal";
@@ -28,6 +30,7 @@ focal is a cli / rofi menu for capturing and copying screenshots or videos on hy
 ```
 
 A [focal cachix](https://focal.cachix.org) is also available, providing prebuilt binaries. To use it, add the following to your configuration:
+
 ```nix
 {
   nix.settings = {
@@ -40,8 +43,8 @@ A [focal cachix](https://focal.cachix.org) is also available, providing prebuilt
 > [!Warning]
 > Overriding the `focal` input using a `inputs.nixpkgs.follows` invalidates the cache and will cause the package to be rebuilt.
 
-
 Then, include it in your `environment.systemPackages` or `home.packages` by referencing the input:
+
 ```nix
 inputs.focal.packages.${pkgs.system}.default
 ```
@@ -53,15 +56,10 @@ nix run github:iynaix/focal
 ```
 
 OCR support can be optionally disabled through the use of an override:
+
 ```nix
 (inputs.focal.packages.${pkgs.system}.default.override { ocr = false; })
 ```
-
-> [!Note]
-> `rofi` now has wayland support on `nixos-unstable`. To use `rofi-wayland` for `nixos-25.05`, you can use the following override:
-> ```nix
-> (inputs.focal.packages.${pkgs.system}.default.override { rofi = pkgs.rofi-wayland; })
-> ```
 
 ### Arch Linux
 
@@ -76,7 +74,7 @@ paru -S focal-hyprland-git
 
 ```console
 $ focal --help
-focal is a cli / rofi menu for capturing and copying screenshots or videos on hyprland / niri / umbriel / mango / sway.
+focal is a cli / graphical menu for capturing and copying screenshots or videos on hyprland / niri / umbriel / mango / sway.
 
 Usage: focal image [OPTIONS] <--rofi|--area <AREA>|--selection|--monitor|--all> [FILE]
        focal video [OPTIONS] <--rofi|--area <AREA>|--selection|--monitor|--stop> [FILE]
@@ -98,8 +96,8 @@ Captures a screenshot.
       --no-rounded-windows  Do not show rounded corners when capturing a window. (Hyprland only)
       --no-notify           Do not show notifications
       --no-save             Do not save the file permanently
-      --rofi                Display rofi menu for selection options
-      --no-icons            Do not show icons for rofi menu
+      --rofi                Display menu for selection options
+      --no-icons            Do not show icons for menu
       --theme <THEME>       Path to a rofi theme
   -e, --edit <COMMAND>      Edit screenshot using COMMAND
                             The image path will be passed as $IMAGE
@@ -136,26 +134,31 @@ Print this message or the help of the given subcommand(s)
 > Invoking `focal video` a second time stops any currently recording videos.
 
 Example usage as a **hyprland** keybinding:
+
 ```
 hl.bind("SUPER + backslash", hl.dsp.exec_cmd("focal image --area selection"))
 ```
 
 For a **niri** keybinding:
+
 ```
 Mod+backslash { spawn "focal" "image" "--area" "selection" }
 ```
 
 For a **umbriel** keybinding:
+
 ```
 "Mod+backslash" = "focal image --area selection"
 ```
 
 For a **mango** keybinding:
+
 ```
 bind=SUPER, backslash, exec, focal image --area selection
 ```
 
 For a **sway** keybinding:
+
 ```
 bindsym $mod+backslash exec "focal image --area selection"
 ```
@@ -165,19 +168,19 @@ bindsym $mod+backslash exec "focal image --area selection"
 To build focal from source
 
 - Build dependencies
-    * Rust (cargo, rustc)
+  - Rust (cargo, rustc)
 - Runtime dependencies
-    * [grim](https://sr.ht/~emersion/grim/)
-    * [slurp](https://github.com/emersion/slurp)
-    * [hyprland](https://hyprland.org/)
-    * [niri](https://github.com/YaLTeR/niri)
-    * [umbriel](https://github.com/noctalia-dev/umbriel)
-    * [mango](https://github.com/DreamMaoMao/mangowc)
-    * [sway](https://swaywm.org/)
-    * [rofi](https://github.com/davatorium/rofi)
-    * [wl-clipboard](https://github.com/bugaevc/wl-clipboard)
-    * [wf-recorder](https://github.com/ammen99/wf-recorder)
-    * [ffmpeg](https://www.ffmpeg.org/)
+  - [grim](https://sr.ht/~emersion/grim/)
+  - [slurp](https://github.com/emersion/slurp)
+  - [hyprland](https://hyprland.org/)
+  - [niri](https://github.com/YaLTeR/niri)
+  - [umbriel](https://github.com/noctalia-dev/umbriel)
+  - [mango](https://github.com/DreamMaoMao/mangowc)
+  - [sway](https://swaywm.org/)
+  - [rofi](https://github.com/davatorium/rofi)
+  - [wl-clipboard](https://github.com/bugaevc/wl-clipboard)
+  - [wf-recorder](https://github.com/ammen99/wf-recorder)
+  - [ffmpeg](https://www.ffmpeg.org/)
 
 ## Hacking
 

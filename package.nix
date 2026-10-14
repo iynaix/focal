@@ -7,7 +7,6 @@
   ffmpeg,
   grim,
   procps,
-  rofi,
   slurp,
   tesseract,
   hyprpicker,
@@ -72,7 +71,6 @@ rustPlatform.buildRustPackage {
       binaries = [
         grim
         procps
-        rofi
         slurp
         hyprpicker
         wl-clipboard
@@ -88,7 +86,7 @@ rustPlatform.buildRustPackage {
     "wrapProgram $out/bin/focal --prefix PATH : ${lib.makeBinPath binaries}";
 
   meta = with lib; {
-    description = "Focal captures screenshots / videos using rofi, with clipboard support on hyprland / niri / mango / sway";
+    description = "Focal is a cli / graphical menu for capturing and copying screenshots or videos on hyprland / niri / umbriel / mango / sway.";
     mainProgram = "focal";
     homepage = "https://github.com/iynaix/focal";
     license = licenses.mit;

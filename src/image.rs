@@ -10,6 +10,7 @@ use crate::{
         image::{CaptureArea, ImageArgs},
     },
     create_parent_dirs, focal_monitor, is_hyprland, is_mango, is_niri, iso8601_filename,
+    noctalia_dmenu::NoctaliaDmenu,
     show_notification,
 };
 use clap::CommandFactory;
@@ -497,6 +498,74 @@ impl Screenshot {
             .parse::<u64>()
             .expect("Invalid delay specified")
     }
+
+    pub fn noctalia_dmenu(&mut self) {
+        let mut opts = vec!["Selection", "Window", "Monitor"];
+
+        // don't show "All" option if single monitor
+        if focal_monitor().all().len() > 1 {
+            opts.push("All");
+        }
+
+        let noctalia_dmenu = NoctaliaDmenu::new(&opts);
+        let (sel, _) = noctalia_dmenu.run();
+
+        let sel = sel
+            .split('\t')
+            .collect::<Vec<&str>>()
+            .pop()
+            .unwrap_or_default();
+
+        match sel {
+            "Selection" => {
+                self.delay = Some(Self::noctalia_dmenu_delay());
+                self.selection();
+            }
+            "Window" => {
+                self.delay = Some(Self::noctalia_dmenu_delay());
+
+                // TODO: use slurp to highlight geometry when selecting window for niri?
+                // requires niri to expose all window geometry in the IPC
+                if is_niri() {
+                    self.window();
+                } else {
+                    self.selection();
+                }
+            }
+            "Monitor" => {
+                self.delay = Some(Self::noctalia_dmenu_delay());
+                self.monitor();
+            }
+            "All" => {
+                self.delay = Some(Self::noctalia_dmenu_delay());
+                self.all();
+            }
+            "" => {
+                eprintln!("No capture selection was made.");
+                std::process::exit(1);
+            }
+            _ => unimplemented!("Invalid rofi selection"),
+        }
+    }
+
+    /// prompts the user for delay using rofi if not provided as a cli flag
+    fn noctalia_dmenu_delay() -> u64 {
+        let delay_options = ["0s", "3s", "5s", "10s"];
+
+        let noctalia_dmenu = NoctaliaDmenu::new(&delay_options).prompt("Select a delay");
+
+        // disable the animations on hyprland so the delay rofi closing animation will not be captured by hyprpicker
+        let (sel, _) = noctalia_dmenu.run();
+
+        if sel.is_empty() {
+            eprintln!("No delay selection was made.");
+            std::process::exit(1);
+        }
+
+        sel.replace('s', "")
+            .parse::<u64>()
+            .expect("Invalid delay specified")
+    }
 }
 
 pub fn main(args: ImageArgs) {
@@ -538,7 +607,12 @@ pub fn main(args: ImageArgs) {
     };
 
     if args.rofi_args.rofi {
-        screenshot.rofi(args.rofi_args.theme.as_ref());
+        // use noctalia if available
+        if args.noctalia && which::which("noctalia").is_ok() {
+            screenshot.noctalia_dmenu();
+        } else {
+            screenshot.rofi(args.rofi_args.theme.as_ref());
+        }
     } else if let Some(area) = args.area_args.parse() {
         match area {
             CaptureArea::Monitor => screenshot.monitor(),

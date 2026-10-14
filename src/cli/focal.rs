@@ -55,7 +55,7 @@ pub struct CommonArgs {
 #[allow(clippy::module_name_repetitions)]
 #[derive(Args, Debug)]
 pub struct RofiArgs {
-    #[arg(long, action, help = "Display rofi menu for selection options")]
+    #[arg(long, action, help = "Display graphical menu for selection options")]
     pub rofi: bool,
 
     #[arg(long, action, help = "Do not show icons for rofi menu")]
@@ -68,7 +68,7 @@ pub struct RofiArgs {
 #[derive(Parser, Debug)]
 #[command(
     name = "focal",
-    about = "focal is a cli / rofi menu for capturing and copying screenshots or videos on hyprland / sway.",
+    about = "focal is a cli / graphical menu for capturing and copying screenshots or videos on hyprland / sway.",
     author,
     version = env!("CARGO_PKG_VERSION"),
     infer_subcommands = true,

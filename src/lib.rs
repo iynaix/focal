@@ -9,6 +9,7 @@ mod umbriel;
 pub mod cli;
 pub mod image;
 mod monitor;
+pub mod noctalia_dmenu;
 pub mod rofi;
 mod slurp;
 pub mod video;

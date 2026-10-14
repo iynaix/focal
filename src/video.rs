@@ -248,7 +248,7 @@ impl Screencast {
         }
     }
 
-    /// prompts the user for delay using rofi if not provided as a cli flag
+    /// prompts the user for delay using gui if not provided as a cli flag
     fn rofi_delay(theme: Option<&PathBuf>) -> u64 {
         let delay_options = ["0s", "3s", "5s", "10s"];
 

@@ -8,8 +8,8 @@ build = "build.rs"
 
 [dependencies]
 chrono = "0.4.45"
-clap = { version = "4.6.6", features = ["derive", "string"] }
-clap_complete = "4.6.9"
+clap = { version = "4.6.7", features = ["derive", "string"] }
+clap_complete = "4.6.11"
 clap_mangen = "0.3.3"
 ctrlc = "3.5.2"
 dirs = "7.0.0"
@@ -17,16 +17,16 @@ execute = "0.3.0"
 hyprland = { version = "0.4.0-beta.3" }
 image = "0.25.10"
 niri-ipc = "26.4.0"
-notify-rust = "4.18.0"
+notify-rust = "4.18.2"
 regex = "1.13.1"
 serde = "1.0.229"
 serde_derive = "1.0.229"
-serde_json = "1.0.151"
+serde_json = "1.0.154"
 which = "8.0.6"
 
 [build-dependencies]
-clap = { version = "4.6.6", features = ["derive", "string"] }
-clap_complete = "4.6.9"
+clap = { version = "4.6.7", features = ["derive", "string"] }
+clap_complete = "4.6.11"
 clap_mangen = "0.3.3"
 
 [features]
