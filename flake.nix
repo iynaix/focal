@@ -57,7 +57,6 @@
             };
             default = focal;
             no-ocr = focal.override { ocr = false; };
-            no-waybar = focal.override { focalWaybar = false; };
             focal-hyprland = focal;
             focal-sway = focal;
             focal-mango = focal;

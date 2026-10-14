@@ -34,12 +34,6 @@ clap_mangen = "0.3.3"
 default = ["ocr", "video"]
 ocr = []
 video = []
-waybar = []
-
-[[bin]]
-name = "focal-waybar"
-path = "src/bin/focal-waybar.rs"
-required-features = ["waybar"]
 
 [lints.rust]
 unsafe_code = "forbid"

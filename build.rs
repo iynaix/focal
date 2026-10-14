@@ -30,11 +30,6 @@ fn generate_man_pages() -> Result<(), Box<dyn std::error::Error>> {
         fs::write(man_dir.join(subcmd_name + ".1"), buffer)?;
     }
 
-    // focal-waybar man page
-    let mut buffer = Vec::default();
-    Man::new(cli::waybar::Cli::command()).render(&mut buffer)?;
-    fs::write(man_dir.join("focal-waybar.1"), buffer)?;
-
     Ok(())
 }
 

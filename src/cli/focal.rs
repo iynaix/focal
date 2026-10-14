@@ -55,7 +55,12 @@ pub struct CommonArgs {
 #[allow(clippy::module_name_repetitions)]
 #[derive(Args, Debug)]
 pub struct MenuArgs {
-    #[arg(long, action, help = "Display graphical menu for selection options")]
+    #[arg(
+        long,
+        action,
+        aliases = ["rofi"],
+        help = "Display graphical menu for selection options"
+    )]
     pub menu: bool,
 
     #[arg(long, action, help = "Do not show icons (rofi only)")]

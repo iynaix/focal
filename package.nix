@@ -16,7 +16,6 @@
   xdg-utils,
   ocr ? true,
   video ? true,
-  focalWaybar ? true,
 }:
 rustPlatform.buildRustPackage {
   pname = "focal";
@@ -41,30 +40,21 @@ rustPlatform.buildRustPackage {
   cargoLock.lockFile = ./Cargo.lock;
 
   buildNoDefaultFeatures = true;
-  buildFeatures =
-    lib.optionals video [ "video" ]
-    ++ lib.optionals ocr [ "ocr" ]
-    ++ lib.optionals focalWaybar [ "waybar" ];
+  buildFeatures = lib.optionals video [ "video" ] ++ lib.optionals ocr [ "ocr" ];
 
   nativeBuildInputs = [
     installShellFiles
     makeWrapper
   ];
 
-  postInstall =
-    let
-      bins = [ "focal" ] ++ lib.optionals focalWaybar [ "focal-waybar" ];
-    in
-    ''
-      for cmd in ${lib.concatStringsSep " " bins}; do
-        installShellCompletion --cmd $cmd \
-          --bash <($out/bin/$cmd generate bash) \
-          --fish <($out/bin/$cmd generate fish) \
-          --zsh <($out/bin/$cmd generate zsh)
-      done
+  postInstall = ''
+    installShellCompletion --cmd focal \
+      --bash <($out/bin/focal generate bash) \
+      --fish <($out/bin/focal generate fish) \
+      --zsh <($out/bin/focal generate zsh)
 
-      installManPage target/man/*
-    '';
+    installManPage target/man/*
+  '';
 
   postFixup =
     let
