@@ -16,6 +16,7 @@ pub mod video;
 mod wf_recorder;
 
 pub use image::Screenshot;
+pub use noctalia_dmenu::NoctaliaDmenu;
 pub use rofi::Rofi;
 pub use slurp::SlurpGeom;
 pub use video::Screencast;

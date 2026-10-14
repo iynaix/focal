@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::cli::focal::{CommonArgs, RofiArgs};
+use crate::cli::focal::{CommonArgs, MenuArgs};
 use clap::{ArgGroup, Args, Subcommand, ValueEnum};
 
 #[derive(Subcommand, ValueEnum, Debug, Clone)]
@@ -85,13 +85,13 @@ impl AreaArgs {
     ArgGroup::new("required_mode")
         .required(true)
         .multiple(false)
-        .args(["rofi", "area", "selection", "window", "monitor", "all"]),
+        .args(["menu", "area", "selection", "window", "monitor", "all"]),
 ))]
 #[command(group(
     ArgGroup::new("freeze_mode")
         .required(false)
         .multiple(false)
-        .args(["rofi", "area", "selection"]),
+        .args(["menu", "area", "selection"]),
 ))]
 pub struct ImageArgs {
     #[command(flatten)]
@@ -109,7 +109,7 @@ pub struct ImageArgs {
     pub common_args: CommonArgs,
 
     #[command(flatten)]
-    pub rofi_args: RofiArgs,
+    pub menu_args: MenuArgs,
 
     #[arg(long, help = "Capture using noctalia's screenshot tool")]
     pub noctalia: bool,
@@ -148,8 +148,10 @@ impl ImageArgs {
     pub fn required_programs(&self) -> Vec<&str> {
         let mut progs = vec!["grim"];
 
-        if self.rofi_args.rofi {
-            progs.push("rofi");
+        if self.menu_args.menu {
+            if !self.noctalia {
+                progs.push("rofi");
+            }
             progs.push("slurp");
         }
 

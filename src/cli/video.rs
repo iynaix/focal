@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::cli::focal::{CommonArgs, RofiArgs};
+use crate::cli::focal::{CommonArgs, MenuArgs};
 use clap::{ArgGroup, Args, Subcommand, ValueEnum};
 
 #[derive(Subcommand, ValueEnum, Debug, Clone)]
@@ -61,7 +61,7 @@ impl AreaArgs {
     ArgGroup::new("required_mode")
         .required(true)
         .multiple(false)
-        .args(["rofi", "area", "selection", "monitor", "stop"]),
+        .args(["menu", "area", "selection", "monitor", "stop"]),
 ))]
 pub struct VideoArgs {
     #[command(flatten)]
@@ -71,10 +71,13 @@ pub struct VideoArgs {
     pub common_args: CommonArgs,
 
     #[command(flatten)]
-    pub rofi_args: RofiArgs,
+    pub menu_args: MenuArgs,
 
     #[arg(long, action, help = "Stops any previous video recordings")]
     pub stop: bool,
+
+    #[arg(long, help = "Display menu with noctalia")]
+    pub noctalia: bool,
 
     #[arg(
         long,
@@ -105,8 +108,10 @@ impl VideoArgs {
     pub fn required_programs(&self) -> Vec<&str> {
         let mut progs = vec!["wf-recorder", "pkill"];
 
-        if self.rofi_args.rofi {
-            progs.push("rofi");
+        if self.menu_args.menu {
+            if !self.noctalia {
+                progs.push("rofi");
+            }
             progs.push("slurp");
         }
 

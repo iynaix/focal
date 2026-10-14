@@ -4,13 +4,12 @@ use std::{
 };
 
 use crate::{
-    Rofi, check_programs,
+    NoctaliaDmenu, Rofi, check_programs,
     cli::{
         focal::Cli,
         image::{CaptureArea, ImageArgs},
     },
     create_parent_dirs, focal_monitor, is_hyprland, is_mango, is_niri, iso8601_filename,
-    noctalia_dmenu::NoctaliaDmenu,
     show_notification,
 };
 use clap::CommandFactory;
@@ -600,18 +599,18 @@ pub fn main(args: ImageArgs) {
         freeze: args.freeze,
         edit: args.edit,
         no_rounded_windows: args.common_args.no_rounded_windows,
-        icons: !args.rofi_args.no_icons,
+        icons: !args.menu_args.no_icons,
         notify: !args.common_args.no_notify,
         ocr: args.ocr,
         slurp: args.common_args.slurp,
     };
 
-    if args.rofi_args.rofi {
+    if args.menu_args.menu {
         // use noctalia if available
         if args.noctalia && which::which("noctalia").is_ok() {
             screenshot.noctalia_dmenu();
         } else {
-            screenshot.rofi(args.rofi_args.theme.as_ref());
+            screenshot.rofi(args.menu_args.theme.as_ref());
         }
     } else if let Some(area) = args.area_args.parse() {
         match area {

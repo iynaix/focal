@@ -54,14 +54,14 @@ pub struct CommonArgs {
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Args, Debug)]
-pub struct RofiArgs {
+pub struct MenuArgs {
     #[arg(long, action, help = "Display graphical menu for selection options")]
-    pub rofi: bool,
+    pub menu: bool,
 
-    #[arg(long, action, help = "Do not show icons for rofi menu")]
+    #[arg(long, action, help = "Do not show icons (rofi only)")]
     pub no_icons: bool,
 
-    #[arg(long, action, help = "Path to a rofi theme")]
+    #[arg(long, action, help = "Path to a rofi theme (rofi only)")]
     pub theme: Option<PathBuf>,
 }
 
@@ -106,15 +106,15 @@ mod tests {
     #[test]
     fn test_exclusive_args() {
         assert_cmd(
-            "focal video --rofi --area monitor",
+            "focal video --menu --area monitor",
             ErrorKind::ArgumentConflict,
-            "--rofi and --area are exclusive",
+            "--menu and --area are exclusive",
         );
 
         assert_cmd(
-            "focal image --rofi --area monitor",
+            "focal image --menu --area monitor",
             ErrorKind::ArgumentConflict,
-            "--rofi and --area are exclusive",
+            "--menu and --area are exclusive",
         );
 
         assert_cmd(

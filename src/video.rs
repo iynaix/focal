@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::{path::PathBuf, process::Command, vec};
 
 use crate::{
-    Rofi, SlurpGeom, check_programs,
+    NoctaliaDmenu, Rofi, SlurpGeom, check_programs,
     cli::video::{CaptureArea, VideoArgs},
     create_parent_dirs, focal_monitor, is_hyprland, iso8601_filename, show_notification,
     wf_recorder::WfRecorder,
@@ -193,7 +193,7 @@ impl Screencast {
     }
 
     pub fn rofi(&mut self, theme: Option<&PathBuf>) {
-        let mut opts = vec!["󰒉\tSelection", "󰍹\tMonitor", "󰍺\tAll"];
+        let mut opts = vec!["󰒉\tSelection", "󰍹\tMonitor"];
 
         // don't show "All" option if single monitor
         if focal_monitor().all().len() == 1 {
@@ -241,7 +241,7 @@ impl Screencast {
                 self.selection();
             }
             "" => {
-                eprintln!("No rofi selection was made.");
+                eprintln!("No selection was made.");
                 std::process::exit(1);
             }
             _ => unimplemented!("Invalid rofi selection"),
@@ -257,6 +257,62 @@ impl Screencast {
             rofi = rofi.theme(theme.clone());
         }
 
+        let (sel, _) = rofi.run();
+
+        if sel.is_empty() {
+            eprintln!("No delay selection was made.");
+            std::process::exit(1);
+        }
+
+        sel.replace('s', "")
+            .parse::<u64>()
+            .expect("Invalid delay specified")
+    }
+
+    pub fn noctalia_dmenu(&mut self) {
+        let opts = vec!["󰒉\tSelection", "󰍹\tMonitor"];
+
+        let noctalia_dmenu = NoctaliaDmenu::new(&opts);
+        let (sel, _) = noctalia_dmenu
+            // record audio with Alt+a
+            // .arg("-kb-custom-1")
+            // .arg("Alt-a")
+            // .message("Audio can be recorded using Alt+a")
+            .run();
+
+        // custom keyboard code selected
+        // if self.audio.is_none() {
+        //     self.audio = (exit_code == 10).then_some(String::new());
+        // }
+
+        let sel = sel
+            .split('\t')
+            .collect::<Vec<&str>>()
+            .pop()
+            .unwrap_or_default();
+
+        match sel {
+            "Monitor" => {
+                self.delay = Some(Self::noctalia_dmenu_delay());
+                self.monitor();
+            }
+            "Selection" => {
+                self.delay = Some(Self::noctalia_dmenu_delay());
+                self.selection();
+            }
+            "" => {
+                eprintln!("No selection was made.");
+                std::process::exit(1);
+            }
+            _ => unimplemented!("Invalid selection"),
+        }
+    }
+
+    /// prompts the user for delay using gui if not provided as a cli flag
+    fn noctalia_dmenu_delay() -> u64 {
+        let delay_options = ["0s", "3s", "5s", "10s"];
+
+        let rofi = Rofi::new(&delay_options).message("Select a delay");
         let (sel, _) = rofi.run();
 
         if sel.is_empty() {
@@ -299,7 +355,7 @@ pub fn main(args: VideoArgs) {
 
     let mut screencast = Screencast {
         output,
-        icons: !args.rofi_args.no_icons,
+        icons: !args.menu_args.no_icons,
         notify: !args.common_args.no_notify,
         no_rounded_windows: args.common_args.no_rounded_windows,
         delay: args.common_args.delay,
@@ -308,8 +364,8 @@ pub fn main(args: VideoArgs) {
         slurp: args.common_args.slurp,
     };
 
-    if args.rofi_args.rofi {
-        screencast.rofi(args.rofi_args.theme.as_ref());
+    if args.menu_args.menu {
+        screencast.rofi(args.menu_args.theme.as_ref());
     } else if let Some(area) = args.area_args.parse() {
         match area {
             CaptureArea::Monitor => screencast.monitor(),
