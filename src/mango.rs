@@ -1,6 +1,7 @@
 use crate::{
-    SlurpGeom, command_json,
+    SlurpGeom, command_json, focal_monitor,
     monitor::{FocalMonitor, FocalMonitors, Rotation},
+    screenshot::{FocalScreenshot, FocalScreenshotArgs},
 };
 use color_eyre::eyre::{OptionExt, Result};
 use std::process::{Command, Stdio};
@@ -113,5 +114,50 @@ impl FocalMonitors for MangoMonitors {
         // TODO: mango currently doesn't expose window geometries, see:
         // https://github.com/DreamMaoMao/mangowc/issues/418
         Ok(Vec::new())
+    }
+}
+
+pub struct MangoScreenshot;
+
+impl FocalScreenshot for MangoScreenshot {
+    fn window(&self, args: &FocalScreenshotArgs) -> Result<()> {
+        let mon_name = focal_monitor().focused()?.name;
+
+        let output = Command::new("mmsg")
+            .arg("-x")
+            .stdout(Stdio::piped())
+            .output()?;
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+
+        // create a geom of the window to be captured
+        let mut geom = crate::SlurpGeom::default();
+        for line in stdout.lines() {
+            let parts: Vec<_> = line.split(' ').collect();
+            if parts.len() != 3 {
+                continue;
+            }
+
+            if parts[0] != mon_name {
+                continue;
+            }
+
+            match parts[1] {
+                "x" => geom.x = parts[2].parse()?,
+                "y" => geom.y = parts[2].parse()?,
+                "width" => geom.w = parts[2].parse()?,
+                "height" => geom.h = parts[2].parse()?,
+                _ => {}
+            }
+        }
+
+        std::thread::sleep(std::time::Duration::from_secs(args.delay));
+        self.capture("", &geom.to_string(), args)?;
+        self.edit_or_ocr(args)
+    }
+
+    fn all(&self, _: &FocalScreenshotArgs) -> Result<()> {
+        eprintln!("Capturing all screens is not supported");
+        std::process::exit(0)
     }
 }

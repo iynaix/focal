@@ -4,6 +4,7 @@ use std::process::Command;
 use crate::{
     SlurpGeom, command_json,
     monitor::{FocalMonitor, FocalMonitors, Rotation},
+    screenshot::FocalScreenshot,
 };
 
 use serde_derive::Deserialize;
@@ -134,3 +135,7 @@ impl FocalMonitors for SwayMonitors {
         )
     }
 }
+
+pub struct SwayScreenshot;
+
+impl FocalScreenshot for SwayScreenshot {}

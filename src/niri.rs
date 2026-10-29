@@ -1,9 +1,10 @@
-use color_eyre::eyre::Result;
+use color_eyre::eyre::{OptionExt, Result, eyre};
 use niri_ipc::{Output, Request, Response, Transform, socket::Socket};
 
 use crate::{
     SlurpGeom,
     monitor::{FocalMonitor, FocalMonitors, Rotation},
+    screenshot::{FocalScreenshot, FocalScreenshotArgs},
 };
 
 #[allow(clippy::module_name_repetitions)]
@@ -67,5 +68,69 @@ impl FocalMonitors for NiriMonitors {
     fn window_geoms(&self) -> Result<Vec<SlurpGeom>> {
         // TODO: niri currently doesn't expose window geometries
         Ok(Vec::new())
+    }
+}
+
+pub struct NiriScreenshot;
+
+impl FocalScreenshot for NiriScreenshot {
+    fn window(&self, args: &FocalScreenshotArgs) -> Result<()> {
+        use niri_ipc::{Action, Request, Response, Window, socket::Socket};
+
+        std::thread::sleep(std::time::Duration::from_secs(args.delay));
+
+        let mut socket = Socket::connect()?;
+        let Ok(Response::PickedWindow(window)) = socket.send(Request::PickWindow)? else {
+            panic!("unexpected response from niri, should be PickWindow");
+        };
+
+        let Some(Window { id, .. }) = window else {
+            eprintln!("No window was picked.");
+            std::process::exit(1);
+        };
+
+        socket
+            .send(Request::Action(Action::ScreenshotWindow {
+                id: Some(id),
+                path: Some(
+                    args.output
+                        .to_str()
+                        .ok_or_eyre("invalid output path")?
+                        .to_string(),
+                ),
+                show_pointer: false,
+                write_to_disk: true,
+            }))
+            .map_err(|_| eyre!("failed to send ScreenshotWindow request to niri"))?
+            .map_err(|_| eyre!("failed to screenshot window"))?;
+
+        self.edit_or_ocr(args)
+    }
+
+    fn selection(&self, args: &FocalScreenshotArgs) -> Result<()> {
+        use niri_ipc::{Action, Request, socket::Socket};
+
+        std::thread::sleep(std::time::Duration::from_secs(args.delay));
+
+        let mut socket = Socket::connect()?;
+        socket
+            .send(Request::Action(Action::Screenshot {
+                path: Some(
+                    args.output
+                        .to_str()
+                        .ok_or_eyre("invalid output path")?
+                        .to_string(),
+                ),
+                show_pointer: false,
+            }))
+            .map_err(|_| eyre!("failed to send Screenshot request to niri"))?
+            .map_err(|_| eyre!("failed to screenshot selection"))?;
+
+        self.edit_or_ocr(args)
+    }
+
+    fn all(&self, _: &FocalScreenshotArgs) -> Result<()> {
+        eprintln!("Capturing all screens is not supported");
+        std::process::exit(0)
     }
 }

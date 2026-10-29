@@ -4,6 +4,7 @@ use std::process::Command;
 use crate::{
     SlurpGeom, command_json,
     monitor::{FocalMonitor, FocalMonitors, Rotation},
+    screenshot::FocalScreenshot,
 };
 
 use color_eyre::eyre::OptionExt;
@@ -148,3 +149,7 @@ impl FocalMonitors for UmbrielMonitors {
             .collect())
     }
 }
+
+pub struct UmbrielScreenshot;
+
+impl FocalScreenshot for UmbrielScreenshot {}

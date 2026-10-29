@@ -2,8 +2,6 @@ use color_eyre::eyre::Result;
 use execute::Execute;
 use std::{path::PathBuf, process::Command};
 
-use crate::show_notification;
-
 #[derive(Default)]
 pub struct Grim {
     monitor: String,
@@ -41,16 +39,6 @@ impl Grim {
         }
 
         grim.arg(&self.output).execute()?;
-
-        Ok(())
-    }
-
-    /// show a notification
-    pub fn notify(&self) -> Result<()> {
-        show_notification(
-            &format!("Screenshot captured to {}", &self.output.display()),
-            Some(&self.output),
-        )?;
 
         Ok(())
     }

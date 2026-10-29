@@ -5,25 +5,25 @@ mod grim;
 mod hyprland;
 mod mango;
 mod niri;
+mod screenshot;
 mod sway;
 mod umbriel;
 
 pub mod cli;
 pub mod image;
 mod monitor;
-pub mod noctalia_dmenu;
+pub mod noctalia;
 pub mod rofi;
 mod slurp;
 pub mod video;
 mod wf_recorder;
 
-pub use image::Screenshot;
-pub use noctalia_dmenu::NoctaliaDmenu;
+pub use noctalia::NoctaliaDmenu;
 pub use rofi::Rofi;
 pub use slurp::SlurpGeom;
 pub use video::Screencast;
 
-use crate::monitor::FocalMonitors;
+use crate::{monitor::FocalMonitors, screenshot::FocalScreenshot};
 
 pub fn create_parent_dirs(path: PathBuf) -> Result<PathBuf> {
     if let Some(parent) = path.parent()
@@ -128,6 +128,24 @@ pub fn focal_monitor() -> Box<dyn FocalMonitors> {
         "sway" => Box::new(sway::SwayMonitors),
         "mango" => Box::new(mango::MangoMonitors),
         "umbriel" => Box::new(umbriel::UmbrielMonitors),
+        _ => unimplemented!("Unsupported desktop environment"),
+    }
+}
+
+pub fn focal_screenshot() -> Box<dyn FocalScreenshot> {
+    if which::which("noctalia").is_ok() {
+        return Box::new(noctalia::NoctaliaScreenshot);
+    }
+
+    match std::env::var("XDG_CURRENT_DESKTOP")
+        .unwrap_or_default()
+        .as_str()
+    {
+        "Hyprland" => Box::new(hyprland::HyprScreenshot),
+        "niri" => Box::new(niri::NiriScreenshot),
+        "sway" => Box::new(sway::SwayScreenshot),
+        "mango" => Box::new(mango::MangoScreenshot),
+        "umbriel" => Box::new(umbriel::UmbrielScreenshot),
         _ => unimplemented!("Unsupported desktop environment"),
     }
 }
