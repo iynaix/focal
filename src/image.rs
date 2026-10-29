@@ -12,7 +12,7 @@ use crate::{
     },
     create_parent_dirs, focal_monitor,
     grim::Grim,
-    is_hyprland, is_mango, is_niri, iso8601_filename, show_notification,
+    is_mango, is_niri, iso8601_filename, show_notification,
 };
 use clap::CommandFactory;
 use execute::Execute;
@@ -20,8 +20,6 @@ use execute::Execute;
 #[allow(clippy::struct_excessive_bools)]
 pub struct Screenshot {
     pub delay: Option<u64>,
-    pub no_rounded_windows: bool,
-    pub freeze: bool,
     pub edit: Option<String>,
     pub icons: bool,
     pub notify: bool,
@@ -240,12 +238,11 @@ impl Screenshot {
         if self.noctalia {
             std::thread::sleep(std::time::Duration::from_secs(delay));
 
-            let mut cmd = Command::new("noctalia");
-            cmd.arg("msg").arg("screenshot-region");
-            if self.freeze {
-                cmd.arg("--freeze-screen");
-            }
-            cmd.stdout(Stdio::piped()).output()?;
+            Command::new("noctalia")
+                .arg("msg")
+                .arg("screenshot-region")
+                .stdout(Stdio::piped())
+                .output()?;
             return Ok(());
         }
 
@@ -253,7 +250,7 @@ impl Screenshot {
             self.niri_selection(delay)
         } else {
             // freeze screen before delay to capture selection
-            let picker_process = if self.freeze || delay > 0 {
+            let picker_process = if delay > 0 {
                 let child = Command::new("hyprpicker").arg("-rz").spawn()?;
                 std::thread::sleep(std::time::Duration::from_millis(200));
                 Some(child)
@@ -261,30 +258,13 @@ impl Screenshot {
                 None
             };
 
-            let (geom, is_window) = crate::SlurpGeom::prompt(self.slurp.as_deref())?;
+            let geom = crate::SlurpGeom::prompt(self.slurp.as_deref())?;
             // kill hyprpicker so it doesn't ask for a color
             picker_process.map(|mut p| p.kill().ok());
 
             std::thread::sleep(std::time::Duration::from_secs(delay));
 
-            let do_capture = || self.capture("", &geom.to_string());
-
-            if is_hyprland() && is_window && self.no_rounded_windows {
-                use hyprland::keyword::Keyword;
-
-                if let Ok(Keyword {
-                    value: rounding, ..
-                }) = Keyword::get("decoration:rounding")
-                {
-                    Keyword::set("decoration:rounding", 0)?;
-                    do_capture()?;
-                    Keyword::set("decoration:rounding", rounding)?;
-
-                    return Ok(());
-                }
-            }
-
-            do_capture()
+            self.capture("", &geom.to_string())
         }
     }
 
@@ -546,9 +526,7 @@ pub fn main(args: ImageArgs) -> Result<()> {
         output,
         noctalia: has_noctalia,
         delay: args.common_args.delay,
-        freeze: args.freeze,
         edit: args.edit,
-        no_rounded_windows: args.common_args.no_rounded_windows,
         icons: !args.menu_args.no_icons,
         notify: !args.common_args.no_notify,
         ocr: args.ocr,

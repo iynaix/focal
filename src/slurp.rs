@@ -154,7 +154,7 @@ impl SlurpGeom {
     }
 
     /// returns the selected geometry and if a window was selected
-    pub fn prompt(slurp_args: Option<&str>) -> Result<(Self, bool)> {
+    pub fn prompt(slurp_args: Option<&str>) -> Result<Self> {
         let window_geoms = focal_monitor().window_geoms()?;
 
         let orig_fade_anim = if is_hyprland() {
@@ -208,15 +208,12 @@ impl SlurpGeom {
                 std::process::exit(1);
             }
             Ok(sel) => {
-                let geom_and_flag =
-                    if let Some(geom) = window_geoms.into_iter().find(|g| g.to_string() == sel) {
-                        (geom, true)
-                    } else {
-                        let parsed = sel.parse()?;
-                        (parsed, false)
-                    };
-
-                Ok(geom_and_flag)
+                if let Some(geom) = window_geoms.into_iter().find(|g| g.to_string() == sel) {
+                    Ok(geom)
+                } else {
+                    let parsed = sel.parse()?;
+                    Ok(parsed)
+                }
             }
         }
     }

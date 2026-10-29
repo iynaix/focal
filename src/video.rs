@@ -5,7 +5,7 @@ use std::{path::PathBuf, process::Command, vec};
 use crate::{
     NoctaliaDmenu, Rofi, SlurpGeom, check_programs,
     cli::video::{CaptureArea, VideoArgs},
-    create_parent_dirs, focal_monitor, is_hyprland, iso8601_filename, show_notification,
+    create_parent_dirs, focal_monitor, iso8601_filename, show_notification,
     wf_recorder::WfRecorder,
 };
 use execute::Execute;
@@ -13,7 +13,6 @@ use execute::Execute;
 #[derive(Serialize, Deserialize)]
 pub struct LockFile {
     pub video: PathBuf,
-    pub rounding: Option<i64>,
 }
 
 impl LockFile {
@@ -50,7 +49,6 @@ pub struct Screencast {
     pub delay: Option<u64>,
     pub icons: bool,
     pub audio: Option<String>,
-    pub no_rounded_windows: bool,
     pub notify: bool,
     pub duration: Option<u64>,
     pub slurp: Option<String>,
@@ -58,7 +56,7 @@ pub struct Screencast {
 }
 
 impl Screencast {
-    fn capture(&self, mon: &str, filter: &str, rounding: Option<i64>) -> Result<()> {
+    fn capture(&self, mon: &str, filter: &str) -> Result<()> {
         ctrlc::set_handler(move || {
             if let Err(e) = Self::stop(false) {
                 eprintln!("failed to stop: {e}");
@@ -76,7 +74,6 @@ impl Screencast {
 
         let lock = LockFile {
             video: self.output.clone(),
-            rounding,
         };
 
         WfRecorder::new(mon, self.output.clone())
@@ -108,14 +105,8 @@ impl Screencast {
 
         let is_killed = String::from_utf8(wf_process)?.lines().count() > 0;
 
-        if let Ok(LockFile { video, rounding }) = LockFile::read() {
+        if let Ok(LockFile { video }) = LockFile::read() {
             LockFile::remove()?;
-
-            if is_hyprland()
-                && let Some(rounding) = rounding
-            {
-                hyprland::keyword::Keyword::set("decoration:rounding", rounding)?;
-            }
 
             // show notification with the video thumbnail
             if notify {
@@ -156,29 +147,11 @@ impl Screencast {
     }
 
     pub fn selection(&self) -> Result<()> {
-        let (geom, is_window) = SlurpGeom::prompt(self.slurp.as_deref())?;
+        let geom = SlurpGeom::prompt(self.slurp.as_deref())?;
         let (mon, filter) = geom.to_ffmpeg_geom()?;
 
-        let do_capture = |rounding: Option<i64>| -> Result<()> {
-            std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
-            self.capture(&mon, &filter, rounding)
-        };
-
-        if is_hyprland() && is_window && self.no_rounded_windows {
-            use hyprland::keyword::{Keyword, OptionValue};
-
-            if let Ok(Keyword {
-                value: OptionValue::Int(rounding),
-                ..
-            }) = Keyword::get("decoration:rounding")
-            {
-                Keyword::set("decoration:rounding", 0)?;
-
-                return do_capture(Some(rounding));
-            }
-        }
-
-        do_capture(None)
+        std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
+        self.capture(&mon, &filter)
     }
 
     pub fn monitor(&self) -> Result<()> {
@@ -186,7 +159,7 @@ impl Screencast {
 
         let mon = focal_monitor().focused()?;
         let transpose = mon.rotation.ffmpeg_transpose();
-        self.capture(&mon.name, &transpose, None)
+        self.capture(&mon.name, &transpose)
     }
 
     pub fn rofi(&mut self, theme: Option<&PathBuf>) -> Result<()> {
@@ -353,7 +326,6 @@ pub fn main(args: VideoArgs) -> Result<()> {
         output,
         icons: !args.menu_args.no_icons,
         notify: !args.common_args.no_notify,
-        no_rounded_windows: args.common_args.no_rounded_windows,
         delay: args.common_args.delay,
         duration: args.duration,
         audio: args.audio,

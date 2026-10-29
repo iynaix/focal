@@ -38,13 +38,6 @@ pub struct CommonArgs {
     #[arg(short, long, help = "Options to pass to slurp")]
     pub slurp: Option<String>,
 
-    #[arg(
-        long,
-        hide = std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default() != "Hyprland",
-        help = "Do not show rounded corners when capturing a window."
-    )]
-    pub no_rounded_windows: bool,
-
     #[arg(long, action, help = "Do not show notifications")]
     pub no_notify: bool,
 

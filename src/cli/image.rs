@@ -87,23 +87,9 @@ impl AreaArgs {
         .multiple(false)
         .args(["menu", "area", "selection", "window", "monitor", "all"]),
 ))]
-#[command(group(
-    ArgGroup::new("freeze_mode")
-        .required(false)
-        .multiple(false)
-        .args(["menu", "area", "selection"]),
-))]
 pub struct ImageArgs {
     #[command(flatten)]
     pub area_args: AreaArgs,
-
-    #[arg(
-        long,
-        action,
-        help = "Freezes the screen before selecting an area.",
-        hide = std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default() == "niri",
-    )]
-    pub freeze: bool,
 
     #[command(flatten)]
     pub common_args: CommonArgs,
