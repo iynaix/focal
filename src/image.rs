@@ -242,7 +242,18 @@ impl Screenshot {
     }
 
     pub fn window(&self) -> Result<()> {
-        if is_niri() {
+        // use noctalia's inbuilt screenshot
+        if self.noctalia {
+            let delay = self.delay.unwrap_or(0);
+            std::thread::sleep(std::time::Duration::from_secs(delay));
+
+            Command::new("noctalia")
+                .arg("msg")
+                .arg("screenshot-window")
+                .stdout(Stdio::piped())
+                .output()?;
+            Ok(())
+        } else if is_niri() {
             self.niri_window()
         } else if is_mango() {
             self.mango_window()
@@ -278,11 +289,14 @@ impl Screenshot {
 
         // use noctalia's inbuilt screenshot
         if self.noctalia {
-            Command::new("noctalia")
-                .arg("msg")
-                .arg("screenshot-region")
-                .stdout(Stdio::piped())
-                .output()?;
+            std::thread::sleep(std::time::Duration::from_secs(delay));
+
+            let mut cmd = Command::new("noctalia");
+            cmd.arg("msg").arg("screenshot-region");
+            if self.freeze {
+                cmd.arg("--freeze-screen");
+            }
+            cmd.stdout(Stdio::piped()).output()?;
             return Ok(());
         }
 
@@ -463,7 +477,7 @@ impl Screenshot {
                 eprintln!("No capture selection was made.");
                 std::process::exit(1);
             }
-            _ => unimplemented!("Invalid rofi selection"),
+            _ => unimplemented!("Invalid selection"),
         }
     }
 
@@ -477,7 +491,7 @@ impl Screenshot {
         }
 
         // disable the animations on hyprland so the delay rofi closing animation will not be captured by hyprpicker
-        let (sel, _) = rofi.run_without_animation()?;
+        let (sel, _) = rofi.run()?;
 
         if sel.is_empty() {
             eprintln!("No delay selection was made.");
@@ -511,14 +525,7 @@ impl Screenshot {
             }
             "Window" => {
                 self.delay = Some(Self::noctalia_dmenu_delay()?);
-
-                // TODO: use slurp to highlight geometry when selecting window for niri?
-                // requires niri to expose all window geometry in the IPC
-                if is_niri() {
-                    self.window()
-                } else {
-                    self.selection()
-                }
+                self.window()
             }
             "Monitor" => {
                 self.delay = Some(Self::noctalia_dmenu_delay()?);
@@ -532,7 +539,7 @@ impl Screenshot {
                 eprintln!("No capture selection was made.");
                 std::process::exit(1);
             }
-            _ => unimplemented!("Invalid rofi selection"),
+            _ => unimplemented!("Invalid selection"),
         }
     }
 
