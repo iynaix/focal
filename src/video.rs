@@ -257,7 +257,7 @@ impl Screencast {
             .pop()
             .unwrap_or_default();
 
-        return match sel {
+        match sel {
             "Monitor" => {
                 self.delay = Some(Self::noctalia_dmenu_delay()?);
                 self.monitor()
@@ -271,7 +271,7 @@ impl Screencast {
                 std::process::exit(1);
             }
             _ => unimplemented!("Invalid selection"),
-        };
+        }
     }
 
     /// prompts the user for delay using gui if not provided as a cli flag
@@ -310,14 +310,11 @@ pub fn main(args: VideoArgs) -> Result<()> {
     let output = if args.common_args.no_save {
         PathBuf::from(format!("/tmp/{fname}"))
     } else {
-        let path = match args.filename {
-            Some(filename) => filename,
-            None => {
-                let picture_dir =
-                    dirs::picture_dir().ok_or_eyre("could not get $XDG_VIDEOS_DIR")?;
+        let path = if let Some(filename) = args.filename { filename } else {
+            let picture_dir =
+                dirs::picture_dir().ok_or_eyre("could not get $XDG_VIDEOS_DIR")?;
 
-                picture_dir.join(format!("Screenshots/{fname}"))
-            }
+            picture_dir.join(format!("Screenshots/{fname}"))
         };
         create_parent_dirs(path)?
     };
@@ -341,5 +338,5 @@ pub fn main(args: VideoArgs) -> Result<()> {
         };
     }
 
-    return Ok(());
+    Ok(())
 }

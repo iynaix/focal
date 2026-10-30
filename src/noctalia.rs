@@ -105,7 +105,7 @@ pub fn screenshot_menu(delay: Option<u64>, screenshot_args: &FocalScreenshotArgs
             std::process::exit(1);
         }
         _ => unimplemented!("Invalid selection"),
-    };
+    }
 
     Ok(())
 }
@@ -129,46 +129,68 @@ fn delay_menu() -> Result<u64> {
 
 pub struct NoctaliaScreenshot;
 
+/// helper to add optional args for noctalia based on screenshot args
+fn handle_noctalia_args(mut cmd: Command, args: &FocalScreenshotArgs) -> Command {
+    // handle the output file
+    let Some(dir) = args.output.parent() else {
+        eprintln!("Could not parse parent dir");
+        std::process::exit(1);
+    };
+    let Some(fname) = args.output.file_stem() else {
+        eprintln!("Could not parse file steam");
+        std::process::exit(1);
+    };
+    cmd.arg("--directory").arg(dir);
+    cmd.arg("--filename-pattern").arg(fname);
+
+    cmd
+}
+
 impl FocalScreenshot for NoctaliaScreenshot {
     fn monitor(&self, args: &FocalScreenshotArgs) -> Result<()> {
         std::thread::sleep(std::time::Duration::from_secs(args.delay));
-        Command::new("noctalia")
-            .arg("msg")
-            .arg("screenshot-fullscreen")
-            .stdout(Stdio::piped())
-            .output()?;
+
+        let mut cmd = Command::new("noctalia");
+        cmd.arg("msg").arg("screenshot-fullscreen");
+
+        cmd = handle_noctalia_args(cmd, args);
+
+        cmd.stdout(Stdio::piped()).output()?;
         Ok(())
     }
 
     fn window(&self, args: &FocalScreenshotArgs) -> Result<()> {
         std::thread::sleep(std::time::Duration::from_secs(args.delay));
-        Command::new("noctalia")
-            .arg("msg")
-            .arg("screenshot-window")
-            .stdout(Stdio::piped())
-            .output()?;
+
+        let mut cmd = Command::new("noctalia");
+        cmd.arg("msg").arg("screenshot-window");
+
+        cmd = handle_noctalia_args(cmd, args);
+
+        cmd.stdout(Stdio::piped()).output()?;
         Ok(())
     }
 
     fn selection(&self, args: &FocalScreenshotArgs) -> Result<()> {
         std::thread::sleep(std::time::Duration::from_secs(args.delay));
-        Command::new("noctalia")
-            .arg("msg")
-            .arg("screenshot-region")
-            .stdout(Stdio::piped())
-            .output()?;
-        return Ok(());
+
+        let mut cmd = Command::new("noctalia");
+        cmd.arg("msg").arg("screenshot-region");
+
+        cmd = handle_noctalia_args(cmd, args);
+
+        cmd.stdout(Stdio::piped()).output()?;
+        Ok(())
     }
 
     fn all(&self, args: &FocalScreenshotArgs) -> Result<()> {
         std::thread::sleep(std::time::Duration::from_secs(args.delay));
-        Command::new("noctalia")
-            .arg("msg")
-            .arg("screenshot-fullscreen")
-            .arg("all")
-            .stdout(Stdio::piped())
-            .output()?;
+        let mut cmd = Command::new("noctalia");
+        cmd.arg("msg").arg("screenshot-fullscreen").arg("all");
 
-        return Ok(());
+        cmd = handle_noctalia_args(cmd, args);
+
+        cmd.stdout(Stdio::piped()).output()?;
+        Ok(())
     }
 }

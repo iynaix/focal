@@ -95,6 +95,7 @@ mod tests {
     use super::*;
     use clap::error::ErrorKind;
 
+    #[allow(clippy::expect_used)]
     fn assert_cmd(cmd: &str, err_kind: ErrorKind, msg: &str) {
         let args = Cli::try_parse_from(cmd.split_whitespace());
         assert!(args.is_err(), "{msg}");

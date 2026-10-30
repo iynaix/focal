@@ -63,14 +63,13 @@ pub fn show_notification(body: &str, output: Option<&PathBuf>) -> Result<()> {
 
     if let Some(output) = output {
         notification.wait_for_action(|action| {
-            if action == "open" {
-                if let Err(e) = std::process::Command::new("xdg-open")
-                    .arg(&output)
+            if action == "open"
+                && let Err(e) = std::process::Command::new("xdg-open")
+                    .arg(output)
                     .spawn()
                     .and_then(|mut child| child.wait())
-                {
-                    eprintln!("Failed to open file: {e}");
-                }
+            {
+                eprintln!("Failed to open file: {e}");
             }
         });
     }

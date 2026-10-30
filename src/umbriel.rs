@@ -66,9 +66,7 @@ impl FocalMonitors for UmbrielMonitors {
                 }
 
                 // ignore if no current mode
-                let Some(mode) = mon.modes.iter().find(|mode| mode.current) else {
-                    return None;
-                };
+                let mode = mon.modes.iter().find(|mode| mode.current)?;
 
                 Some(FocalMonitor {
                     name: mon.name,

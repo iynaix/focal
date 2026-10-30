@@ -44,9 +44,7 @@ pub struct HyprlandWorkspace {
 }
 
 fn hyprland_monitors() -> Result<Vec<HyprlandMonitor>> {
-    Ok(command_json(
-        Command::new("hyprctl").arg("monitors").arg("-j"),
-    )?)
+    command_json(Command::new("hyprctl").arg("monitors").arg("-j"))
 }
 
 fn to_focal_monitor(mon: &HyprlandMonitor) -> FocalMonitor {

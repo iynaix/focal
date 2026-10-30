@@ -8,7 +8,7 @@ fn main() -> Result<()> {
     match args.command {
         FocalSubcommand::Generate(args) => {
             generate_completions("focal", &mut Cli::command(), &args.shell);
-            return Ok(());
+            Ok(())
         }
         FocalSubcommand::Image(image_args) => focal::image::main(image_args),
         #[cfg(feature = "video")]

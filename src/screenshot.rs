@@ -37,7 +37,7 @@ pub trait FocalScreenshot {
 
         if args.notify {
             show_notification(
-                &format!("Screenshot captured to {}", &args.output.display()),
+                &format!("Screenshot captured to {}", args.output.display()),
                 Some(&args.output),
             )?;
         }

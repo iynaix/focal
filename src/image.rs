@@ -32,14 +32,11 @@ pub fn main(args: ImageArgs) -> Result<()> {
     let output = if args.common_args.no_save {
         PathBuf::from(format!("/tmp/{fname}"))
     } else {
-        let path = match args.filename {
-            Some(filename) => filename,
-            None => {
-                let picture_dir =
-                    dirs::picture_dir().ok_or_eyre("could not get $XDG_PICTURES_DIR")?;
+        let path = if let Some(filename) = args.filename { filename } else {
+            let picture_dir =
+                dirs::picture_dir().ok_or_eyre("could not get $XDG_PICTURES_DIR")?;
 
-                picture_dir.join(format!("Screenshots/{fname}"))
-            }
+            picture_dir.join(format!("Screenshots/{fname}"))
         };
         create_parent_dirs(path)?
     };
@@ -57,14 +54,13 @@ pub fn main(args: ImageArgs) -> Result<()> {
         // use noctalia if available
         if has_noctalia {
             return crate::noctalia::screenshot_menu(args.common_args.delay, &screenshot_args);
-        } else {
-            return crate::rofi::screenshot_menu(
-                args.common_args.delay,
-                &screenshot_args,
-                args.menu_args.theme.as_ref(),
-                !args.menu_args.no_icons,
-            );
         }
+        return crate::rofi::screenshot_menu(
+            args.common_args.delay,
+            &screenshot_args,
+            args.menu_args.theme.as_ref(),
+            !args.menu_args.no_icons,
+        );
     } else if let Some(area) = args.area_args.parse() {
         return match area {
             CaptureArea::Monitor => focal_screenshot().monitor(&screenshot_args),

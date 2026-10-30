@@ -42,9 +42,7 @@ impl FocalMonitors for NiriMonitors {
             panic!("unexpected response from niri, should be Outputs");
         };
 
-        Ok(monitors
-            .iter()
-            .filter_map(|(_, mon)| mon.logical.map(|_| mon))
+        Ok(monitors.values().filter_map(|mon| mon.logical.map(|_| mon))
             .map(to_focal_monitor)
             .collect())
     }
