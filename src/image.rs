@@ -7,7 +7,7 @@ use crate::{
         focal::Cli,
         image::{CaptureArea, ImageArgs},
     },
-    create_parent_dirs, focal_screenshot, iso8601_filename,
+    create_parent_dirs, focal_screenshot, is_noctalia, iso8601_filename,
     screenshot::FocalScreenshotArgs,
 };
 use clap::CommandFactory;
@@ -22,7 +22,7 @@ pub fn main(args: ImageArgs) -> Result<()> {
             .exit()
     }
 
-    let has_noctalia = which::which("noctalia").is_ok();
+    let has_noctalia = is_noctalia();
 
     // check if all required programs are installed
     check_programs(&args.required_programs(has_noctalia));
@@ -32,9 +32,10 @@ pub fn main(args: ImageArgs) -> Result<()> {
     let output = if args.common_args.no_save {
         PathBuf::from(format!("/tmp/{fname}"))
     } else {
-        let path = if let Some(filename) = args.filename { filename } else {
-            let picture_dir =
-                dirs::picture_dir().ok_or_eyre("could not get $XDG_PICTURES_DIR")?;
+        let path = if let Some(filename) = args.filename {
+            filename
+        } else {
+            let picture_dir = dirs::picture_dir().ok_or_eyre("could not get $XDG_PICTURES_DIR")?;
 
             picture_dir.join(format!("Screenshots/{fname}"))
         };

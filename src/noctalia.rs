@@ -1,5 +1,8 @@
 use color_eyre::eyre::{OptionExt, Result};
-use std::process::{Command, Stdio};
+use std::{
+    fmt::Write,
+    process::{Command, Stdio},
+};
 
 use execute::Execute;
 
@@ -130,7 +133,37 @@ fn delay_menu() -> Result<u64> {
 pub struct NoctaliaScreenshot;
 
 /// helper to add optional args for noctalia based on screenshot args
-fn handle_noctalia_args(mut cmd: Command, args: &FocalScreenshotArgs) -> Command {
+fn handle_noctalia_args(mut cmd: Command, args: &FocalScreenshotArgs) -> Result<Command> {
+    if args.ocr.is_some() {
+        cmd.arg("--no-annotate")
+            .arg("--no-copy-to-clipboard")
+            .arg("--no-save-to-file");
+
+        let mut tesseract_cmd = String::from("tesseract stdin stdout");
+
+        if let Some(lang) = &args.ocr
+            && !lang.is_empty()
+        {
+            write!(tesseract_cmd, " -l {lang}")?;
+        }
+
+        write!(
+            tesseract_cmd,
+            " | wl-copy && noctalia msg notification-show \"Text copied to clipboard\""
+        )?;
+
+        cmd.arg("--pipe-to-command")
+            .arg("--pipe-command")
+            .arg(tesseract_cmd);
+    } else if let Some(ref edit_cmd) = args.edit {
+        cmd.arg("--no-annotate")
+            .arg("--no-copy-to-clipboard")
+            .arg("--no-save-to-file")
+            .arg("--pipe-to-command")
+            .arg("--pipe-command")
+            .arg(edit_cmd);
+    }
+
     // handle the output file
     let Some(dir) = args.output.parent() else {
         eprintln!("Could not parse parent dir");
@@ -143,7 +176,7 @@ fn handle_noctalia_args(mut cmd: Command, args: &FocalScreenshotArgs) -> Command
     cmd.arg("--directory").arg(dir);
     cmd.arg("--filename-pattern").arg(fname);
 
-    cmd
+    Ok(cmd)
 }
 
 impl FocalScreenshot for NoctaliaScreenshot {
@@ -153,7 +186,7 @@ impl FocalScreenshot for NoctaliaScreenshot {
         let mut cmd = Command::new("noctalia");
         cmd.arg("msg").arg("screenshot-fullscreen");
 
-        cmd = handle_noctalia_args(cmd, args);
+        cmd = handle_noctalia_args(cmd, args)?;
 
         cmd.stdout(Stdio::piped()).output()?;
         Ok(())
@@ -165,7 +198,7 @@ impl FocalScreenshot for NoctaliaScreenshot {
         let mut cmd = Command::new("noctalia");
         cmd.arg("msg").arg("screenshot-window");
 
-        cmd = handle_noctalia_args(cmd, args);
+        cmd = handle_noctalia_args(cmd, args)?;
 
         cmd.stdout(Stdio::piped()).output()?;
         Ok(())
@@ -177,7 +210,7 @@ impl FocalScreenshot for NoctaliaScreenshot {
         let mut cmd = Command::new("noctalia");
         cmd.arg("msg").arg("screenshot-region");
 
-        cmd = handle_noctalia_args(cmd, args);
+        cmd = handle_noctalia_args(cmd, args)?;
 
         cmd.stdout(Stdio::piped()).output()?;
         Ok(())
@@ -188,7 +221,7 @@ impl FocalScreenshot for NoctaliaScreenshot {
         let mut cmd = Command::new("noctalia");
         cmd.arg("msg").arg("screenshot-fullscreen").arg("all");
 
-        cmd = handle_noctalia_args(cmd, args);
+        cmd = handle_noctalia_args(cmd, args)?;
 
         cmd.stdout(Stdio::piped()).output()?;
         Ok(())
