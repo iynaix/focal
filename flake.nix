@@ -27,6 +27,9 @@
                 slurp
                 tesseract
                 hyprpicker
+                libgbm
+                libGL
+                wayland
                 wl-clipboard
                 wlr-randr # for mango
                 xdg-utils # xdg-open
@@ -43,6 +46,7 @@
                 rust-analyzer
                 rustfmt
                 clippy
+                pkg-config
               ];
             };
           };

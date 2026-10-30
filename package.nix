@@ -10,6 +10,10 @@
   slurp,
   tesseract,
   hyprpicker,
+  pkg-config,
+  libgbm,
+  libGL,
+  wayland,
   wf-recorder,
   wl-clipboard,
   wlr-randr,
@@ -45,6 +49,13 @@ rustPlatform.buildRustPackage {
   nativeBuildInputs = [
     installShellFiles
     makeWrapper
+    pkg-config
+  ];
+
+  buildInputs = [
+    libgbm
+    libGL
+    wayland
   ];
 
   postInstall = ''

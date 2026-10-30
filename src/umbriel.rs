@@ -1,10 +1,11 @@
 use color_eyre::eyre::Result;
+use libwayshot::LogicalRegion;
 use std::process::Command;
 
 use crate::{
-    SlurpGeom, command_json,
+    SlurpGeom, command_json, focal_monitor,
     monitor::{FocalMonitor, FocalMonitors, Rotation},
-    screenshot::FocalScreenshot,
+    screenshot::{FocalScreenshot, FocalScreenshotArgs},
 };
 
 use color_eyre::eyre::OptionExt;
@@ -150,4 +151,69 @@ impl FocalMonitors for UmbrielMonitors {
 
 pub struct UmbrielScreenshot;
 
-impl FocalScreenshot for UmbrielScreenshot {}
+impl FocalScreenshot for UmbrielScreenshot {
+    fn monitor(&self, args: &FocalScreenshotArgs) -> Result<()> {
+        use libwayshot::WayshotConnection;
+
+        std::thread::sleep(std::time::Duration::from_secs(args.delay));
+
+        let curr_mon = focal_monitor().focused()?.name;
+
+        let conn = WayshotConnection::new()?;
+        let outputs = conn.get_all_outputs();
+
+        let curr_output = outputs
+            .iter()
+            .find(|output| output.name == curr_mon)
+            .unwrap_or_else(|| {
+                eprintln!("Unable to get current output");
+                std::process::exit(1);
+            });
+
+        let img = conn.screenshot_single_output(curr_output, false)?;
+        img.save("/tmp/monitor.png")?;
+
+        self.edit_or_ocr(args)
+    }
+
+    fn window(&self, args: &FocalScreenshotArgs) -> Result<()> {
+        use libwayshot::WayshotConnection;
+
+        std::thread::sleep(std::time::Duration::from_secs(args.delay));
+
+        let conn = WayshotConnection::new()?;
+        let windows = conn.get_all_toplevels();
+
+        /*
+        umbriel focused-window --json
+        {"active":true,"app_id":"kitty","border_effect":{"name":"","overlay":"","pool":"","source":"default","suppressed":false},"column":1,"content_type":"none","floating":false,"focused":true,"fullscreen":false,"h":1390,"id":"7c72ce35dd6cb56cc7e59d832450838e","maximized":false,"maximized_to_edges":false,"minimizable":false,"minimized":false,"output":"DP-1","parent":"","pid":3366,"pinned":false,"row":0,"scratchpad":"","snap":null,"tab_hidden":false,"tab_index":-1,"tabbed":false,"title":"umbriel focused-wind ~","title_bar":false,"urgent":false,"visible":true,"w":1688,"window_effect":{"name":"","pool":"","source":"default","suppressed":false},"workspace":"DP-1:2","x":3166,"xdg_tag":"","xwayland":false,"y":1120}
+        */
+
+        let curr_win = windows
+            .iter()
+            .find(|win| win.identifier == "7c72ce35dd6cb56cc7e59d832450838e")
+            .unwrap_or_else(|| {
+                eprintln!("Unable to get current window");
+                std::process::exit(1);
+            });
+
+        let img = conn.screenshot_toplevel(curr_win, false)?;
+        img.save("/tmp/window.png")?;
+
+        self.edit_or_ocr(args)
+    }
+
+    fn selection(&self, args: &FocalScreenshotArgs) -> Result<()> {
+        use libwayshot::WayshotConnection;
+
+        std::thread::sleep(std::time::Duration::from_secs(args.delay));
+
+        let geom = SlurpGeom::prompt(None)?;
+
+        let conn = WayshotConnection::new()?;
+        let img = conn.screenshot(geom.to_logical_region(), false)?;
+        img.save("/tmp/selection.png")?;
+
+        self.edit_or_ocr(args)
+    }
+}

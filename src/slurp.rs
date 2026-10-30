@@ -1,5 +1,9 @@
 use color_eyre::eyre::Result;
 use execute::Execute;
+use libwayshot::{
+    LogicalRegion, Size,
+    region::{Position, Region},
+};
 use std::{
     fmt,
     process::{Command, Stdio},
@@ -111,6 +115,21 @@ impl SlurpGeom {
         );
 
         Ok((mon.name.clone(), filter))
+    }
+
+    pub const fn to_logical_region(self) -> LogicalRegion {
+        LogicalRegion {
+            inner: Region {
+                position: Position {
+                    x: self.x,
+                    y: self.y,
+                },
+                size: Size {
+                    width: self.w.cast_unsigned(),
+                    height: self.h.cast_unsigned(),
+                },
+            },
+        }
     }
 
     /// returns the selected geometry and if a window was selected

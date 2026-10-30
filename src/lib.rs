@@ -118,8 +118,10 @@ pub fn is_umbriel() -> bool {
 }
 
 pub fn is_noctalia() -> bool {
-    static CACHE: OnceLock<bool> = OnceLock::new();
-    *CACHE.get_or_init(|| which::which("noctalia").is_ok())
+    false
+
+    // static CACHE: OnceLock<bool> = OnceLock::new();
+    // *CACHE.get_or_init(|| which::which("noctalia").is_ok())
 }
 
 pub fn focal_monitor() -> Box<dyn FocalMonitors> {
