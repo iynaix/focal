@@ -7,7 +7,7 @@ use std::{
 use execute::Execute;
 
 use crate::{
-    focal_monitor, focal_screenshot,
+    focal_screenshot,
     screenshot::{FocalScreenshot, FocalScreenshotArgs},
 };
 
@@ -70,12 +70,7 @@ impl NoctaliaDmenu {
 }
 
 pub fn screenshot_menu(delay: Option<u64>, screenshot_args: &FocalScreenshotArgs) -> Result<()> {
-    let mut opts = vec!["Selection", "Window", "Monitor"];
-
-    // don't show "All" option if single monitor
-    if focal_monitor().all()?.len() > 1 {
-        opts.push("All");
-    }
+    let opts = vec!["Selection", "Window", "Monitor", "All"];
 
     let noctalia_dmenu = NoctaliaDmenu::new(&opts);
     let (sel, _) = noctalia_dmenu.prompt("Select region to screenshot").run()?;

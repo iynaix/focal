@@ -6,7 +6,7 @@ use std::{
 use color_eyre::eyre::{OptionExt, Result};
 use execute::Execute;
 
-use crate::{focal_monitor, focal_screenshot, is_mango, is_niri, screenshot::FocalScreenshotArgs};
+use crate::{focal_screenshot, screenshot::FocalScreenshotArgs};
 
 pub struct Rofi {
     choices: Vec<String>,
@@ -124,16 +124,7 @@ pub fn screenshot_menu(
     theme: Option<&PathBuf>,
     show_icons: bool,
 ) -> Result<()> {
-    let mut opts = vec!["󰒉\tSelection", "󰍹\tWindow", "󰍹\tMonitor"];
-
-    if !(is_niri() || is_mango()) {
-        opts.push("󰍺\tAll");
-    }
-
-    // don't show "All" option if single monitor
-    if focal_monitor().all()?.len() == 1 {
-        opts.pop();
-    }
+    let mut opts = vec!["󰒉\tSelection", "󰍹\tWindow", "󰍹\tMonitor", "󰍺\tAll"];
 
     if !show_icons {
         opts = opts.iter().filter_map(|s| s.split('\t').nth(1)).collect();
