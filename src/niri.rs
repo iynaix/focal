@@ -42,7 +42,9 @@ impl FocalMonitors for NiriMonitors {
             panic!("unexpected response from niri, should be Outputs");
         };
 
-        Ok(monitors.values().filter_map(|mon| mon.logical.map(|_| mon))
+        Ok(monitors
+            .values()
+            .filter_map(|mon| mon.logical.map(|_| mon))
             .map(to_focal_monitor)
             .collect())
     }
@@ -125,10 +127,5 @@ impl FocalScreenshot for NiriScreenshot {
             .map_err(|_| eyre!("failed to screenshot selection"))?;
 
         self.edit_or_ocr(args)
-    }
-
-    fn all(&self, _: &FocalScreenshotArgs) -> Result<()> {
-        eprintln!("Capturing all screens is not supported");
-        std::process::exit(0)
     }
 }

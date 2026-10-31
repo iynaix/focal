@@ -133,9 +133,9 @@ impl SlurpGeom {
     }
 
     /// returns the selected geometry and if a window was selected
-    pub fn prompt(slurp_args: Option<&str>) -> Result<Self> {
+    pub fn prompt(initial_geoms: &[Self], slurp_args: Option<&str>) -> Result<Self> {
         let window_geoms = focal_monitor().window_geoms()?;
-        let slurp_geoms = window_geoms
+        let slurp_geoms = initial_geoms
             .iter()
             .map(std::string::ToString::to_string)
             .collect::<Vec<_>>()

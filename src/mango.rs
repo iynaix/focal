@@ -155,9 +155,4 @@ impl FocalScreenshot for MangoScreenshot {
         self.capture("", &geom.to_string(), args)?;
         self.edit_or_ocr(args)
     }
-
-    fn all(&self, _: &FocalScreenshotArgs) -> Result<()> {
-        eprintln!("Capturing all screens is not supported");
-        std::process::exit(0)
-    }
 }

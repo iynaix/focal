@@ -5,6 +5,7 @@ use std::{
 
 use color_eyre::eyre::Result;
 use execute::Execute;
+use libwayshot::WayshotConnection;
 
 use crate::{focal_monitor, grim::Grim, is_niri, show_notification};
 
@@ -121,7 +122,9 @@ pub trait FocalScreenshot {
             None
         };
 
-        let geom = crate::SlurpGeom::prompt(args.slurp.as_deref())?;
+        let window_geoms = focal_monitor().window_geoms().unwrap_or_default();
+        let geom = crate::SlurpGeom::prompt(&window_geoms, args.slurp.as_deref())?;
+
         // kill hyprpicker so it doesn't ask for a color
         picker_process.map(|mut p| p.kill().ok());
 
@@ -131,10 +134,12 @@ pub trait FocalScreenshot {
     }
 
     fn all(&self, args: &FocalScreenshotArgs) -> Result<()> {
-        let (w, h) = focal_monitor().total_dimensions()?;
-
         std::thread::sleep(std::time::Duration::from_secs(args.delay));
-        self.capture("", &format!("0,0 {w}x{h}"), args)?;
+
+        let conn = WayshotConnection::new()?;
+        let img = conn.screenshot_all(false)?;
+        img.save(&args.output)?;
+
         self.edit_or_ocr(args)
     }
 }

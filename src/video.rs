@@ -147,7 +147,8 @@ impl Screencast {
     }
 
     pub fn selection(&self) -> Result<()> {
-        let geom = SlurpGeom::prompt(self.slurp.as_deref())?;
+        let window_geoms = focal_monitor().window_geoms().unwrap_or_default();
+        let geom = SlurpGeom::prompt(&window_geoms, self.slurp.as_deref())?;
         let (mon, filter) = geom.to_ffmpeg_geom()?;
 
         std::thread::sleep(std::time::Duration::from_secs(self.delay.unwrap_or(0)));
@@ -310,9 +311,10 @@ pub fn main(args: VideoArgs) -> Result<()> {
     let output = if args.common_args.no_save {
         PathBuf::from(format!("/tmp/{fname}"))
     } else {
-        let path = if let Some(filename) = args.filename { filename } else {
-            let picture_dir =
-                dirs::picture_dir().ok_or_eyre("could not get $XDG_VIDEOS_DIR")?;
+        let path = if let Some(filename) = args.filename {
+            filename
+        } else {
+            let picture_dir = dirs::picture_dir().ok_or_eyre("could not get $XDG_VIDEOS_DIR")?;
 
             picture_dir.join(format!("Screenshots/{fname}"))
         };
