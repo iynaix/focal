@@ -31,7 +31,6 @@
                 libGL
                 wayland
                 wl-clipboard
-                wlr-randr # for mango
                 xdg-utils # xdg-open
               ];
 

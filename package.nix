@@ -16,7 +16,6 @@
   wayland,
   wf-recorder,
   wl-clipboard,
-  wlr-randr,
   xdg-utils,
   ocr ? true,
   video ? true,
@@ -75,7 +74,6 @@ rustPlatform.buildRustPackage {
         slurp
         hyprpicker
         wl-clipboard
-        wlr-randr
         xdg-utils
       ]
       ++ lib.optionals video [
