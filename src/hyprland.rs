@@ -1,4 +1,4 @@
-use color_eyre::eyre::{OptionExt, Result};
+use color_eyre::eyre::Result;
 use std::process::Command;
 
 use crate::{
@@ -66,6 +66,7 @@ fn to_focal_monitor(mon: &HyprlandMonitor) -> FocalMonitor {
             7 => Rotation::Flipped270,
             _ => unimplemented!("Invalid monitor transform: {}", mon.transform),
         },
+        focused: mon.focused,
     }
 }
 
@@ -74,16 +75,6 @@ pub struct HyprMonitors;
 impl FocalMonitors for HyprMonitors {
     fn all(&self) -> Result<Vec<FocalMonitor>> {
         Ok(hyprland_monitors()?.iter().map(to_focal_monitor).collect())
-    }
-
-    fn focused(&self) -> Result<FocalMonitor> {
-        let monitors = hyprland_monitors()?;
-        let curr_mon = monitors
-            .iter()
-            .find(|m| m.focused)
-            .ok_or_eyre("No focused monitor found.")?;
-
-        Ok(to_focal_monitor(curr_mon))
     }
 
     fn window_geoms(&self) -> Result<Vec<SlurpGeom>> {

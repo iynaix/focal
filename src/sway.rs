@@ -1,4 +1,4 @@
-use color_eyre::eyre::{OptionExt, Result};
+use color_eyre::eyre::Result;
 use std::process::Command;
 
 use crate::{
@@ -78,6 +78,7 @@ fn to_focal_monitor(mon: &GetOutput) -> FocalMonitor {
             "flipped-270" => Rotation::Flipped270,
             _ => unimplemented!("Invalid monitor transform"),
         },
+        focused: mon.focused,
     }
 }
 
@@ -110,20 +111,6 @@ impl FocalMonitors for SwayMonitors {
         )?;
 
         Ok(monitors.iter().map(to_focal_monitor).collect())
-    }
-
-    fn focused(&self) -> Result<FocalMonitor> {
-        let monitors: Vec<GetOutput> = command_json(
-            Command::new("swaymsg")
-                .arg("-t")
-                .arg("get_outputs")
-                .arg("--raw"),
-        )?;
-
-        monitors
-            .iter()
-            .find_map(|m| m.focused.then_some(to_focal_monitor(m)))
-            .ok_or_eyre("no focused monitor found")
     }
 
     fn window_geoms(&self) -> Result<Vec<SlurpGeom>> {

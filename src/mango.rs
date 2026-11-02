@@ -3,7 +3,7 @@ use crate::{
     monitor::{FocalMonitor, FocalMonitors, Rotation},
     screenshot::FocalScreenshot,
 };
-use color_eyre::eyre::{OptionExt, Result};
+use color_eyre::eyre::Result;
 use std::process::Command;
 
 use serde_derive::Deserialize;
@@ -51,26 +51,16 @@ fn to_focal_monitor(mon: &MangoMonitor) -> FocalMonitor {
         scale: mon.scale,
         // TODO: rotation not included????
         rotation: Rotation::Normal,
+        focused: mon.active,
     }
-}
-
-fn mango_all_monitors() -> Result<Vec<MangoMonitor>> {
-    let resp: MangoAllMonitors = command_json(Command::new("mmsg").arg("get").arg("all-monitors"))?;
-
-    Ok(resp.monitors)
 }
 
 impl FocalMonitors for MangoMonitors {
     fn all(&self) -> Result<Vec<FocalMonitor>> {
-        mango_all_monitors().map(|monitors| monitors.iter().map(to_focal_monitor).collect())
-    }
+        let resp: MangoAllMonitors =
+            command_json(Command::new("mmsg").arg("get").arg("all-monitors"))?;
 
-    fn focused(&self) -> Result<FocalMonitor> {
-        mango_all_monitors()?
-            .iter()
-            .find(|mon| mon.active)
-            .map(to_focal_monitor)
-            .ok_or_eyre("No focused monitor")
+        Ok(resp.monitors.iter().map(to_focal_monitor).collect())
     }
 
     fn window_geoms(&self) -> Result<Vec<SlurpGeom>> {

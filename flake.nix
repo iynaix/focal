@@ -60,10 +60,6 @@
             };
             default = focal;
             no-ocr = focal.override { ocr = false; };
-            focal-hyprland = focal;
-            focal-sway = focal;
-            focal-mango = focal;
-            focal-niri = focal;
             focal-image = focal.override { video = false; };
           };
         };

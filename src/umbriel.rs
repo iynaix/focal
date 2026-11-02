@@ -18,6 +18,7 @@ pub struct UmbrielMonitor {
     pub position: UmbrielMonitorPosition,
     pub scale: f32,
     pub transform: String,
+    pub focused: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -86,6 +87,7 @@ impl FocalMonitors for UmbrielMonitors {
                         "flipped-270" => Rotation::Flipped270,
                         _ => unimplemented!("Invalid monitor transform"),
                     },
+                    focused: mon.focused,
                 })
             })
             .collect())

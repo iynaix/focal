@@ -32,6 +32,7 @@ fn to_focal_monitor(mon: &Output) -> FocalMonitor {
                 Transform::Flipped180 => Rotation::Flipped180,
                 Transform::Flipped270 => Rotation::Flipped270,
             },
+            focused: false,
         },
     )
 }
@@ -66,8 +67,7 @@ impl FocalMonitors for NiriMonitors {
     }
 
     fn window_geoms(&self) -> Result<Vec<SlurpGeom>> {
-        // TODO: niri currently doesn't expose window geometries
-        Ok(Vec::new())
+        Err(eyre!("niri does not expose x and y coordinates of windows"))
     }
 }
 

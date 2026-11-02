@@ -1,5 +1,5 @@
 use crate::SlurpGeom;
-use color_eyre::eyre::Result;
+use color_eyre::eyre::{OptionExt, Result};
 
 #[derive(Debug, Default, Clone)]
 pub enum Rotation {
@@ -47,6 +47,7 @@ pub struct FocalMonitor {
     pub h: i32,
     pub scale: f32,
     pub rotation: Rotation,
+    pub focused: bool,
 }
 
 pub trait FocalMonitors {
@@ -54,7 +55,12 @@ pub trait FocalMonitors {
     fn all(&self) -> Result<Vec<FocalMonitor>>;
 
     /// returns the focused monitor
-    fn focused(&self) -> Result<FocalMonitor>;
+    fn focused(&self) -> Result<FocalMonitor> {
+        self.all()?
+            .into_iter()
+            .find(|mon| mon.focused)
+            .ok_or_eyre("No focused monitor found")
+    }
 
     /// returns geometries of all visible (active) windows across all monitors
     fn window_geoms(&self) -> Result<Vec<SlurpGeom>>;

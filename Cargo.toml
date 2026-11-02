@@ -15,7 +15,6 @@ color-eyre = "0.6.5"
 ctrlc = "3.5.2"
 dirs = "7.0.0"
 execute = "0.3.0"
-hyprland = { version = "0.4.0-beta.3" }
 image = "0.25.10"
 libwayshot = "0.9.0"
 niri-ipc = "26.4.0"
