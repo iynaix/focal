@@ -1,7 +1,6 @@
 use color_eyre::eyre::Result;
 use std::{path::PathBuf, process::Command, sync::OnceLock};
 
-mod grim;
 mod hyprland;
 mod mango;
 mod niri;

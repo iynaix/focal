@@ -107,7 +107,6 @@ fn delay_menu(theme: Option<&PathBuf>) -> Result<u64> {
         rofi = rofi.theme(theme.clone());
     }
 
-    // disable the animations on hyprland so the delay rofi closing animation will not be captured by hyprpicker
     let (sel, _) = rofi.run()?;
 
     if sel.is_empty() {

@@ -9,10 +9,11 @@
   procps,
   slurp,
   tesseract,
-  hyprpicker,
   pkg-config,
+  glib,
   libgbm,
   libGL,
+  pango,
   wayland,
   wf-recorder,
   wl-clipboard,
@@ -52,6 +53,8 @@ rustPlatform.buildRustPackage {
   ];
 
   buildInputs = [
+    glib
+    pango
     libgbm
     libGL
     wayland
@@ -72,7 +75,6 @@ rustPlatform.buildRustPackage {
         grim
         procps
         slurp
-        hyprpicker
         wl-clipboard
         xdg-utils
       ]

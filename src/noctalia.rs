@@ -113,8 +113,6 @@ fn delay_menu() -> Result<u64> {
     let delay_options = ["0s", "3s", "5s", "10s"];
 
     let noctalia_dmenu = NoctaliaDmenu::new(&delay_options).prompt("Select a delay");
-
-    // disable the animations on hyprland so the delay rofi closing animation will not be captured by hyprpicker
     let (sel, _) = noctalia_dmenu.run()?;
 
     if sel.is_empty() {

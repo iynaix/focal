@@ -3,11 +3,11 @@ use std::{
     process::{Command, Stdio},
 };
 
-use color_eyre::eyre::Result;
+use color_eyre::eyre::{OptionExt, Result};
 use execute::Execute;
 use libwayshot::WayshotConnection;
 
-use crate::{focal_monitor, grim::Grim, is_niri, show_notification};
+use crate::{focal_monitor, is_niri, show_notification};
 
 #[derive(Debug, Clone)]
 pub struct FocalScreenshotArgs {
@@ -78,58 +78,63 @@ pub trait FocalScreenshot {
         Ok(())
     }
 
-    fn capture(&self, monitor: &str, geometry: &str, args: &FocalScreenshotArgs) -> Result<()> {
-        // small delay before capture
-        std::thread::sleep(std::time::Duration::from_millis(500));
-
-        let grim = Grim::new(args.output.clone())
-            .geometry(geometry)
-            .monitor(monitor);
-
-        grim.capture()?;
-
-        // wait for up to 5s for the file to appear
-        let mut attempts = 0;
-        while !args.output.exists() && attempts < 50 {
-            std::thread::sleep(std::time::Duration::from_millis(100));
-            attempts += 1;
-        }
-        if !args.output.exists() {
-            eprintln!("No image was captured by grim!");
-            std::process::exit(1);
-        }
-
-        Ok(())
-    }
-
     fn monitor(&self, args: &FocalScreenshotArgs) -> Result<()> {
         std::thread::sleep(std::time::Duration::from_secs(args.delay));
-        self.capture(&focal_monitor().focused()?.name, "", args)?;
+
+        let curr_mon = &focal_monitor().focused()?.name;
+
+        let conn = WayshotConnection::new()?;
+
+        let focused = conn
+            .get_all_outputs()
+            .iter()
+            .find(|mon| mon.name == *curr_mon)
+            .ok_or_eyre("Could not get focused monitor")?;
+
+        let img = conn.screenshot_single_output(focused, false)?;
+        img.save(&args.output)?;
+
         self.edit_or_ocr(args)
     }
 
     fn window(&self, args: &FocalScreenshotArgs) -> Result<()> {
-        self.selection(args)
+        std::thread::sleep(std::time::Duration::from_secs(args.delay));
+
+        let conn = WayshotConnection::new()?;
+        let slurp_args = args.slurp.clone();
+
+        let window_geoms = focal_monitor().window_geoms().unwrap_or_default();
+        let img = conn.screenshot_freeze(
+            move |_| {
+                let geom = crate::SlurpGeom::prompt(&window_geoms, slurp_args.as_deref())
+                    .map_err(|e| libwayshot::Error::FreezeCallbackError(e.to_string()))?;
+
+                Ok(geom.to_logical_region())
+            },
+            false,
+        )?;
+        img.save(&args.output)?;
+
+        self.edit_or_ocr(args)
     }
 
     fn selection(&self, args: &FocalScreenshotArgs) -> Result<()> {
-        // freeze screen before delay to capture selection
-        let picker_process = if args.delay > 0 {
-            let child = Command::new("hyprpicker").arg("-rz").spawn()?;
-            std::thread::sleep(std::time::Duration::from_millis(200));
-            Some(child)
-        } else {
-            None
-        };
-
-        let window_geoms = focal_monitor().window_geoms().unwrap_or_default();
-        let geom = crate::SlurpGeom::prompt(&window_geoms, args.slurp.as_deref())?;
-
-        // kill hyprpicker so it doesn't ask for a color
-        picker_process.map(|mut p| p.kill().ok());
-
         std::thread::sleep(std::time::Duration::from_secs(args.delay));
-        self.capture("", &geom.to_string(), args)?;
+
+        let conn = WayshotConnection::new()?;
+        let slurp_args = args.slurp.clone();
+
+        let img = conn.screenshot_freeze(
+            move |_| {
+                let geom = crate::SlurpGeom::prompt(&[], slurp_args.as_deref())
+                    .map_err(|e| libwayshot::Error::FreezeCallbackError(e.to_string()))?;
+
+                Ok(geom.to_logical_region())
+            },
+            false,
+        )?;
+        img.save(&args.output)?;
+
         self.edit_or_ocr(args)
     }
 
