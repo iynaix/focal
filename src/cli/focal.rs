@@ -38,6 +38,9 @@ pub struct CommonArgs {
     #[arg(short, long, help = "Options to pass to slurp")]
     pub slurp: Option<String>,
 
+    #[arg(long, action, help = "Do not use noctalia, even if detected")]
+    pub no_noctalia: bool,
+
     #[arg(long, action, help = "Do not show notifications")]
     pub no_notify: bool,
 

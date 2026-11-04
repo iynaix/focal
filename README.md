@@ -93,6 +93,7 @@ Captures a screenshot.
       --all
   -t, --delay <DELAY>   Delay in seconds before capturing
   -s, --slurp <SLURP>   Options to pass to slurp
+      --no-noctalia     Do not use noctalia, even if detected
       --no-notify       Do not show notifications
       --no-save         Do not save the file permanently
       --menu            Display graphical menu for selection options

@@ -14,6 +14,7 @@ pub struct FocalScreenshotArgs {
     pub delay: u64,
     pub edit: Option<String>,
     pub ocr: Option<String>,
+    pub noctalia: bool,
     pub notify: bool,
     pub slurp: Option<String>,
     pub output: PathBuf,

@@ -92,11 +92,13 @@ pub fn screenshot_menu(delay: Option<u64>, screenshot_args: &FocalScreenshotArgs
         ..screenshot_args.clone()
     };
 
+    let screenshot = focal_screenshot(screenshot_args.noctalia);
+
     match sel {
-        "Selection" => focal_screenshot().selection(&screenshot_args)?,
-        "Window" => focal_screenshot().window(&screenshot_args)?,
-        "Monitor" => focal_screenshot().monitor(&screenshot_args)?,
-        "All" => focal_screenshot().all(&screenshot_args)?,
+        "Selection" => screenshot.selection(&screenshot_args)?,
+        "Window" => screenshot.window(&screenshot_args)?,
+        "Monitor" => screenshot.monitor(&screenshot_args)?,
+        "All" => screenshot.all(&screenshot_args)?,
 
         "" => {
             eprintln!("No capture selection was made.");

@@ -7,7 +7,7 @@ use crate::{
         focal::Cli,
         image::{CaptureArea, ImageArgs},
     },
-    create_parent_dirs, focal_screenshot, is_noctalia, iso8601_filename,
+    create_parent_dirs, focal_screenshot, iso8601_filename,
     screenshot::FocalScreenshotArgs,
 };
 use clap::CommandFactory;
@@ -22,7 +22,11 @@ pub fn main(args: ImageArgs) -> Result<()> {
             .exit()
     }
 
-    let has_noctalia = is_noctalia();
+    let has_noctalia = if args.common_args.no_noctalia {
+        false
+    } else {
+        which::which("noctalia").is_ok()
+    };
 
     // check if all required programs are installed
     check_programs(&args.required_programs(has_noctalia));
@@ -46,6 +50,7 @@ pub fn main(args: ImageArgs) -> Result<()> {
         delay: args.common_args.delay.unwrap_or_default(),
         edit: args.edit,
         ocr: args.ocr,
+        noctalia: has_noctalia,
         notify: !args.common_args.no_notify,
         slurp: args.common_args.slurp,
         output,
@@ -63,11 +68,13 @@ pub fn main(args: ImageArgs) -> Result<()> {
             !args.menu_args.no_icons,
         );
     } else if let Some(area) = args.area_args.parse() {
+        let screenshot = focal_screenshot(has_noctalia);
+
         return match area {
-            CaptureArea::Monitor => focal_screenshot().monitor(&screenshot_args),
-            CaptureArea::Window => focal_screenshot().window(&screenshot_args),
-            CaptureArea::Selection => focal_screenshot().selection(&screenshot_args),
-            CaptureArea::All => focal_screenshot().all(&screenshot_args),
+            CaptureArea::Monitor => screenshot.monitor(&screenshot_args),
+            CaptureArea::Window => screenshot.window(&screenshot_args),
+            CaptureArea::Selection => screenshot.selection(&screenshot_args),
+            CaptureArea::All => screenshot.all(&screenshot_args),
         };
     }
 

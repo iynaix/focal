@@ -1,5 +1,5 @@
 use color_eyre::eyre::Result;
-use std::{path::PathBuf, process::Command, sync::OnceLock};
+use std::{path::PathBuf, process::Command};
 
 mod hyprland;
 mod mango;
@@ -116,11 +116,6 @@ pub fn is_umbriel() -> bool {
     std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default() == "umbriel"
 }
 
-pub fn is_noctalia() -> bool {
-    static CACHE: OnceLock<bool> = OnceLock::new();
-    *CACHE.get_or_init(|| which::which("noctalia").is_ok())
-}
-
 pub fn focal_monitor() -> Box<dyn FocalMonitors> {
     match std::env::var("XDG_CURRENT_DESKTOP")
         .unwrap_or_default()
@@ -135,8 +130,8 @@ pub fn focal_monitor() -> Box<dyn FocalMonitors> {
     }
 }
 
-pub fn focal_screenshot() -> Box<dyn FocalScreenshot> {
-    if is_noctalia() {
+pub fn focal_screenshot(noctalia: bool) -> Box<dyn FocalScreenshot> {
+    if noctalia {
         return Box::new(noctalia::NoctaliaScreenshot);
     }
 
