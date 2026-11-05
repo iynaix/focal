@@ -129,7 +129,7 @@ pub struct ImageArgs {
 
 impl ImageArgs {
     pub fn required_programs(&self, has_noctalia: bool) -> Vec<&str> {
-        let mut progs = vec!["grim"];
+        let mut progs = Vec::new();
 
         if self.menu_args.menu {
             if !has_noctalia {

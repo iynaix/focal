@@ -5,7 +5,6 @@
   rustPlatform,
   makeWrapper,
   ffmpeg,
-  grim,
   procps,
   slurp,
   tesseract,
@@ -72,7 +71,6 @@ rustPlatform.buildRustPackage {
   postFixup =
     let
       binaries = [
-        grim
         procps
         slurp
         wl-clipboard
