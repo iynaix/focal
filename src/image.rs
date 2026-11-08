@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use crate::{
     check_programs,
     cli::{
-        focal::Cli,
+        focal::{Cli, MenuType},
         image::{CaptureArea, ImageArgs},
     },
     create_parent_dirs, focal_screenshot, iso8601_filename,
@@ -22,10 +22,11 @@ pub fn main(args: ImageArgs) -> Result<()> {
             .exit()
     }
 
+    let has_noctalia_bin = which::which("noctalia").is_ok();
     let has_noctalia = if args.common_args.no_noctalia {
         false
     } else {
-        which::which("noctalia").is_ok()
+        has_noctalia_bin
     };
 
     // check if all required programs are installed
@@ -56,9 +57,9 @@ pub fn main(args: ImageArgs) -> Result<()> {
         output,
     };
 
-    if args.menu_args.menu {
+    if let Some(menu_arg) = args.menu_args.menu {
         // use noctalia if available
-        if has_noctalia {
+        if (menu_arg == MenuType::Auto && has_noctalia_bin) || menu_arg == MenuType::Noctalia {
             return crate::noctalia::screenshot_menu(args.common_args.delay, &screenshot_args);
         }
         return crate::rofi::screenshot_menu(

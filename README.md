@@ -96,7 +96,7 @@ Captures a screenshot.
       --no-noctalia     Do not use noctalia, even if detected
       --no-notify       Do not show notifications
       --no-save         Do not save the file permanently
-      --menu            Display graphical menu for selection options
+      --menu [<MENU>]   Display graphical menu for selection options [default: auto] [possible values: auto, rofi, noctalia]
       --no-icons        Do not show icons (rofi only)
       --theme <THEME>   Path to a rofi theme (rofi only)
   -e, --edit <COMMAND>  Edit screenshot using COMMAND
@@ -114,7 +114,7 @@ Captures a video.
   -s, --slurp <SLURP>       Options to pass to slurp
       --no-notify           Do not show notifications
       --no-save             Do not save the file permanently
-      --menu                Display graphical menu for selection options
+      --menu [<MENU>]       Display graphical menu for selection options [default: auto] [possible values: auto, rofi, noctalia]
       --no-icons            Do not show icons (rofi only)
       --theme <THEME>       Path to a rofi theme (rofi only)
       --stop                Stops any previous video recordings

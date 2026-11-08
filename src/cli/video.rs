@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::cli::focal::{CommonArgs, MenuArgs};
+use crate::cli::focal::{CommonArgs, MenuArgs, MenuType};
 use clap::{ArgGroup, Args, Subcommand, ValueEnum};
 
 #[derive(Subcommand, ValueEnum, Debug, Clone)]
@@ -102,14 +102,17 @@ pub struct VideoArgs {
 }
 
 impl VideoArgs {
-    pub fn required_programs(&self) -> Vec<&str> {
+    pub fn required_programs(&self, has_noctalia: bool) -> Vec<&str> {
         let mut progs = vec!["wf-recorder", "pkill"];
 
-        if self.menu_args.menu {
-            if which::which("noctalia").is_err() {
+        if let Some(ref menu_arg) = self.menu_args.menu {
+            if *menu_arg == MenuType::Noctalia {
+                progs.push("noctalia");
+            }
+
+            if !has_noctalia || *menu_arg == MenuType::Rofi {
                 progs.push("rofi");
             }
-            progs.push("slurp");
         }
 
         if matches!(self.area_args.parse(), Some(CaptureArea::Selection)) {

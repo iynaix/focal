@@ -17,7 +17,7 @@ pub enum FocalSubcommand {
     Generate(GenerateArgs),
 }
 
-#[derive(Subcommand, ValueEnum, Debug, Clone)]
+#[derive(Debug, Clone, Subcommand, ValueEnum)]
 pub enum ShellCompletion {
     Bash,
     Zsh,
@@ -48,16 +48,25 @@ pub struct CommonArgs {
     pub no_save: bool,
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, ValueEnum)]
+pub enum MenuType {
+    #[default]
+    Auto,
+    Rofi,
+    Noctalia,
+}
+
 #[allow(clippy::module_name_repetitions)]
 #[derive(Args, Debug)]
 pub struct MenuArgs {
     #[arg(
         long,
-        action,
-        aliases = ["rofi"],
+        default_value = "auto",
+        default_missing_value = "auto",
+        num_args = 0..=1,
         help = "Display graphical menu for selection options"
     )]
-    pub menu: bool,
+    pub menu: Option<MenuType>,
 
     #[arg(long, action, help = "Do not show icons (rofi only)")]
     pub no_icons: bool,

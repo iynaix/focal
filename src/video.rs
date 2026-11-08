@@ -4,7 +4,10 @@ use std::{path::PathBuf, process::Command, vec};
 
 use crate::{
     NoctaliaDmenu, Rofi, SlurpGeom, check_programs,
-    cli::video::{CaptureArea, VideoArgs},
+    cli::{
+        focal::MenuType,
+        video::{CaptureArea, VideoArgs},
+    },
     create_parent_dirs, focal_monitor, iso8601_filename, show_notification,
     wf_recorder::WfRecorder,
 };
@@ -303,8 +306,15 @@ pub fn main(args: VideoArgs) -> Result<()> {
         return Ok(());
     }
 
+    let has_noctalia_bin = which::which("noctalia").is_ok();
+    let has_noctalia = if args.common_args.no_noctalia {
+        false
+    } else {
+        has_noctalia_bin
+    };
+
     // check if all required programs are installed
-    check_programs(&args.required_programs());
+    check_programs(&args.required_programs(has_noctalia));
 
     let fname = format!("{}.mp4", iso8601_filename());
 
@@ -331,7 +341,10 @@ pub fn main(args: VideoArgs) -> Result<()> {
         slurp: args.common_args.slurp,
     };
 
-    if args.menu_args.menu {
+    if let Some(menu_arg) = args.menu_args.menu {
+        if (menu_arg == MenuType::Auto && has_noctalia) || menu_arg == MenuType::Noctalia {
+            return screencast.noctalia_dmenu();
+        }
         return screencast.rofi(args.menu_args.theme.as_ref());
     } else if let Some(area) = args.area_args.parse() {
         return match area {
