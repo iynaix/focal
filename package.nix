@@ -9,10 +9,8 @@
   slurp,
   tesseract,
   pkg-config,
-  glib,
   libgbm,
   libGL,
-  pango,
   wayland,
   wf-recorder,
   wl-clipboard,
@@ -52,8 +50,6 @@ rustPlatform.buildRustPackage {
   ];
 
   buildInputs = [
-    glib
-    pango
     libgbm
     libGL
     wayland

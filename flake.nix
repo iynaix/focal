@@ -25,10 +25,8 @@
                 rofi
                 slurp
                 tesseract
-                glib
                 libgbm
                 libGL
-                pango
                 wayland
                 wl-clipboard
                 xdg-utils # xdg-open

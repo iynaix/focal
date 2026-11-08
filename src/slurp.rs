@@ -147,6 +147,7 @@ impl SlurpGeom {
         } else {
             // sane slurp defaults
             slurp_cmd
+                .arg("-d") // show selection dimensions
                 .arg("-c") // selection border
                 .arg("#FFFFFFC0") // 0.75 opaque white
                 .arg("-b") // background
