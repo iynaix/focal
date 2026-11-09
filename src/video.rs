@@ -239,7 +239,7 @@ impl Screencast {
     }
 
     pub fn noctalia_dmenu(&mut self) -> Result<()> {
-        let opts = vec!["󰒉\tSelection", "󰍹\tMonitor"];
+        let opts = vec!["Selection", "Monitor"];
 
         let noctalia_dmenu = NoctaliaDmenu::new(&opts);
         let (sel, _) = noctalia_dmenu

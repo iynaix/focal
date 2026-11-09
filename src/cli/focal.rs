@@ -61,7 +61,6 @@ pub enum MenuType {
 pub struct MenuArgs {
     #[arg(
         long,
-        default_value = "auto",
         default_missing_value = "auto",
         num_args = 0..=1,
         help = "Display graphical menu for selection options"
